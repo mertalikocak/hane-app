@@ -73,39 +73,43 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Top Header */}
-      <div className="lg:hidden sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md">
-        <Link href="/" className="flex items-center gap-2.5 font-bold text-base text-foreground truncate">
-          <img
-            src="/logo.png"
-            alt="Hane App Logo"
-            className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm"
-          />
-          <div className="flex flex-col min-w-0">
-            <span className="leading-none text-base font-extrabold tracking-tight truncate">Hane App</span>
-            <span className="text-[10px] text-muted font-medium truncate">Ev & Yaşam</span>
+      <div className="lg:hidden sticky top-0 z-40 flex flex-col border-b border-border bg-surface/95 backdrop-blur-md">
+        {/* iOS Status Bar & Dynamic Island Safe Area Spacer */}
+        <div style={{ height: "env(safe-area-inset-top, 0px)" }} className="w-full shrink-0" />
+        <div className="flex h-16 items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2.5 font-bold text-base text-foreground truncate">
+            <img
+              src="/logo.png"
+              alt="Hane App Logo"
+              className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm"
+            />
+            <div className="flex flex-col min-w-0">
+              <span className="leading-none text-base font-extrabold tracking-tight truncate">Hane App</span>
+              <span className="text-[10px] text-muted font-medium truncate">Ev & Yaşam</span>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <CloudSyncIndicator variant="compact" />
+
+            <button
+              type="button"
+              onClick={() => setIsBackupOpen(true)}
+              className="flex h-9 items-center gap-1 px-2.5 rounded-xl border border-border bg-surface-raised text-xs font-bold text-foreground shadow-xs cursor-pointer"
+              title="Veri Yedekle / İçe Aktar"
+            >
+              <span>🔄</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface-raised text-foreground"
+              aria-label="Menüyü aç/kapat"
+            >
+              {isOpen ? "✕" : "☰"}
+            </button>
           </div>
-        </Link>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          <CloudSyncIndicator variant="compact" />
-
-          <button
-            type="button"
-            onClick={() => setIsBackupOpen(true)}
-            className="flex h-9 items-center gap-1 px-2.5 rounded-xl border border-border bg-surface-raised text-xs font-bold text-foreground shadow-xs cursor-pointer"
-            title="Veri Yedekle / İçe Aktar"
-          >
-            <span>🔄</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface-raised text-foreground"
-            aria-label="Menüyü aç/kapat"
-          >
-            {isOpen ? "✕" : "☰"}
-          </button>
         </div>
       </div>
 
@@ -122,6 +126,10 @@ export function Sidebar() {
         className={`fixed top-0 bottom-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-surface transition-transform duration-300 lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
       >
         {/* App Logo & Header */}
         <div className="flex h-20 items-center justify-between border-b border-border/70 px-6">
