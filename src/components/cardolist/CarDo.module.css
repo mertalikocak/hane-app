@@ -1,0 +1,372 @@
+.cardoContainer {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 16px 8px;
+  color: var(--cardo-text, #1e293b);
+  --cardo-primary: #3b82f6;
+  --cardo-primary-hover: #2563eb;
+  --cardo-success: #22c55e;
+  --cardo-warning: #f59e0b;
+  --cardo-danger: #ef4444;
+  --cardo-card-bg: var(--color-surface, #ffffff);
+  --cardo-border: var(--color-border, #e2e8f0);
+  --cardo-item-bg: var(--color-surface-raised, #f8fafc);
+  --cardo-text-sec: var(--color-muted, #64748b);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cardoContainer {
+    --cardo-text: #f1f5f9;
+    --cardo-primary: #60a5fa;
+    --cardo-primary-hover: #3b82f6;
+    --cardo-success: #4ade80;
+    --cardo-warning: #fbbf24;
+    --cardo-danger: #f87171;
+    --cardo-card-bg: #1e293b;
+    --cardo-border: #334155;
+    --cardo-item-bg: #121926;
+    --cardo-text-sec: #94a3b8;
+  }
+}
+
+.pageHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pageHeaderTitles h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: inherit;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--cardo-text-sec);
+  font-size: 0.95rem;
+}
+
+.addExpenseSection {
+  background: var(--cardo-card-bg);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  border: 1px solid var(--cardo-border);
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: inherit;
+}
+
+.expenseForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.formGroup {
+  flex: 1;
+  min-width: 200px;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cardo-text-sec);
+  margin-bottom: 6px;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--cardo-border);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: var(--cardo-item-bg);
+  color: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.formGroup input:focus {
+  border-color: var(--cardo-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--cardo-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  height: 44px;
+}
+
+.btnPrimary:hover {
+  background: var(--cardo-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border: 1px solid var(--cardo-border);
+  border-radius: 10px;
+  background: var(--cardo-item-bg);
+  color: inherit;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.expenseListSection {
+  background: var(--cardo-card-bg);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+  border: 1px solid var(--cardo-border);
+}
+
+.expenseList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--cardo-text-sec);
+}
+
+.emptyIcon {
+  font-size: 2.75rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.expenseItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--cardo-item-bg);
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+}
+
+.expenseItem:hover {
+  border-color: var(--cardo-border);
+}
+
+.expenseItem.completed {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.expenseItem.completed .expenseName {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.expenseCheckbox {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cardo-success);
+}
+
+.expenseDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.expenseName {
+  font-weight: 600;
+  margin-bottom: 2px;
+  word-break: break-word;
+}
+
+.expensePrice {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--cardo-primary);
+}
+
+.expenseActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.editBtn {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--cardo-warning);
+}
+
+.editBtn:hover {
+  background: var(--cardo-warning);
+  color: #1e293b;
+}
+
+.deleteBtn {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--cardo-danger);
+}
+
+.deleteBtn:hover {
+  background: var(--cardo-danger);
+  color: white;
+}
+
+.summarySection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.summaryCard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  color: white;
+}
+
+.summaryTotal {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.summarySpent {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.summaryRemaining {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.summaryIcon {
+  font-size: 1.8rem;
+}
+
+.summaryContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.summaryLabel {
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.summaryValue {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+/* Modal */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modalContent {
+  background: var(--cardo-card-bg);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--cardo-border);
+  color: inherit;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--cardo-border);
+}
+
+.modalHeader h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.modalClose {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: var(--cardo-item-bg);
+  border-radius: 8px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--cardo-text-sec);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalClose:hover {
+  background: var(--cardo-danger);
+  color: white;
+}
+
+.modalBody {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 10px;
+}

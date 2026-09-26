@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-raised: #f1f5f9;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --primary: #ea580c;
+  --primary-hover: #c2410c;
+  --primary-foreground: #ffffff;
+  --accent: #fff7ed;
+  --accent-foreground: #9a3412;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #090d16;
+    --foreground: #f8fafc;
+    --surface: #121926;
+    --surface-raised: #182234;
+    --muted: #8e9bb2;
+    --border: #1f2c42;
+    --primary: #f97316;
+    --primary-hover: #fb923c;
+    --primary-foreground: #ffffff;
+    --accent: #2c1a0e;
+    --accent-foreground: #fed7aa;
+    --success: #34d399;
+    --success-foreground: #022c22;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  text-rendering: optimizeLegibility;
+  padding-bottom: env(safe-area-inset-bottom);
+  min-height: 100vh;
+}
+
+@layer components {
+  .field {
+    @apply min-h-10 w-full rounded-xl border border-border bg-background/80 px-3 py-2 text-sm text-foreground outline-none transition-all placeholder:text-muted/60 focus:border-primary focus:bg-background focus:ring-2 focus:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .primary-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition-all hover:bg-primary-hover hover:shadow-md hover:shadow-primary/30 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .secondary-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-medium text-foreground shadow-xs transition-all hover:border-primary/40 hover:bg-surface-raised active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .accent-button {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-accent px-3.5 py-2 text-sm font-semibold text-accent-foreground transition-all hover:brightness-105 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .icon-button {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-surface/60 text-muted transition-all hover:border-red-400/50 hover:bg-red-500/10 hover:text-red-500 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-40;
+  }
+}
