@@ -83,9 +83,11 @@ export function CloudConnectionGate({ onConnected, onSkipToLocal }: CloudConnect
       <div className="w-full max-w-xl space-y-6">
         {/* Branding & Welcome Header */}
         <div className="text-center space-y-3">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-600 text-4xl shadow-xl shadow-orange-500/20 text-white">
-            🏡
-          </div>
+          <img
+            src="/logo.png"
+            alt="Hane App Logo"
+            className="mx-auto h-24 w-24 rounded-3xl object-cover shadow-2xl shadow-orange-500/25 border border-zinc-700/60"
+          />
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
               Hane App Bulut Bağlantısı

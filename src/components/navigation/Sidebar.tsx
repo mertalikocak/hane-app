@@ -74,10 +74,12 @@ export function Sidebar() {
     <>
       {/* Mobile Top Header */}
       <div className="lg:hidden sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md">
-        <Link href="/" className="flex items-center gap-2 font-bold text-base text-foreground truncate">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-lg shadow-sm text-white">
-            🏡
-          </span>
+        <Link href="/" className="flex items-center gap-2.5 font-bold text-base text-foreground truncate">
+          <img
+            src="/logo.png"
+            alt="Hane App Logo"
+            className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm"
+          />
           <div className="flex flex-col min-w-0">
             <span className="leading-none text-base font-extrabold tracking-tight truncate">Hane App</span>
             <span className="text-[10px] text-muted font-medium truncate">Ev & Yaşam</span>
@@ -128,9 +130,11 @@ export function Sidebar() {
             onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 group"
           >
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 text-xl shadow-md text-white group-hover:scale-105 transition-transform">
-              🏡
-            </span>
+            <img
+              src="/logo.png"
+              alt="Hane App Logo"
+              className="h-11 w-11 shrink-0 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform"
+            />
             <div className="flex flex-col">
               <span className="text-xl font-black tracking-tight text-foreground">
                 Hane App
