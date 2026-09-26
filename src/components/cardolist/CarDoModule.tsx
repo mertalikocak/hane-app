@@ -145,7 +145,7 @@ export function CarDoModule() {
     <div className={styles.cardoContainer}>
       <header className={styles.pageHeader}>
         <div className={styles.pageHeaderTitles}>
-          <h1>🚗 Araba Masraf Takibi</h1>
+          <h1>🚗 Hane Car</h1>
           <p className={styles.subtitle}>
             Araç bakım, yakıt, sigorta ve diğer masraflarınızı kolayca yönetin.
           </p>

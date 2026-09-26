@@ -7,6 +7,7 @@ import { STORAGE_KEYS, type LocalMeal, type LocalPlanEntry } from "@/lib/local-s
 import { ayAnahtariOlustur, ayVerisiOku } from "@/storage/ayDeposu";
 import { ayToplamGirisGideri, ayToplamGelir } from "@/domain/ekstreHesapla";
 import { getProfiles, getActiveProfileId, getProfileStats } from "@/storage/bodyStorage";
+import { YedekModal } from "@/components/navigation/YedekModal";
 
 const para = (n: number) =>
   new Intl.NumberFormat("tr-TR", {
@@ -26,6 +27,7 @@ export default function DashboardPage() {
     totalMeasurements: number;
   }>({ profileName: "", totalMeasurements: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -108,7 +110,7 @@ export default function DashboardPage() {
 
       {/* Grid of 4 Main Apps */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Card 1: CarDo */}
+        {/* Card 1: Hane Car */}
         <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-6 shadow-xs hover:shadow-md hover:border-blue-500/40 transition-all group">
           <div>
             <div className="flex items-center justify-between gap-3 mb-4">
@@ -119,7 +121,7 @@ export default function DashboardPage() {
                 {isLoaded ? `${cardoStats.count} Masraf` : "..."}
               </span>
             </div>
-            <h2 className="text-xl font-bold text-foreground">CarDo</h2>
+            <h2 className="text-xl font-bold text-foreground">Hane Car</h2>
             <p className="mt-1 text-xs sm:text-sm text-muted">
               Araç bakım, yakıt, sigorta ve periyodik masrafların takibi.
             </p>
@@ -287,6 +289,30 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* Universal Backup Action Banner */}
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-zinc-900 to-slate-800 p-6 sm:p-8 text-white border border-border/80 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="space-y-1.5 max-w-xl">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/20 border border-amber-500/30 px-3 py-0.5 text-xs font-bold text-amber-400">
+            🔄 MOBİL & WEB SENKRONİZASYONU
+          </span>
+          <h3 className="text-xl sm:text-2xl font-black tracking-tight">
+            Tüm Verilerinizi Yedekleyin veya Aktarın
+          </h3>
+          <p className="text-xs sm:text-sm text-zinc-300">
+            Ev giderleri, araç masrafları, yemek planları ve fit ölçümlerinizi tek tıkla cihazlar arasında taşıyın.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsBackupOpen(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-md hover:from-amber-400 hover:to-orange-500 active:scale-98 transition cursor-pointer self-start sm:self-auto shrink-0"
+        >
+          <span>💾</span>
+          <span>Veri Yedekle / Yükle</span>
+        </button>
+      </section>
+
       {/* Quick Access Info Section */}
       <section className="rounded-3xl border border-border/80 bg-surface p-6 sm:p-7 shadow-xs">
         <h3 className="text-lg font-bold text-foreground mb-3">
@@ -319,6 +345,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </section>
+
+      {/* Universal Backup Modal */}
+      <YedekModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
     </div>
   );
 }

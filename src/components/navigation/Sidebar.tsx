@@ -4,6 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { YedekModal } from "./YedekModal";
+import { CloudSyncIndicator } from "./CloudSyncIndicator";
+
 interface NavItem {
   name: string;
   href: string;
@@ -21,7 +24,7 @@ const navItems: NavItem[] = [
     description: "Hane genel kontrol paneli",
   },
   {
-    name: "CarDo",
+    name: "Hane Car",
     href: "/cardolist",
     icon: "🚗",
     description: "Araç masraf & bakım takibi",
@@ -60,6 +63,7 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -70,23 +74,37 @@ export function Sidebar() {
     <>
       {/* Mobile Top Header */}
       <div className="lg:hidden sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-surface/90 px-4 backdrop-blur-md">
-        <Link href="/" className="flex items-center gap-2.5 font-bold text-lg text-foreground">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-lg shadow-sm text-white">
+        <Link href="/" className="flex items-center gap-2 font-bold text-base text-foreground truncate">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-lg shadow-sm text-white">
             🏡
           </span>
-          <div className="flex flex-col">
-            <span className="leading-none text-base font-extrabold tracking-tight">Hane App</span>
-            <span className="text-[10px] text-muted font-medium">Ev & Yaşam Yönetimi</span>
+          <div className="flex flex-col min-w-0">
+            <span className="leading-none text-base font-extrabold tracking-tight truncate">Hane App</span>
+            <span className="text-[10px] text-muted font-medium truncate">Ev & Yaşam</span>
           </div>
         </Link>
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface-raised text-foreground"
-          aria-label="Menüyü aç/kapat"
-        >
-          {isOpen ? "✕" : "☰"}
-        </button>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <CloudSyncIndicator variant="compact" />
+
+          <button
+            type="button"
+            onClick={() => setIsBackupOpen(true)}
+            className="flex h-9 items-center gap-1 px-2.5 rounded-xl border border-border bg-surface-raised text-xs font-bold text-foreground shadow-xs cursor-pointer"
+            title="Veri Yedekle / İçe Aktar"
+          >
+            <span>🔄</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface-raised text-foreground"
+            aria-label="Menüyü aç/kapat"
+          >
+            {isOpen ? "✕" : "☰"}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Backdrop */}
@@ -125,7 +143,7 @@ export function Sidebar() {
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="lg:hidden text-muted hover:text-foreground text-lg"
+            className="lg:hidden text-muted hover:text-foreground text-lg cursor-pointer"
           >
             ✕
           </button>
@@ -189,19 +207,35 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Footer info in Sidebar */}
-        <div className="border-t border-border/70 p-4">
-          <div className="rounded-2xl bg-surface-raised/70 border border-border/60 p-3 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary text-base">
-              ✨
+        {/* Footer info & Backup button in Sidebar */}
+        <div className="border-t border-border/70 p-4 space-y-2.5">
+          {/* Cloud Sync Status Pill */}
+          <CloudSyncIndicator variant="sidebar" />
+
+          {/* Backup / Export button */}
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(false);
+              setIsBackupOpen(true);
+            }}
+            className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-surface-raised/50 hover:bg-surface border border-border/60 text-foreground transition cursor-pointer shadow-xs group"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold">
+                🔄
+              </span>
+              <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                Manuel Yedek İndir / Yükle
+              </span>
             </div>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-foreground truncate">Hane Sistemi Aktif</span>
-              <span className="text-[10px] text-muted truncate">4 Modül Entegre Edildi</span>
-            </div>
-          </div>
+            <span className="text-xs text-muted group-hover:text-foreground">→</span>
+          </button>
         </div>
       </aside>
+
+      {/* Universal Backup Modal */}
+      <YedekModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
     </>
   );
 }
