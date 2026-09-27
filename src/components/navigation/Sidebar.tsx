@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { YedekModal } from "./YedekModal";
 import { CloudSyncIndicator } from "./CloudSyncIndicator";
+import { ProfileHeaderMenu } from "@/components/profile/ProfileHeaderMenu";
 
 interface NavItem {
   name: string;
@@ -24,12 +25,6 @@ const navItems: NavItem[] = [
     description: "Hane genel kontrol paneli",
   },
   {
-    name: "Hane Car",
-    href: "/cardolist",
-    icon: "🚗",
-    description: "Araç masraf & bakım takibi",
-  },
-  {
     name: "Hane Dinner",
     href: "/dinner",
     icon: "🍽️",
@@ -40,6 +35,12 @@ const navItems: NavItem[] = [
     ],
   },
   {
+    name: "Hane Calendar",
+    href: "/calendar",
+    icon: "📅",
+    description: "Ortak & bireysel aile takvimi",
+  },
+  {
     name: "Hane Gider",
     href: "/gider",
     icon: "💰",
@@ -47,16 +48,27 @@ const navItems: NavItem[] = [
   },
   {
     name: "Hane Fit",
-    href: "/fit",
+    href: "/fit/dashboard",
     icon: "📐",
     description: "Vücut ölçüleri & yağ takibi",
     subItems: [
-      { name: "Profil Seçimi", href: "/fit" },
       { name: "Genel Bakış", href: "/fit/dashboard" },
       { name: "Ölçüm Geçmişi", href: "/fit/measurements" },
       { name: "Yeni Ölçüm", href: "/fit/measurements/new" },
       { name: "Profiller", href: "/fit/profiles" },
     ],
+  },
+  {
+    name: "Hane Wish List",
+    href: "/wishlist",
+    icon: "🎁",
+    description: "Ortak & bireysel istek listesi",
+  },
+  {
+    name: "Hane Car",
+    href: "/cardolist",
+    icon: "🚗",
+    description: "Araç masraf & bakım takibi",
   },
 ];
 
@@ -76,20 +88,22 @@ export function Sidebar() {
       <div className="lg:hidden sticky top-0 z-40 flex flex-col border-b border-border bg-surface/95 backdrop-blur-md">
         {/* iOS Status Bar & Dynamic Island Safe Area Spacer */}
         <div style={{ height: "env(safe-area-inset-top, 0px)" }} className="w-full shrink-0" />
-        <div className="flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2.5 font-bold text-base text-foreground truncate">
+        <div className="flex h-16 items-center justify-between px-3 sm:px-4">
+          <Link href="/" className="flex items-center gap-2 font-bold text-base text-foreground truncate">
             <img
               src="/logo.png"
               alt="Hane App Logo"
-              className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm"
+              className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 rounded-xl object-cover shadow-sm"
             />
             <div className="flex flex-col min-w-0">
-              <span className="leading-none text-base font-extrabold tracking-tight truncate">Hane App</span>
+              <span className="leading-none text-sm sm:text-base font-extrabold tracking-tight truncate">Hane App</span>
               <span className="text-[10px] text-muted font-medium truncate">Ev & Yaşam</span>
             </div>
           </Link>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            <ProfileHeaderMenu variant="mobile" />
+
             <CloudSyncIndicator variant="compact" />
 
             <button

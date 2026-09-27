@@ -28,14 +28,26 @@ export default function FitProfileSelectPage() {
   };
 
   useEffect(() => {
+    const active = ProfileService.getActive();
+    if (active) {
+      router.replace("/fit/dashboard");
+      return;
+    }
     loadData();
 
-    const handleUpdate = () => loadData();
+    const handleUpdate = () => {
+      const updatedActive = ProfileService.getActive();
+      if (updatedActive) {
+        router.replace("/fit/dashboard");
+      } else {
+        loadData();
+      }
+    };
     window.addEventListener("fit_profiles_updated", handleUpdate);
     return () => {
       window.removeEventListener("fit_profiles_updated", handleUpdate);
     };
-  }, []);
+  }, [router]);
 
   const handleSelectProfile = (profileId: string) => {
     ProfileService.setActive(profileId);

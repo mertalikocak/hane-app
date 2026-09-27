@@ -12,6 +12,8 @@ export interface HaneModulOzet {
   carDoGiderSayisi: number;
   dinnerYemekSayisi: number;
   dinnerPlanSayisi: number;
+  calendarEtkinlikSayisi?: number;
+  wishlistSayisi?: number;
   fitProfilSayisi: number;
   fitOlcumSayisi: number;
   toplamAnahtarSayisi: number;
@@ -77,6 +79,8 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
   let carDoGiderSayisi = 0;
   let dinnerYemekSayisi = 0;
   let dinnerPlanSayisi = 0;
+  let calendarEtkinlikSayisi = 0;
+  let wishlistSayisi = 0;
   let fitProfilSayisi = 0;
   let fitOlcumSayisi = 0;
 
@@ -93,6 +97,12 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
       } else if (key === "plans") {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) dinnerPlanSayisi += parsed.length;
+      } else if (key === "hane_calendar_events") {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) calendarEtkinlikSayisi += parsed.length;
+      } else if (key === "hane_wishlist_items") {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) wishlistSayisi += parsed.length;
       } else if (key === "hane_fit_profiles") {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) fitProfilSayisi += parsed.length;
@@ -110,6 +120,8 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
     carDoGiderSayisi,
     dinnerYemekSayisi,
     dinnerPlanSayisi,
+    calendarEtkinlikSayisi,
+    wishlistSayisi,
     fitProfilSayisi,
     fitOlcumSayisi,
     toplamAnahtarSayisi: Object.keys(veriler).length,
@@ -190,6 +202,8 @@ export function tumHaneVerileriniIceAktar(hamVeriler: Record<string, string>): {
     window.dispatchEvent(new Event("fit_profiles_updated"));
     window.dispatchEvent(new Event("fit_measurements_updated"));
     window.dispatchEvent(new Event("fit_profile_changed"));
+    window.dispatchEvent(new Event("calendar_events_updated"));
+    window.dispatchEvent(new Event("wishlist_items_updated"));
 
     return { basarili: true, eklenenSayisi: Object.keys(hamVeriler).length };
   } catch (err) {

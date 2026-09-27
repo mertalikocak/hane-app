@@ -7,6 +7,8 @@ import { STORAGE_KEYS, type LocalMeal, type LocalPlanEntry } from "@/lib/local-s
 import { ayAnahtariOlustur, ayVerisiOku } from "@/storage/ayDeposu";
 import { ayToplamGirisGideri, ayToplamGelir } from "@/domain/ekstreHesapla";
 import { getProfiles, getActiveProfileId, getProfileStats } from "@/storage/bodyStorage";
+import { getCalendarEvents } from "@/storage/calendarStorage";
+import { getWishlistItems } from "@/storage/wishlistStorage";
 import { YedekModal } from "@/components/navigation/YedekModal";
 
 const para = (n: number) =>
@@ -19,7 +21,9 @@ const para = (n: number) =>
 export default function DashboardPage() {
   const [cardoStats, setCardoStats] = useState({ count: 0, total: 0, remaining: 0 });
   const [dinnerStats, setDinnerStats] = useState({ mealCount: 0, plannedDays: 0 });
+  const [calendarStats, setCalendarStats] = useState({ totalCount: 0, upcomingCount: 0 });
   const [giderStats, setGiderStats] = useState({ totalExpense: 0, totalIncome: 0 });
+  const [wishlistStats, setWishlistStats] = useState({ totalCount: 0, pendingCount: 0, completedCount: 0 });
   const [fitStats, setFitStats] = useState<{
     profileName: string;
     latestWeight?: number;
@@ -29,7 +33,7 @@ export default function DashboardPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
 
-  useEffect(() => {
+  const loadDashboardData = () => {
     try {
       // 1. CarDo Stats
       const carData = localStorage.getItem("carExpenses");
@@ -53,7 +57,13 @@ export default function DashboardPage() {
       const plannedDays = new Set(currentAssignments.map((a) => a.dayOfWeek)).size;
       setDinnerStats({ mealCount: meals.length, plannedDays });
 
-      // 3. Gider Stats
+      // 3. Calendar Stats
+      const calEvents = getCalendarEvents();
+      const today = new Date().toISOString().split("T")[0];
+      const upcoming = calEvents.filter((e) => e.date >= today).length;
+      setCalendarStats({ totalCount: calEvents.length, upcomingCount: upcoming });
+
+      // 4. Gider Stats
       const now = new Date();
       const ayAnahtar = ayAnahtariOlustur(now.getFullYear(), now.getMonth());
       const ayVeri = ayVerisiOku(ayAnahtar);
@@ -61,7 +71,7 @@ export default function DashboardPage() {
       const totalIncome = ayToplamGelir(ayVeri);
       setGiderStats({ totalExpense, totalIncome });
 
-      // 4. Fit Stats
+      // 5. Fit Stats
       const profiles = getProfiles();
       const activeId = getActiveProfileId();
       const activeProfile = profiles.find((p) => p.id === activeId) || profiles[0];
@@ -73,12 +83,42 @@ export default function DashboardPage() {
           latestBodyFat: st.latestBodyFat,
           totalMeasurements: st.totalMeasurements,
         });
+      } else {
+        setFitStats({ profileName: "", totalMeasurements: 0 });
       }
+
+      // 6. Wishlist Stats
+      const wishItems = getWishlistItems();
+      const completedCount = wishItems.filter((w) => w.completed).length;
+      setWishlistStats({
+        totalCount: wishItems.length,
+        pendingCount: wishItems.length - completedCount,
+        completedCount,
+      });
     } catch (e) {
       console.error("Dashboard loading error", e);
     } finally {
       setIsLoaded(true);
     }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+
+    const handleProfileChange = () => loadDashboardData();
+    window.addEventListener("fit_profile_changed", handleProfileChange);
+    window.addEventListener("fit_profiles_updated", handleProfileChange);
+    window.addEventListener("calendar_events_updated", handleProfileChange);
+    window.addEventListener("wishlist_items_updated", handleProfileChange);
+    window.addEventListener("storage", handleProfileChange);
+
+    return () => {
+      window.removeEventListener("fit_profile_changed", handleProfileChange);
+      window.removeEventListener("fit_profiles_updated", handleProfileChange);
+      window.removeEventListener("calendar_events_updated", handleProfileChange);
+      window.removeEventListener("wishlist_items_updated", handleProfileChange);
+      window.removeEventListener("storage", handleProfileChange);
+    };
   }, []);
 
   const todayFormatted = new Intl.DateTimeFormat("tr-TR", {
@@ -100,7 +140,7 @@ export default function DashboardPage() {
             Hoş Geldiniz, Hane Yönetim Paneli
           </h1>
           <p className="mt-2 text-sm sm:text-base text-white/90 font-medium">
-            Araç masrafları, haftalık akşam yemekleri, ev bütçesi ve vücut takibi tek çatı altında.
+            Araç masrafları, haftalık yemekler, ev bütçesi, istek listesi ve vücut takibi tek çatı altında.
           </p>
         </div>
         {/* Decorative background circles */}
@@ -108,51 +148,10 @@ export default function DashboardPage() {
         <div className="absolute right-32 -top-12 h-48 w-48 rounded-full bg-amber-300/20 blur-xl pointer-events-none" />
       </section>
 
-      {/* Grid of 4 Main Apps */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        {/* Card 1: Hane Car */}
-        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-6 shadow-xs hover:shadow-md hover:border-blue-500/40 transition-all group">
-          <div>
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-2xl group-hover:scale-110 transition-transform">
-                🚗
-              </span>
-              <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400">
-                {isLoaded ? `${cardoStats.count} Masraf` : "..."}
-              </span>
-            </div>
-            <h2 className="text-xl font-bold text-foreground">Hane Car</h2>
-            <p className="mt-1 text-xs sm:text-sm text-muted">
-              Araç bakım, yakıt, sigorta ve periyodik masrafların takibi.
-            </p>
-
-            <div className="mt-5 space-y-2 rounded-2xl bg-surface-raised p-4 border border-border/50">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted">Toplam Masraf:</span>
-                <span className="font-bold text-foreground">
-                  {isLoaded ? para(cardoStats.total) : "..."}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-muted">Ödenmeyi Bekleyen:</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">
-                  {isLoaded ? para(cardoStats.remaining) : "..."}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <Link
-            href="/cardolist"
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
-          >
-            <span>Masrafları Yönet</span>
-            <span>→</span>
-          </Link>
-        </div>
-
-        {/* Card 2: Hane Dinner */}
-        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-6 shadow-xs hover:shadow-md hover:border-orange-500/40 transition-all group">
+      {/* Grid of 6 Main Apps */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Card 1: Hane Dinner */}
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-orange-500/40 transition-all group">
           <div>
             <div className="flex items-center justify-between gap-3 mb-4">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-2xl group-hover:scale-110 transition-transform">
@@ -199,8 +198,49 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Card 2: Hane Calendar */}
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-indigo-500/40 transition-all group">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-2xl group-hover:scale-110 transition-transform">
+                📅
+              </span>
+              <span className="rounded-full bg-indigo-500/10 px-2.5 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                {isLoaded ? `${calendarStats.upcomingCount} Yaklaşan` : "..."}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Hane Calendar</h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted">
+              Ortak aile planları, randevular ve kişisel etkinlik takvimi.
+            </p>
+
+            <div className="mt-5 space-y-2 rounded-2xl bg-surface-raised p-4 border border-border/50">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Toplam Etkinlik:</span>
+                <span className="font-bold text-foreground">
+                  {isLoaded ? `${calendarStats.totalCount} Etkinlik` : "..."}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Yaklaşan:</span>
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                  {isLoaded ? `${calendarStats.upcomingCount} Plan` : "..."}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/calendar"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition"
+          >
+            <span>Takvimi Aç</span>
+            <span>→</span>
+          </Link>
+        </div>
+
         {/* Card 3: Hane Gider */}
-        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-6 shadow-xs hover:shadow-md hover:border-emerald-500/40 transition-all group">
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-emerald-500/40 transition-all group">
           <div>
             <div className="flex items-center justify-between gap-3 mb-4">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl group-hover:scale-110 transition-transform">
@@ -241,7 +281,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Card 4: Hane Fit */}
-        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-6 shadow-xs hover:shadow-md hover:border-teal-500/40 transition-all group">
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-teal-500/40 transition-all group">
           <div>
             <div className="flex items-center justify-between gap-3 mb-4">
               <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/10 text-2xl group-hover:scale-110 transition-transform">
@@ -274,7 +314,7 @@ export default function DashboardPage() {
 
           <div className="mt-6 grid grid-cols-2 gap-2">
             <Link
-              href="/fit"
+              href="/fit/dashboard"
               className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-2.5 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-teal-700 transition text-center"
             >
               Özet
@@ -286,6 +326,88 @@ export default function DashboardPage() {
               + Ölçüm
             </Link>
           </div>
+        </div>
+
+        {/* Card 5: Hane Wish List */}
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-rose-500/40 transition-all group">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-2xl group-hover:scale-110 transition-transform">
+                🎁
+              </span>
+              <span className="rounded-full bg-rose-500/10 px-2.5 py-1 text-xs font-bold text-rose-600 dark:text-rose-400">
+                {isLoaded ? `${wishlistStats.pendingCount} Bekleyen` : "..."}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Hane Wish List</h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted">
+              Ortak hane ve kişisel istek listeleri, ürün ve hediye takibi.
+            </p>
+
+            <div className="mt-5 space-y-2 rounded-2xl bg-surface-raised p-4 border border-border/50">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Toplam İstek:</span>
+                <span className="font-bold text-foreground">
+                  {isLoaded ? `${wishlistStats.totalCount} Ürün` : "..."}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Alınan / Biten:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  {isLoaded ? `${wishlistStats.completedCount} İstek` : "..."}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/wishlist"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition"
+          >
+            <span>İstek Listesini Aç</span>
+            <span>→</span>
+          </Link>
+        </div>
+
+        {/* Card 6: Hane Car */}
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-blue-500/40 transition-all group">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/10 text-2xl group-hover:scale-110 transition-transform">
+                🚗
+              </span>
+              <span className="rounded-full bg-blue-500/10 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400">
+                {isLoaded ? `${cardoStats.count} Masraf` : "..."}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Hane Car</h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted">
+              Araç bakım, yakıt, sigorta ve periyodik masrafların takibi.
+            </p>
+
+            <div className="mt-5 space-y-2 rounded-2xl bg-surface-raised p-4 border border-border/50">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Toplam Masraf:</span>
+                <span className="font-bold text-foreground">
+                  {isLoaded ? para(cardoStats.total) : "..."}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Ödenmeyi Bekleyen:</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">
+                  {isLoaded ? para(cardoStats.remaining) : "..."}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/cardolist"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
+          >
+            <span>Masrafları Yönet</span>
+            <span>→</span>
+          </Link>
         </div>
       </section>
 

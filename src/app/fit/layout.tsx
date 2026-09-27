@@ -46,11 +46,10 @@ export default function FitLayout({
   };
 
   const navTabs = [
-    { label: "👥 Profil Seç", href: "/fit" },
     { label: "Genel Bakış", href: "/fit/dashboard" },
     { label: "Ölçüm Geçmişi", href: "/fit/measurements" },
     { label: "Yeni Ölçüm", href: "/fit/measurements/new" },
-    { label: "Profiller", href: "/fit/profiles" },
+    { label: "Profiller & Ayarlar", href: "/fit/profiles" },
   ];
 
   const isSelectionScreen = pathname === "/fit" || pathname === "/fit/profiles/new";

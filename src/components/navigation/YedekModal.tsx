@@ -234,6 +234,22 @@ export function YedekModal({ isOpen, onClose }: YedekModalProps) {
                 </div>
 
                 <div className="rounded-2xl border border-border/70 bg-surface-raised/60 p-3 text-center">
+                  <span className="text-lg block">📅</span>
+                  <span className="text-xs font-bold text-foreground block mt-1">Hane Calendar</span>
+                  <span className="text-[11px] text-muted">
+                    {currentSummary?.calendarEtkinlikSayisi || 0} Etkinlik
+                  </span>
+                </div>
+
+                <div className="rounded-2xl border border-border/70 bg-surface-raised/60 p-3 text-center">
+                  <span className="text-lg block">🎁</span>
+                  <span className="text-xs font-bold text-foreground block mt-1">Hane Wish List</span>
+                  <span className="text-[11px] text-muted">
+                    {currentSummary?.wishlistSayisi || 0} İstek
+                  </span>
+                </div>
+
+                <div className="rounded-2xl border border-border/70 bg-surface-raised/60 p-3 text-center col-span-2">
                   <span className="text-lg block">📐</span>
                   <span className="text-xs font-bold text-foreground block mt-1">Hane Fit</span>
                   <span className="text-[11px] text-muted">
@@ -332,6 +348,8 @@ export function YedekModal({ isOpen, onClose }: YedekModalProps) {
                         <p>• 💰 <strong>{importPreview.ozet.giderAySayisi}</strong> ay ev gideri</p>
                         <p>• 🚗 <strong>{importPreview.ozet.carDoGiderSayisi}</strong> araç masrafı</p>
                         <p>• 🍽️ <strong>{importPreview.ozet.dinnerYemekSayisi}</strong> yemek ve <strong>{importPreview.ozet.dinnerPlanSayisi}</strong> plan</p>
+                        <p>• 📅 <strong>{importPreview.ozet.calendarEtkinlikSayisi || 0}</strong> takvim etkinliği</p>
+                        <p>• 🎁 <strong>{importPreview.ozet.wishlistSayisi || 0}</strong> istek / dilek kaydı</p>
                         <p>• 📐 <strong>{importPreview.ozet.fitProfilSayisi}</strong> fit profili ve <strong>{importPreview.ozet.fitOlcumSayisi}</strong> ölçüm</p>
                       </div>
                     </div>

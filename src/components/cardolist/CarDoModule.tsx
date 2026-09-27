@@ -137,6 +137,16 @@ export function CarDoModule() {
     [expenses]
   );
 
+  // Sort: Uncompleted items on top, completed items at the bottom
+  const sortedExpenses = useMemo(() => {
+    return [...expenses].sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      return b.id - a.id;
+    });
+  }, [expenses]);
+
   if (!isLoaded) {
     return <div className="h-64 animate-pulse rounded-2xl bg-surface-raised" />;
   }
@@ -207,7 +217,7 @@ export function CarDoModule() {
           </div>
         ) : (
           <div className={styles.expenseList}>
-            {expenses.map((expense) => (
+            {sortedExpenses.map((expense) => (
               <div
                 key={expense.id}
                 className={`${styles.expenseItem} ${
