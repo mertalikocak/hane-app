@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CalendarEvent,
   CALENDAR_CATEGORIES,
 } from "@/domain/calendarTypes";
 import { getCalendarEvents } from "@/storage/calendarStorage";
 import { CalendarEventModal } from "./CalendarEventModal";
+import { TodayEventBanner } from "./TodayEventBanner";
 import { useProfile } from "@/context/ProfileContext";
 
 type ViewMode = "month" | "week";
@@ -69,6 +71,27 @@ export function CalendarView() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }, []);
+
+  const searchParams = useSearchParams();
+  const isShortcut = searchParams.get("shortcut") === "today";
+
+  const todayEvents = useMemo(() => {
+    return events.filter((e) => {
+      if (e.date === todayStr) return true;
+      if (e.endDate && e.date <= todayStr && todayStr <= e.endDate) return true;
+      return false;
+    });
+  }, [events, todayStr]);
+
+  useEffect(() => {
+    if (isShortcut) {
+      setSelectedDate(todayStr);
+      const timer = setTimeout(() => {
+        document.getElementById("calendar-today-cell")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [isShortcut, todayStr]);
 
   // Month navigation
   const handlePrev = () => {
@@ -240,8 +263,20 @@ export function CalendarView() {
 
   return (
     <div className="space-y-6">
+      {/* Today's Events Hero Banner */}
+      <TodayEventBanner
+        todayEvents={todayEvents}
+        todayStr={todayStr}
+        onAddNew={(dateStr) => handleOpenCreate(dateStr)}
+        onEditEvent={(evt) => handleOpenEdit(evt)}
+        onScrollToCalendar={() => {
+          document.getElementById("calendar-main-view")?.scrollIntoView({ behavior: "smooth" });
+        }}
+        isShortcutOpen={isShortcut}
+      />
+
       {/* Top Header Controls */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface/90 border border-border/80 rounded-3xl p-4 sm:p-5 backdrop-blur-md shadow-xs">
+      <div id="calendar-main-view" className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface/90 border border-border/80 rounded-3xl p-4 sm:p-5 backdrop-blur-md shadow-xs">
         {/* Date & Month Navigation */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1 bg-surface-raised p-1 rounded-2xl border border-border/60">
@@ -395,6 +430,7 @@ export function CalendarView() {
               return (
                 <div
                   key={day.dateStr}
+                  id={day.isToday ? "calendar-today-cell" : undefined}
                   onClick={() => setSelectedDate(day.dateStr)}
                   className={`min-h-[100px] sm:min-h-[125px] p-1.5 sm:p-2 flex flex-col transition-colors cursor-pointer group ${
                     !day.isCurrentMonth

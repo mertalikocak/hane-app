@@ -2,7 +2,7 @@
 
 import { ShoppingItemCheckbox } from "@/components/dinner/ShoppingItemCheckbox";
 import type { LocalShoppingItem } from "@/lib/local-storage/store";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ShoppingBagIcon } from "@/components/ui/Icons";
 
 interface ShoppingListProps {
@@ -14,6 +14,12 @@ export function ShoppingList({ items, onToggle }: ShoppingListProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   const completedCount = items.filter((item) => item.isCompleted).length;
+
+  const sortedItems = useMemo(() => {
+    const uncompleted = items.filter((item) => !item.isCompleted);
+    const completed = items.filter((item) => item.isCompleted);
+    return [...uncompleted, ...completed];
+  }, [items]);
 
   async function copyShoppingList(): Promise<void> {
     const text = items
@@ -93,7 +99,7 @@ export function ShoppingList({ items, onToggle }: ShoppingListProps) {
         </div>
       ) : (
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item) => (
+          {sortedItems.map((item) => (
             <label
               key={item.key}
               className={`flex items-center gap-3 rounded-xl border p-3 transition-all cursor-pointer select-none ${

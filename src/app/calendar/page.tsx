@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
 import { CalendarView } from "@/components/calendar/CalendarView";
 
@@ -32,7 +33,9 @@ export default function CalendarPage() {
       </div>
 
       {/* Main Calendar Component */}
-      <CalendarView />
+      <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-surface-raised" />}>
+        <CalendarView />
+      </Suspense>
     </div>
   );
 }

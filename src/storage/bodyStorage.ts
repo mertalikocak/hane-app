@@ -103,15 +103,16 @@ export function deleteProfile(id: string): void {
 
 export function getActiveProfileId(): string {
   if (typeof window === "undefined") return "";
-  const stored = localStorage.getItem(STORAGE_KEYS.activeProfileId);
-  if (stored) return stored;
-
   const profiles = getProfiles();
-  if (profiles.length > 0) {
-    setActiveProfileId(profiles[0].id);
-    return profiles[0].id;
+  if (profiles.length === 0) return "";
+
+  const stored = localStorage.getItem(STORAGE_KEYS.activeProfileId);
+  if (stored && profiles.some((p) => p.id === stored)) {
+    return stored;
   }
-  return "";
+
+  setActiveProfileId(profiles[0].id);
+  return profiles[0].id;
 }
 
 export function setActiveProfileId(id: string): void {

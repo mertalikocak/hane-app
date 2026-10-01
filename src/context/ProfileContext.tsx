@@ -31,35 +31,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [modalView, setModalView] = useState<"select" | "create">("select");
-  const [isSessionTimedOut, setIsSessionTimedOut] = useState<boolean>(false);
-
-  const checkTimeout = useCallback(() => {
-    if (typeof window === "undefined") return;
-    const list = ProfileService.getAll();
-    if (list.length === 0) {
-      setModalView("create");
-      setIsModalOpen(true);
-      return;
-    }
-
-    const selectedAtStr = localStorage.getItem(PROFILE_SELECTED_AT_KEY);
-    if (!selectedAtStr) {
-      // Never selected or timestamp missing -> prompt selection
-      setIsSessionTimedOut(true);
-      setModalView("select");
-      setIsModalOpen(true);
-      return;
-    }
-
-    const selectedAt = Number(selectedAtStr);
-    const now = Date.now();
-    if (isNaN(selectedAt) || now - selectedAt > PROFILE_TIMEOUT_MS) {
-      // 1 hour elapsed -> timeout!
-      setIsSessionTimedOut(true);
-      setModalView("select");
-      setIsModalOpen(true);
-    }
-  }, []);
+  const [isSessionTimedOut] = useState<boolean>(false);
 
   const refreshProfiles = useCallback(() => {
     const list = ProfileService.getAll();
@@ -81,51 +53,26 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     const list = ProfileService.getAll();
     if (list.length === 0) {
+      // Henüz sistemde hiç profil yoksa oluşturma modalı aç
       setModalView("create");
       setIsModalOpen(true);
-    } else {
-      checkTimeout();
     }
-
-    // Periodic check every 30 seconds for 1-hour timeout
-    const timer = setInterval(() => {
-      checkTimeout();
-    }, 30000);
-
-    // Check when user switches back to the tab or app
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        checkTimeout();
-      }
-    };
-    const handleFocus = () => {
-      checkTimeout();
-    };
 
     const handleUpdate = () => refreshProfiles();
     window.addEventListener("storage", handleUpdate);
     window.addEventListener("fit_profiles_updated", handleUpdate);
     window.addEventListener("fit_profile_changed", handleUpdate);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
 
     return () => {
-      clearInterval(timer);
       window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("fit_profiles_updated", handleUpdate);
       window.removeEventListener("fit_profile_changed", handleUpdate);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
     };
-  }, [refreshProfiles, checkTimeout]);
+  }, [refreshProfiles]);
 
   const setActiveProfileId = useCallback((id: string) => {
     ProfileService.setActive(id);
     setActiveIdState(id);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(PROFILE_SELECTED_AT_KEY, Date.now().toString());
-    }
-    setIsSessionTimedOut(false);
     setIsModalOpen(false);
     refreshProfiles();
   }, [refreshProfiles]);
@@ -133,10 +80,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   const createProfile = useCallback((input: CreateProfileInput) => {
     const res = ProfileService.create(input);
     if (res.profile) {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(PROFILE_SELECTED_AT_KEY, Date.now().toString());
-      }
-      setIsSessionTimedOut(false);
       setIsModalOpen(false);
       refreshProfiles();
     }

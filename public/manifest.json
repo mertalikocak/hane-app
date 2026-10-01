@@ -27,5 +27,42 @@
       "sizes": "180x180",
       "type": "image/png"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Günün Yemeği",
+      "short_name": "Yemek",
+      "description": "Bugünün akşam yemeği menüsü ve malzemeleri",
+      "url": "/dinner?shortcut=today",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Günün Etkinliği",
+      "short_name": "Etkinlik",
+      "description": "Bugünkü randevular, planlar ve etkinlikler",
+      "url": "/calendar?shortcut=today",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Ev Giderleri",
+      "short_name": "Giderler",
+      "description": "Bu ayın hane ve kart masrafları",
+      "url": "/gider",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "CarDo List",
+      "short_name": "CarDo",
+      "description": "Araç masrafları ve yapılacaklar",
+      "url": "/cardolist",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Fit Ölçüm",
+      "short_name": "Ölçüm",
+      "description": "Yeni kilo ve vücut ölçümü kaydet",
+      "url": "/fit/measurements/new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

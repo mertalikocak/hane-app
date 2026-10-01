@@ -22,6 +22,7 @@ import {
   CalendarIcon,
   UtensilsIcon,
 } from "@/components/ui/Icons";
+import { TodayMealBanner } from "@/components/dinner/TodayMealBanner";
 
 const EMPTY_MEALS: LocalMeal[] = [];
 const EMPTY_PLANS: Record<string, LocalPlanEntry[]> = {};
@@ -64,6 +65,34 @@ function DinnerContent() {
     const daysSet = new Set(assignments.map((a) => a.dayOfWeek));
     return daysSet.size;
   }, [assignments]);
+
+  const isShortcut = searchParams.get("shortcut") === "today";
+
+  // Calculate today's DayOfWeek (1: Pazartesi ... 7: Pazar)
+  const todayDayOfWeek = useMemo<DayOfWeek>(() => {
+    const jsDay = new Date().getDay();
+    return (jsDay === 0 ? 7 : jsDay) as DayOfWeek;
+  }, []);
+
+  const todayAssignments = useMemo(() => {
+    if (!isCurrentWeek) return [];
+    return assignments.filter((a) => a.dayOfWeek === todayDayOfWeek);
+  }, [assignments, todayDayOfWeek, isCurrentWeek]);
+
+  const todayMeals = useMemo(() => {
+    return todayAssignments
+      .map((a) => meals.find((m) => m.id === a.mealId))
+      .filter((m): m is LocalMeal => Boolean(m));
+  }, [todayAssignments, meals]);
+
+  useEffect(() => {
+    if (isShortcut && mealsReady && plansReady) {
+      const timer = setTimeout(() => {
+        document.getElementById("day-card-today")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [isShortcut, mealsReady, plansReady]);
 
   useEffect(() => {
     const nextShopping = buildShoppingItems(ingredients, currentShopping);
@@ -195,6 +224,19 @@ function DinnerContent() {
           <ChevronRightIcon className="h-4 w-4" />
         </Link>
       </nav>
+
+      {/* Today's Meal Hero Banner */}
+      {isCurrentWeek && (
+        <TodayMealBanner
+          todayMeals={todayMeals}
+          todayDayOfWeek={todayDayOfWeek}
+          onFillToday={() => fillDay(todayDayOfWeek)}
+          onScrollToPlan={() => {
+            document.getElementById("day-card-today")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }}
+          isShortcutOpen={isShortcut}
+        />
+      )}
 
       {/* Main Weekly Plan Section */}
       <section className="space-y-4" aria-labelledby="weekly-plan-heading">

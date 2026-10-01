@@ -137,6 +137,7 @@ function DayCard({
 
   return (
     <article
+      id={isToday ? "day-card-today" : `day-card-${day}`}
       className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-200 ${
         isToday
           ? "border-primary/60 bg-surface shadow-md shadow-primary/5 ring-1 ring-primary/30"

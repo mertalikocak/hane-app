@@ -34,7 +34,16 @@ export interface IceAktarmaOnizleme {
   hamVeriler?: Record<string, string>;
 }
 
-export function tumHaneVerileriniTopla(): TumHaneYedekPaketi {
+/**
+ * Cihaza özel anahtarlar. Bu anahtarlar cihazlar arasında eşitlenmez;
+ * böylece telefonda ayrı, PC'de ayrı aktif profil seçili kalabilir.
+ */
+export const DEVICE_LOCAL_KEYS = new Set<string>([
+  "hane_fit_active_profile_id",
+  "hane_profile_selected_at",
+]);
+
+export function tumHaneVerileriniTopla(excludeDeviceLocalKeys = true): TumHaneYedekPaketi {
   const veriler: Record<string, string> = {};
   if (typeof window === "undefined" || !window.localStorage) {
     return {
@@ -57,6 +66,9 @@ export function tumHaneVerileriniTopla(): TumHaneYedekPaketi {
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
+    if (excludeDeviceLocalKeys && DEVICE_LOCAL_KEYS.has(key)) {
+      continue;
+    }
     const val = localStorage.getItem(key);
     if (val !== null) {
       veriler[key] = val;
@@ -183,7 +195,10 @@ export function yedekDosyasiniDogrula(girdi: unknown): IceAktarmaOnizleme {
   return { gecerli: true, ozet, hamVeriler: rawMap };
 }
 
-export function tumHaneVerileriniIceAktar(hamVeriler: Record<string, string>): {
+export function tumHaneVerileriniIceAktar(
+  hamVeriler: Record<string, string>,
+  preserveDeviceLocal = true
+): {
   basarili: boolean;
   eklenenSayisi: number;
   hata?: string;
@@ -193,7 +208,19 @@ export function tumHaneVerileriniIceAktar(hamVeriler: Record<string, string>): {
   }
 
   try {
+    const existingActiveProfileId = localStorage.getItem("hane_fit_active_profile_id");
+
     for (const [key, value] of Object.entries(hamVeriler)) {
+      if (preserveDeviceLocal && DEVICE_LOCAL_KEYS.has(key)) {
+        // Cihazda zaten aktif bir profil varsa, dışarıdan gelen profil ile ezme!
+        if (key === "hane_fit_active_profile_id" && existingActiveProfileId) {
+          continue;
+        }
+        // Oturum süresi / timestamp anahtarını ezme
+        if (key === "hane_profile_selected_at") {
+          continue;
+        }
+      }
       localStorage.setItem(key, value);
     }
 
