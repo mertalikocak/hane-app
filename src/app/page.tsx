@@ -198,6 +198,47 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Card: Hane Shopping */}
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-amber-500/40 transition-all group">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-2xl group-hover:scale-110 transition-transform">
+                🛒
+              </span>
+              <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                Haftalık Liste
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Hane Shopping</h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted">
+              Yemek menüsü malzemeleri ve haftalık market alışverişi listeleri.
+            </p>
+
+            <div className="mt-5 space-y-2 rounded-2xl bg-surface-raised p-4 border border-border/50">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Gıda Listesi:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  Hane Dinner ile Senkron
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Genel Alışveriş:</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">
+                  Haftalık & Aktarılabilir
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/shopping"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-amber-700 transition"
+          >
+            <span>Alışveriş Listesini Aç</span>
+            <span>→</span>
+          </Link>
+        </div>
+
         {/* Card 2: Hane Calendar */}
         <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-indigo-500/40 transition-all group">
           <div>

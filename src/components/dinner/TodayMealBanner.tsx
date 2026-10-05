@@ -11,6 +11,7 @@ interface TodayMealBannerProps {
   todayDayOfWeek: DayOfWeek;
   onFillToday: () => void;
   onScrollToPlan: () => void;
+  onOpenMealReminder?: () => void;
   isShortcutOpen?: boolean;
 }
 
@@ -19,6 +20,7 @@ export function TodayMealBanner({
   todayDayOfWeek,
   onFillToday,
   onScrollToPlan,
+  onOpenMealReminder,
   isShortcutOpen,
 }: TodayMealBannerProps) {
   const todayFormatted = new Intl.DateTimeFormat("tr-TR", {
@@ -48,10 +50,22 @@ export function TodayMealBanner({
             )}
           </div>
 
-          <span className="text-xs font-medium text-muted flex items-center gap-1">
-            <CalendarIcon className="h-3.5 w-3.5" />
-            {todayFormatted}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onOpenMealReminder}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border border-amber-500/30 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition cursor-pointer"
+              title="Akşam yemeği bildirimi saatini ayarla"
+            >
+              <span>🔔</span>
+              <span>Yemek Bildirimi</span>
+            </button>
+
+            <span className="text-xs font-medium text-muted flex items-center gap-1">
+              <CalendarIcon className="h-3.5 w-3.5" />
+              {todayFormatted}
+            </span>
+          </div>
         </div>
 
         {/* Content */}

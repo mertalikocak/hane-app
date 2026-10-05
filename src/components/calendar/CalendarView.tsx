@@ -9,6 +9,7 @@ import {
 import { getCalendarEvents } from "@/storage/calendarStorage";
 import { CalendarEventModal } from "./CalendarEventModal";
 import { TodayEventBanner } from "./TodayEventBanner";
+import { NotificationBellButton } from "@/components/notifications/NotificationBellButton";
 import { useProfile } from "@/context/ProfileContext";
 
 type ViewMode = "month" | "week";
@@ -337,6 +338,9 @@ export function CalendarView() {
               📆 Haftalık
             </button>
           </div>
+
+          {/* Notification Settings & Test */}
+          <NotificationBellButton />
 
           {/* New Event Button */}
           <button

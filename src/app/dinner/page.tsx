@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { WeekPlan } from "@/components/dinner/WeekPlan";
 import { ShoppingList } from "@/components/dinner/ShoppingList";
+import { MealReminderModal } from "@/components/dinner/MealReminderModal";
 import { useLocalStorage } from "@/lib/local-storage/hooks";
 import {
   STORAGE_KEYS,
@@ -40,6 +41,7 @@ function DinnerContent() {
   const weekStart = getValidWeekStart(searchParams.get("week") ?? undefined);
   const isCurrentWeek = weekStart === getCurrentWeekStart();
 
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [meals, , mealsReady] = useLocalStorage(STORAGE_KEYS.meals, EMPTY_MEALS);
   const [plans, setPlans, plansReady] = useLocalStorage(STORAGE_KEYS.plans, EMPTY_PLANS);
   const [shoppingByWeek, setShoppingByWeek, shoppingReady] = useLocalStorage(
@@ -234,6 +236,7 @@ function DinnerContent() {
           onScrollToPlan={() => {
             document.getElementById("day-card-today")?.scrollIntoView({ behavior: "smooth", block: "center" });
           }}
+          onOpenMealReminder={() => setIsReminderOpen(true)}
           isShortcutOpen={isShortcut}
         />
       )}
@@ -258,6 +261,16 @@ function DinnerContent() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setIsReminderOpen(true)}
+              className="secondary-button text-xs sm:text-sm flex items-center gap-1.5"
+              title="Akşam yemeği bildirimi saatini ayarla"
+            >
+              <span>🔔</span>
+              <span className="hidden sm:inline">Yemek Bildirimi</span>
+            </button>
+
             <button
               type="button"
               onClick={fillWeek}
@@ -295,6 +308,12 @@ function DinnerContent() {
       <div className="pt-2">
         <ShoppingList items={currentShopping} onToggle={toggleShoppingItem} />
       </div>
+
+      {/* Meal Reminder Modal */}
+      <MealReminderModal
+        isOpen={isReminderOpen}
+        onClose={() => setIsReminderOpen(false)}
+      />
     </div>
   );
 }

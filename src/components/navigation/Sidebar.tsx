@@ -7,6 +7,7 @@ import { useState } from "react";
 import { YedekModal } from "./YedekModal";
 import { CloudSyncIndicator } from "./CloudSyncIndicator";
 import { ProfileHeaderMenu } from "@/components/profile/ProfileHeaderMenu";
+import { NotificationBellButton } from "@/components/notifications/NotificationBellButton";
 
 interface NavItem {
   name: string;
@@ -33,6 +34,12 @@ const navItems: NavItem[] = [
       { name: "Haftalık Plan", href: "/dinner" },
       { name: "Yemek Kataloğu", href: "/dinner/meals" },
     ],
+  },
+  {
+    name: "Hane Shopping",
+    href: "/shopping",
+    icon: "🛒",
+    description: "Haftalık alışveriş & gıda listesi",
   },
   {
     name: "Hane Calendar",
@@ -102,6 +109,7 @@ export function Sidebar() {
           </Link>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            <NotificationBellButton />
             <ProfileHeaderMenu variant="mobile" />
 
             <CloudSyncIndicator variant="compact" />

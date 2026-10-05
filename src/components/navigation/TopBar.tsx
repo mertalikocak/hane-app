@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { CloudSyncIndicator } from "./CloudSyncIndicator";
 import { YedekModal } from "./YedekModal";
 import { ProfileHeaderMenu } from "@/components/profile/ProfileHeaderMenu";
+import { NotificationBellButton } from "@/components/notifications/NotificationBellButton";
 import { useProfile } from "@/context/ProfileContext";
 
 export function TopBar() {
@@ -29,6 +30,7 @@ export function TopBar() {
 
         {/* Right: Actions & Profile Switcher */}
         <div className="flex items-center gap-2.5">
+          <NotificationBellButton />
           <CloudSyncIndicator variant="compact" />
 
           {/* Backup Button */}

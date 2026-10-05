@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
+import { useCalendarNotificationScheduler } from "@/lib/notifications/useCalendarNotificationScheduler";
 
 export function ServiceWorkerRegister() {
+  useCalendarNotificationScheduler();
+
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       window.addEventListener("load", () => {
@@ -20,3 +23,4 @@ export function ServiceWorkerRegister() {
 
   return null;
 }
+
