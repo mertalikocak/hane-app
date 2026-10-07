@@ -8,6 +8,7 @@ import {
   showLocalNotification,
 } from "./notificationService";
 import { checkAndSendMealReminder } from "./mealNotificationService";
+import { checkAndSendCleaningReminder } from "./cleaningNotificationService";
 
 const STORAGE_KEY_NOTIFIED = "hane_sent_notification_keys";
 
@@ -97,6 +98,9 @@ export function useCalendarNotificationScheduler() {
 
         // Also check daily meal reminder
         await checkAndSendMealReminder();
+
+        // Also check daily cleaning reminder (12:00)
+        await checkAndSendCleaningReminder();
       } catch (err) {
         console.error("Bildirim kontrolü hatası:", err);
       } finally {

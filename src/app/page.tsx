@@ -9,6 +9,7 @@ import { ayToplamGirisGideri, ayToplamGelir } from "@/domain/ekstreHesapla";
 import { getProfiles, getActiveProfileId, getProfileStats } from "@/storage/bodyStorage";
 import { getCalendarEvents } from "@/storage/calendarStorage";
 import { getWishlistItems } from "@/storage/wishlistStorage";
+import { getCleaningStats, CLEANING_EVENT_NAME } from "@/storage/cleaningStorage";
 import { YedekModal } from "@/components/navigation/YedekModal";
 
 const para = (n: number) =>
@@ -30,6 +31,11 @@ export default function DashboardPage() {
     latestBodyFat?: number;
     totalMeasurements: number;
   }>({ profileName: "", totalMeasurements: 0 });
+  const [cleaningStats, setCleaningStats] = useState({
+    cleanedTodayCount: 0,
+    dueRoomsCount: 0,
+    freshRoomsCount: 0,
+  });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
 
@@ -95,6 +101,14 @@ export default function DashboardPage() {
         pendingCount: wishItems.length - completedCount,
         completedCount,
       });
+
+      // 7. Cleaning Stats
+      const cleanSt = getCleaningStats();
+      setCleaningStats({
+        cleanedTodayCount: cleanSt.cleanedTodayCount,
+        dueRoomsCount: cleanSt.dueRoomsCount,
+        freshRoomsCount: cleanSt.freshRoomsCount,
+      });
     } catch (e) {
       console.error("Dashboard loading error", e);
     } finally {
@@ -110,6 +124,7 @@ export default function DashboardPage() {
     window.addEventListener("fit_profiles_updated", handleProfileChange);
     window.addEventListener("calendar_events_updated", handleProfileChange);
     window.addEventListener("wishlist_items_updated", handleProfileChange);
+    window.addEventListener(CLEANING_EVENT_NAME, handleProfileChange);
     window.addEventListener("storage", handleProfileChange);
 
     return () => {
@@ -117,6 +132,7 @@ export default function DashboardPage() {
       window.removeEventListener("fit_profiles_updated", handleProfileChange);
       window.removeEventListener("calendar_events_updated", handleProfileChange);
       window.removeEventListener("wishlist_items_updated", handleProfileChange);
+      window.removeEventListener(CLEANING_EVENT_NAME, handleProfileChange);
       window.removeEventListener("storage", handleProfileChange);
     };
   }, []);
@@ -447,6 +463,47 @@ export default function DashboardPage() {
             className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition"
           >
             <span>Masrafları Yönet</span>
+            <span>→</span>
+          </Link>
+        </div>
+
+        {/* Card 7: Hane Cleaning */}
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-emerald-500/40 transition-all group">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-2xl group-hover:scale-110 transition-transform">
+                🧹
+              </span>
+              <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                {isLoaded ? `${cleaningStats.cleanedTodayCount} Bugün Temizlendi` : "..."}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Hane Cleaning</h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted">
+              Oda bazında süpürge, paspas ve robot süpürge temizlik kontrolü.
+            </p>
+
+            <div className="mt-5 space-y-2 rounded-2xl bg-surface-raised p-4 border border-border/50">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Tertemiz Odalar:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                  {isLoaded ? `${cleaningStats.freshRoomsCount} Oda` : "..."}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Temizlik Bekleyen:</span>
+                <span className="font-bold text-amber-600 dark:text-amber-400">
+                  {isLoaded ? `${cleaningStats.dueRoomsCount} Oda` : "..."}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/cleaning"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+          >
+            <span>Temizlik Kontrolü</span>
             <span>→</span>
           </Link>
         </div>

@@ -9,7 +9,15 @@ import {
   type NotificationPermissionState,
 } from "@/lib/notifications/notificationService";
 
-export function NotificationBellButton() {
+interface NotificationBellButtonProps {
+  variant?: "default" | "sidebar" | "compact";
+  showLabel?: boolean;
+}
+
+export function NotificationBellButton({
+  variant = "default",
+  showLabel = true,
+}: NotificationBellButtonProps) {
   const [supported, setSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermissionState>("default");
   const [isOpen, setIsOpen] = useState(false);
@@ -57,55 +65,120 @@ export function NotificationBellButton() {
   const isGranted = permission === "granted";
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
-          isGranted
-            ? "bg-primary/10 border-primary/25 text-primary hover:bg-primary/20"
-            : "bg-surface-raised border-border text-foreground hover:bg-border/40"
-        }`}
-        title="Bildirim Ayarları"
-      >
-        <span className="text-sm">🔔</span>
-        <span className="hidden sm:inline">
-          {isGranted ? "Bildirimler Açık" : "Bildirimleri Aç"}
-        </span>
-        {!isGranted && (
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+    <>
+      {/* Trigger Button Variants */}
+      {variant === "sidebar" ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-surface-raised/50 hover:bg-surface border border-border/60 text-foreground transition cursor-pointer shadow-xs group"
+          title="Bildirim Ayarları"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/10 text-primary text-xs font-bold">
+              🔔
+            </span>
+            <div className="flex flex-col text-left">
+              <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
+                Bildirim Ayarları
+              </span>
+              <span className="text-[10px] text-muted">
+                {isGranted ? "Hatırlatıcılar açık" : "İzin verilmedi"}
+              </span>
+            </div>
+          </div>
+          <span
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              isGranted
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+            }`}
+          >
+            {isGranted ? "Açık" : "Kapalı"}
           </span>
-        )}
-      </button>
+        </button>
+      ) : variant === "compact" ? (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className={`relative flex h-9 w-9 items-center justify-center rounded-xl border transition ${
+            isGranted
+              ? "bg-primary/10 border-primary/25 text-primary hover:bg-primary/20"
+              : "bg-surface-raised border-border text-foreground hover:bg-border/40"
+          }`}
+          title="Bildirim Ayarları"
+        >
+          <span className="text-sm">🔔</span>
+          {!isGranted && (
+            <span className="flex h-2 w-2 absolute top-1.5 right-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition border ${
+            isGranted
+              ? "bg-primary/10 border-primary/25 text-primary hover:bg-primary/20"
+              : "bg-surface-raised border-border text-foreground hover:bg-border/40"
+          }`}
+          title="Bildirim Ayarları"
+        >
+          <span className="text-sm">🔔</span>
+          {showLabel && (
+            <span className="hidden sm:inline">
+              {isGranted ? "Bildirimler Açık" : "Bildirimleri Aç"}
+            </span>
+          )}
+          {!isGranted && (
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+          )}
+        </button>
+      )}
 
+      {/* Screen-Centered Modal Dialog (Never slips off screen on mobile) */}
       {isOpen && (
-        <>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[1px]"
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-80 max-w-[90vw] z-50 rounded-2xl bg-surface border border-border shadow-xl p-4 text-foreground animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-border">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🔔</span>
-                <h4 className="font-bold text-sm">Android & Web Bildirimleri</h4>
+
+          {/* Centered Modal Card */}
+          <div className="relative w-full max-w-sm rounded-3xl bg-surface border border-border shadow-2xl p-5 text-foreground animate-in zoom-in-95 duration-150 z-10">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-border/80">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary text-base">
+                  🔔
+                </span>
+                <div>
+                  <h4 className="font-extrabold text-sm tracking-tight">Android & Web Bildirimleri</h4>
+                  <p className="text-[11px] text-muted">Takvim ve yemek hatırlatıcıları</p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="text-muted hover:text-foreground text-xs p-1"
+                className="flex h-7 w-7 items-center justify-center rounded-xl bg-surface-raised border border-border/80 text-muted hover:text-foreground text-xs cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="py-3 space-y-2.5 text-xs text-muted-foreground">
-              <div className="flex items-center justify-between p-2 rounded-xl bg-surface-raised border border-border/60">
-                <span className="font-medium text-foreground">İzin Durumu:</span>
+            {/* Body */}
+            <div className="py-4 space-y-3 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between p-2.5 rounded-2xl bg-surface-raised border border-border/60">
+                <span className="font-medium text-foreground text-xs">Cihaz İzin Durumu:</span>
                 <span
-                  className={`font-bold px-2 py-0.5 rounded-full text-[11px] ${
+                  className={`font-bold px-2.5 py-0.5 rounded-full text-[11px] ${
                     isGranted
                       ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                       : permission === "denied"
@@ -121,16 +194,21 @@ export function NotificationBellButton() {
                 </span>
               </div>
 
-              <p className="text-[11px] leading-relaxed text-muted">
-                Bildirimler açıkken takviminizdeki etkinliklere <strong>15 dakika kala</strong> ve <strong>etkinlik saatinde</strong> telefonunuzun bildirim çubuğunda hatırlatıcı gösterilir.
-              </p>
+              <div className="p-3 rounded-2xl bg-surface-raised/60 border border-border/40 space-y-1.5 text-[11px] leading-relaxed text-muted">
+                <div className="flex items-center gap-1.5 font-bold text-foreground">
+                  <span>ℹ️</span> Bildirimler ne zaman gelir?
+                </div>
+                <p>• Takvim etkinliklerinize <strong>15 dakika kala</strong> ve etkinlik vaktinde.</p>
+                <p>• Belirlediğiniz saatte o günün <strong>akşam yemeği menüsü</strong>.</p>
+                <p>• Saat <strong>12:00</strong>'de temizlik günü gelen odaların listesi.</p>
+              </div>
 
               {statusMessage && (
                 <div
-                  className={`p-2.5 rounded-xl text-xs font-medium border ${
+                  className={`p-3 rounded-2xl text-xs font-semibold border animate-in fade-in duration-150 ${
                     statusMessage.type === "success"
-                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
-                      : "bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400"
+                      ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400"
+                      : "bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400"
                   }`}
                 >
                   {statusMessage.text}
@@ -138,13 +216,14 @@ export function NotificationBellButton() {
               )}
             </div>
 
+            {/* Action Buttons */}
             <div className="pt-2 flex flex-col gap-2">
               {!isGranted ? (
                 <button
                   type="button"
                   disabled={loading}
                   onClick={handleRequestPermission}
-                  className="w-full py-2.5 px-3 rounded-xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 transition disabled:opacity-50 cursor-pointer shadow-xs"
+                  className="w-full py-2.5 px-3 rounded-2xl bg-primary text-primary-foreground font-bold text-xs hover:opacity-90 transition disabled:opacity-50 cursor-pointer shadow-xs"
                 >
                   {loading ? "İzin İsteniyor..." : "🔔 Bildirim İzni Ver"}
                 </button>
@@ -153,15 +232,16 @@ export function NotificationBellButton() {
                   type="button"
                   disabled={loading}
                   onClick={handleTestNotification}
-                  className="w-full py-2.5 px-3 rounded-xl bg-primary/10 border border-primary/25 text-primary font-bold text-xs hover:bg-primary/20 transition disabled:opacity-50 cursor-pointer"
+                  className="w-full py-2.5 px-3 rounded-2xl bg-primary/10 border border-primary/25 text-primary font-bold text-xs hover:bg-primary/20 transition disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  {loading ? "Gönderiliyor..." : "📲 Test Bildirimi Gönder"}
+                  <span>📲</span>
+                  <span>{loading ? "Gönderiliyor..." : "Test Bildirimi Gönder"}</span>
                 </button>
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
 }

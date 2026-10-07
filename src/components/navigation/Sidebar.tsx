@@ -72,6 +72,12 @@ const navItems: NavItem[] = [
     description: "Ortak & bireysel istek listesi",
   },
   {
+    name: "Hane Cleaning",
+    href: "/cleaning",
+    icon: "🧹",
+    description: "Ev temizlik & oda bakım takibi",
+  },
+  {
     name: "Hane Car",
     href: "/cardolist",
     icon: "🚗",
@@ -95,43 +101,27 @@ export function Sidebar() {
       <div className="lg:hidden sticky top-0 z-40 flex flex-col border-b border-border bg-surface/95 backdrop-blur-md">
         {/* iOS Status Bar & Dynamic Island Safe Area Spacer */}
         <div style={{ height: "env(safe-area-inset-top, 0px)" }} className="w-full shrink-0" />
-        <div className="flex h-16 items-center justify-between px-3 sm:px-4">
-          <Link href="/" className="flex items-center gap-2 font-bold text-base text-foreground truncate">
+        <div className="flex h-16 items-center justify-between px-4">
+          <Link href="/" className="flex items-center gap-2.5 font-bold text-base text-foreground truncate">
             <img
               src="/logo.png"
               alt="Hane App Logo"
-              className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 rounded-xl object-cover shadow-sm"
+              className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm"
             />
             <div className="flex flex-col min-w-0">
-              <span className="leading-none text-sm sm:text-base font-extrabold tracking-tight truncate">Hane App</span>
-              <span className="text-[10px] text-muted font-medium truncate">Ev & Yaşam</span>
+              <span className="leading-none text-base font-extrabold tracking-tight truncate">Hane App</span>
+              <span className="text-[11px] text-muted font-medium truncate">Ev & Yaşam</span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            <NotificationBellButton />
-            <ProfileHeaderMenu variant="mobile" />
-
-            <CloudSyncIndicator variant="compact" />
-
-            <button
-              type="button"
-              onClick={() => setIsBackupOpen(true)}
-              className="flex h-9 items-center gap-1 px-2.5 rounded-xl border border-border bg-surface-raised text-xs font-bold text-foreground shadow-xs cursor-pointer"
-              title="Veri Yedekle / İçe Aktar"
-            >
-              <span>🔄</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsOpen(!isOpen)}
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface-raised text-foreground"
-              aria-label="Menüyü aç/kapat"
-            >
-              {isOpen ? "✕" : "☰"}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-surface-raised text-foreground text-lg font-bold shadow-xs hover:bg-border/40 transition cursor-pointer"
+            aria-label="Menüyü aç/kapat"
+          >
+            {isOpen ? "✕" : "☰"}
+          </button>
         </div>
       </div>
 
@@ -183,8 +173,13 @@ export function Sidebar() {
           </button>
         </div>
 
+        {/* Mobile Profile Switcher inside Sidebar */}
+        <div className="px-4 pt-3 pb-1 lg:hidden">
+          <ProfileHeaderMenu variant="mobile" />
+        </div>
+
         {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5" aria-label="Ana Menü">
+        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5" aria-label="Ana Menü">
           <div className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-muted/80">
             Uygulamalar
           </div>
@@ -243,6 +238,9 @@ export function Sidebar() {
 
         {/* Footer info & Backup button in Sidebar */}
         <div className="border-t border-border/70 p-4 space-y-2.5">
+          {/* Notification Settings in Sidebar */}
+          <NotificationBellButton variant="sidebar" />
+
           {/* Cloud Sync Status Pill */}
           <CloudSyncIndicator variant="sidebar" />
 

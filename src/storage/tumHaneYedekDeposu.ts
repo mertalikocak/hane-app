@@ -14,6 +14,7 @@ export interface HaneModulOzet {
   dinnerPlanSayisi: number;
   calendarEtkinlikSayisi?: number;
   wishlistSayisi?: number;
+  cleaningKayitSayisi?: number;
   fitProfilSayisi: number;
   fitOlcumSayisi: number;
   toplamAnahtarSayisi: number;
@@ -93,6 +94,7 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
   let dinnerPlanSayisi = 0;
   let calendarEtkinlikSayisi = 0;
   let wishlistSayisi = 0;
+  let cleaningKayitSayisi = 0;
   let fitProfilSayisi = 0;
   let fitOlcumSayisi = 0;
 
@@ -115,6 +117,9 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
       } else if (key === "hane_wishlist_items") {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) wishlistSayisi += parsed.length;
+      } else if (key === "hane_cleaning_records") {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) cleaningKayitSayisi = (cleaningKayitSayisi || 0) + parsed.length;
       } else if (key === "hane_fit_profiles") {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) fitProfilSayisi += parsed.length;
@@ -134,6 +139,7 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
     dinnerPlanSayisi,
     calendarEtkinlikSayisi,
     wishlistSayisi,
+    cleaningKayitSayisi,
     fitProfilSayisi,
     fitOlcumSayisi,
     toplamAnahtarSayisi: Object.keys(veriler).length,
