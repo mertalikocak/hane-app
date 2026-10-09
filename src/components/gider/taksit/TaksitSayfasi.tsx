@@ -59,13 +59,6 @@ export function TaksitSayfasi() {
     );
   };
 
-  const toggleAllCollapse = () => {
-    if (collapsedKartIds.length === kartlar.length) {
-      setCollapsedKartIds([]);
-    } else {
-      setCollapsedKartIds(kartlar.map((k) => k.id));
-    }
-  };
 
   const projeksiyonRef = React.useRef<HTMLDivElement>(null);
 
@@ -571,26 +564,6 @@ export function TaksitSayfasi() {
             </span>
           </button>
 
-          {/* Akordiyon: Tüm Kartları Kapat / Aç */}
-          {kartlar.length > 0 && (
-            <button
-              type="button"
-              onClick={toggleAllCollapse}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-surface-raised border border-border/70 text-xs font-bold text-muted hover:text-foreground hover:border-primary/50 transition cursor-pointer shadow-xs"
-              title={
-                collapsedKartIds.length === kartlar.length
-                  ? "Tüm kartları aç"
-                  : "Tüm kartları daralt/kapat"
-              }
-            >
-              <span>{collapsedKartIds.length === kartlar.length ? "📂" : "📁"}</span>
-              <span>
-                {collapsedKartIds.length === kartlar.length
-                  ? "Kartları Aç"
-                  : "Kartları Kapat"}
-              </span>
-            </button>
-          )}
         </div>
 
         {/* Yeni Ekle Butonları */}
