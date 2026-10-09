@@ -21,6 +21,7 @@ import { TaksitKartGrubu } from "./TaksitKartGrubu";
 import { TaksitModal } from "./TaksitModal";
 import { KartModal } from "./KartModal";
 import { TaksitProjeksiyonu } from "./TaksitProjeksiyonu";
+import { TaksitAktarimModal } from "./TaksitAktarimModal";
 
 const paraFormat = (n: number) =>
   new Intl.NumberFormat("tr-TR", {
@@ -45,6 +46,26 @@ export function TaksitSayfasi() {
 
   const [isKartModalOpen, setIsKartModalOpen] = useState(false);
   const [editingKart, setEditingKart] = useState<TaksitKarti | null>(null);
+
+  const [isAktarimModalOpen, setIsAktarimModalOpen] = useState(false);
+  const [aktarimMesaj, setAktarimMesaj] = useState<string | null>(null);
+
+  // Akordiyon: Katlanmış (Gizlenmiş) Kart ID'leri
+  const [collapsedKartIds, setCollapsedKartIds] = useState<string[]>([]);
+
+  const toggleKartCollapse = (kartId: string) => {
+    setCollapsedKartIds((prev) =>
+      prev.includes(kartId) ? prev.filter((id) => id !== kartId) : [...prev, kartId]
+    );
+  };
+
+  const toggleAllCollapse = () => {
+    if (collapsedKartIds.length === kartlar.length) {
+      setCollapsedKartIds([]);
+    } else {
+      setCollapsedKartIds(kartlar.map((k) => k.id));
+    }
+  };
 
   const projeksiyonRef = React.useRef<HTMLDivElement>(null);
 
@@ -549,10 +570,41 @@ export function TaksitSayfasi() {
               ↓
             </span>
           </button>
+
+          {/* Akordiyon: Tüm Kartları Kapat / Aç */}
+          {kartlar.length > 0 && (
+            <button
+              type="button"
+              onClick={toggleAllCollapse}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-surface-raised border border-border/70 text-xs font-bold text-muted hover:text-foreground hover:border-primary/50 transition cursor-pointer shadow-xs"
+              title={
+                collapsedKartIds.length === kartlar.length
+                  ? "Tüm kartları aç"
+                  : "Tüm kartları daralt/kapat"
+              }
+            >
+              <span>{collapsedKartIds.length === kartlar.length ? "📂" : "📁"}</span>
+              <span>
+                {collapsedKartIds.length === kartlar.length
+                  ? "Kartları Aç"
+                  : "Kartları Kapat"}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Yeni Ekle Butonları */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsAktarimModalOpen(true)}
+            className="secondary-button h-10 px-3.5 text-xs font-bold border-primary/40 text-primary hover:bg-primary/10 transition"
+            title="Taksitleri Aylık Bütçe & Ev Giderleri sekmesine aktar"
+          >
+            <span>📥</span>
+            <span>Bütçeye Yansıt</span>
+          </button>
+
           <button
             type="button"
             onClick={handleOpenAddKart}
@@ -573,6 +625,23 @@ export function TaksitSayfasi() {
           </button>
         </div>
       </div>
+
+      {/* Aktarım Bildirimi */}
+      {aktarimMesaj && (
+        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <span>✅</span>
+            <span className="font-bold text-foreground">{aktarimMesaj}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAktarimMesaj(null)}
+            className="text-muted hover:text-foreground font-bold p-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Kart Grupları Listesi (Cards Grouped List) */}
       {kartlar.length === 0 ? (
@@ -613,6 +682,8 @@ export function TaksitSayfasi() {
                 onDeleteKart={handleDeleteKart}
                 onPayAllForKart={handlePayAllForKart}
                 onToggleAktif={handleToggleKartAktif}
+                isCollapsed={collapsedKartIds.includes(kart.id)}
+                onToggleCollapse={toggleKartCollapse}
               />
             );
           })}
@@ -640,6 +711,15 @@ export function TaksitSayfasi() {
         onClose={() => setIsKartModalOpen(false)}
         onSave={handleSaveKart}
         editingKart={editingKart}
+      />
+
+      {/* Taksit Aktarım Modalı */}
+      <TaksitAktarimModal
+        isOpen={isAktarimModalOpen}
+        onClose={() => setIsAktarimModalOpen(false)}
+        kartlar={kartlar}
+        taksitler={taksitler}
+        onSuccess={(msg) => setAktarimMesaj(msg)}
       />
     </div>
   );

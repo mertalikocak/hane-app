@@ -17,6 +17,8 @@ interface TaksitKartGrubuProps {
   onPayAllForKart: (kartId: string) => void;
   onToggleAktif?: (kartId: string, aktif: boolean) => void;
   isTopCard?: boolean;
+  isCollapsed?: boolean;
+  onToggleCollapse?: (kartId: string) => void;
 }
 
 const KART_RENK_TEMALARI: Record<KartRengi, { gradient: string; border: string; text: string; badge: string }> = {
@@ -98,7 +100,20 @@ export function TaksitKartGrubu({
   onPayAllForKart,
   onToggleAktif,
   isTopCard,
+  isCollapsed: propIsCollapsed,
+  onToggleCollapse,
 }: TaksitKartGrubuProps) {
+  const [internalCollapsed, setInternalCollapsed] = React.useState(false);
+  const isCollapsed = propIsCollapsed !== undefined ? propIsCollapsed : internalCollapsed;
+
+  const handleToggleCollapse = () => {
+    if (onToggleCollapse) {
+      onToggleCollapse(kart.id);
+    } else {
+      setInternalCollapsed(!internalCollapsed);
+    }
+  };
+
   const tema = KART_RENK_TEMALARI[kart.renk || "emerald"] || KART_RENK_TEMALARI.emerald;
   const isAktif = kart.aktif !== false;
   const sonOdemeDurum = hesaplaKartSonOdemeDurumu(kart);
@@ -308,6 +323,22 @@ export function TaksitKartGrubu({
               >
                 🗑️
               </button>
+
+              {/* Akordiyon Katla / Aç Butonu */}
+              <button
+                type="button"
+                onClick={handleToggleCollapse}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs transition cursor-pointer flex items-center justify-center font-bold"
+                title={isCollapsed ? "Taksit listesini aç" : "Taksit listesini daralt/kapat"}
+              >
+                <span
+                  className={`inline-block text-[10px] transition-transform duration-300 ${
+                    isCollapsed ? "rotate-180" : "rotate-0"
+                  }`}
+                >
+                  ▲
+                </span>
+              </button>
             </div>
           </div>
         </div>
@@ -360,8 +391,9 @@ export function TaksitKartGrubu({
         )}
       </div>
 
-      {/* Taksitler Listesi (Installment Items) */}
-      <div className="p-4 sm:p-5 space-y-3">
+      {/* Taksitler Listesi (Installment Items) - Akordiyon */}
+      {!isCollapsed ? (
+        <div className="p-4 sm:p-5 space-y-3 animate-in fade-in duration-200">
         {taksitler.length === 0 ? (
           <div className="p-6 text-center rounded-2xl border border-dashed border-border/80 bg-surface-raised/40 space-y-2">
             <span className="text-2xl block">🏷️</span>
@@ -547,6 +579,23 @@ export function TaksitKartGrubu({
           </div>
         )}
       </div>
+      ) : (
+        <div
+          onClick={handleToggleCollapse}
+          className="px-5 py-3.5 bg-surface hover:bg-surface-raised border-t border-border/70 text-xs text-muted font-bold flex items-center justify-between cursor-pointer transition select-none group"
+        >
+          <div className="flex items-center gap-2">
+            <span>🏷️</span>
+            <span>
+              {taksitler.length} taksit gizlendi ({aktifTaksitler.length} devam eden taksit)
+            </span>
+          </div>
+          <span className="text-primary group-hover:underline text-[11px] font-extrabold flex items-center gap-1">
+            <span>Taksitleri Göster</span>
+            <span className="text-xs">▼</span>
+          </span>
+        </div>
+      )}
     </div>
   );
 }
