@@ -7,6 +7,7 @@ import { addWeeks, getCurrentWeekStart, getValidWeekStart } from "@/lib/date/wee
 import { ChevronLeftIcon, ChevronRightIcon, CalendarIcon } from "@/components/ui/Icons";
 import { CustomShoppingList } from "@/components/shopping/CustomShoppingList";
 import { FoodShoppingSyncList } from "@/components/shopping/FoodShoppingSyncList";
+import { WhatsAppShareModal } from "@/components/shopping/WhatsAppShareModal";
 import { getWeekCustomShopping } from "@/storage/shoppingStorage";
 import { readStorage, STORAGE_KEYS, type LocalShoppingItem } from "@/lib/local-storage/store";
 
@@ -28,6 +29,7 @@ function ShoppingContent() {
   const [activeTab, setActiveTab] = useState<ShoppingTab>("custom");
   const [customItems, setCustomItems] = useState(() => getWeekCustomShopping(weekStart));
   const [foodItems, setFoodItems] = useState<LocalShoppingItem[]>([]);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
 
   const refreshCustomItems = () => {
     setCustomItems(getWeekCustomShopping(weekStart));
@@ -128,55 +130,55 @@ function ShoppingContent() {
 
         {/* Tab Switcher */}
         <div className="flex items-center p-1.5 rounded-2xl bg-surface-raised border border-border/70 shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveTab("custom")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-              activeTab === "custom"
-                ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <span>🛒</span>
-            <span>Alışveriş Listesi</span>
-            {customItems.length > 0 && (
-              <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  activeTab === "custom"
-                    ? "bg-white/20 text-white"
-                    : "bg-surface text-muted"
-                }`}
-              >
-                {customCompleted}/{customItems.length}
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("custom")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                activeTab === "custom"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <span>🛒</span>
+              <span>Alışveriş</span>
+              {customItems.length > 0 && (
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                    activeTab === "custom"
+                      ? "bg-white/20 text-white"
+                      : "bg-surface text-muted"
+                  }`}
+                >
+                  {customCompleted}/{customItems.length}
+                </span>
+              )}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab("food")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-              activeTab === "food"
-                ? "bg-primary text-primary-foreground shadow-xs"
-                : "text-muted hover:text-foreground"
-            }`}
-          >
-            <span>🍲</span>
-            <span>Gıda Listesi</span>
-            {foodItems.length > 0 && (
-              <span
-                className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                  activeTab === "food"
-                    ? "bg-white/20 text-white"
-                    : "bg-surface text-muted"
-                }`}
-              >
-                {foodCompleted}/{foodItems.length}
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("food")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                activeTab === "food"
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              <span>🍲</span>
+              <span>Gıda</span>
+              {foodItems.length > 0 && (
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                    activeTab === "food"
+                      ? "bg-white/20 text-white"
+                      : "bg-surface text-muted"
+                  }`}
+                >
+                  {foodCompleted}/{foodItems.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* Tab Contents */}
       {activeTab === "custom" ? (
@@ -184,10 +186,23 @@ function ShoppingContent() {
           weekStart={weekStart}
           items={customItems}
           onRefresh={refreshCustomItems}
+          onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
         />
       ) : (
-        <FoodShoppingSyncList weekStart={weekStart} />
+        <FoodShoppingSyncList
+          weekStart={weekStart}
+          onOpenWhatsApp={() => setIsWhatsAppOpen(true)}
+        />
       )}
+
+      {/* WhatsApp Share Modal */}
+      <WhatsAppShareModal
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
+        weekStart={weekStart}
+        customItems={customItems}
+        foodItems={foodItems}
+      />
     </div>
   );
 }

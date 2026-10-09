@@ -5,6 +5,7 @@ import { CloudSyncProvider } from "@/components/navigation/CloudSyncProvider";
 import { ServiceWorkerRegister } from "@/components/navigation/ServiceWorkerRegister";
 import { ProfileProvider } from "@/context/ProfileContext";
 import { GlobalProfileModal } from "@/components/profile/GlobalProfileModal";
+import { QuickActionLauncher } from "@/components/quick-action/QuickActionLauncher";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -68,6 +69,7 @@ export default function RootLayout({
               </main>
             </div>
             <GlobalProfileModal />
+            <QuickActionLauncher />
           </ProfileProvider>
         </CloudSyncProvider>
       </body>

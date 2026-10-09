@@ -10,17 +10,20 @@ import {
   clearWeekShopping,
 } from "@/storage/shoppingStorage";
 import { addWeeks } from "@/lib/date/week";
+import { WhatsAppIcon } from "@/components/ui/Icons";
 
 interface CustomShoppingListProps {
   weekStart: string;
   items: ShoppingCustomItem[];
   onRefresh: () => void;
+  onOpenWhatsApp?: () => void;
 }
 
 export function CustomShoppingList({
   weekStart,
   items,
   onRefresh,
+  onOpenWhatsApp,
 }: CustomShoppingListProps) {
   const [newTitle, setNewTitle] = useState("");
   const [newQuantity, setNewQuantity] = useState("");
@@ -190,6 +193,18 @@ export function CustomShoppingList({
             >
               <span>➡️</span>
               <span>Sonraki Haftaya Aktar ({uncompletedCount})</span>
+            </button>
+          )}
+
+          {items.length > 0 && onOpenWhatsApp && (
+            <button
+              type="button"
+              onClick={onOpenWhatsApp}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition cursor-pointer"
+              title="Listeyi WhatsApp ile paylaş"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5" />
+              <span>WhatsApp</span>
             </button>
           )}
 

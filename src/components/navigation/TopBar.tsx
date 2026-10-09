@@ -3,6 +3,8 @@
 import React from "react";
 import { ProfileHeaderMenu } from "@/components/profile/ProfileHeaderMenu";
 import { useProfile } from "@/context/ProfileContext";
+import { BoltIcon } from "@/components/ui/Icons";
+import { triggerQuickAction } from "@/components/quick-action/QuickActionLauncher";
 
 export function TopBar() {
   const { activeProfile, isLoaded } = useProfile();
@@ -23,8 +25,19 @@ export function TopBar() {
         </div>
       </div>
 
-      {/* Right: Profile Switcher */}
-      <div className="flex items-center gap-2.5">
+      {/* Right: Quick Action & Profile Switcher */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => triggerQuickAction("shopping")}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-primary/30 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs transition cursor-pointer shadow-xs active:scale-98"
+          title="Hızlı Eylem (Ctrl+K)"
+        >
+          <BoltIcon className="w-3.5 h-3.5" />
+          <span>Hızlı Ekle</span>
+          <span className="text-[10px] font-mono bg-primary/20 px-1.5 py-0.5 rounded-md">Ctrl+K</span>
+        </button>
+
         <ProfileHeaderMenu variant="desktop" />
       </div>
     </header>

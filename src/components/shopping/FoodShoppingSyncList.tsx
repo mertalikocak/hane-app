@@ -5,12 +5,14 @@ import type { LocalShoppingItem, LocalMeal, LocalPlanEntry } from "@/lib/local-s
 import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/local-storage/store";
 import { buildShoppingItems } from "@/services/local-shopping";
 import Link from "next/link";
+import { WhatsAppIcon } from "@/components/ui/Icons";
 
 interface FoodShoppingSyncListProps {
   weekStart: string;
+  onOpenWhatsApp?: () => void;
 }
 
-export function FoodShoppingSyncList({ weekStart }: FoodShoppingSyncListProps) {
+export function FoodShoppingSyncList({ weekStart, onOpenWhatsApp }: FoodShoppingSyncListProps) {
   const [isCopied, setIsCopied] = useState(false);
 
   // Read dinner data from storage
@@ -158,16 +160,30 @@ export function FoodShoppingSyncList({ weekStart }: FoodShoppingSyncListProps) {
           )}
         </div>
 
-        {currentShopping.length > 0 && (
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-surface-raised hover:bg-border/40 text-xs font-semibold text-foreground transition cursor-pointer"
-          >
-            <span>{isCopied ? "✓" : "📋"}</span>
-            <span>{isCopied ? "Kopyalandı!" : "Malzemeleri Kopyala"}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {currentShopping.length > 0 && onOpenWhatsApp && (
+            <button
+              type="button"
+              onClick={onOpenWhatsApp}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-bold transition cursor-pointer"
+              title="Malzemeleri WhatsApp ile paylaş"
+            >
+              <WhatsAppIcon className="w-3.5 h-3.5" />
+              <span>WhatsApp</span>
+            </button>
+          )}
+
+          {currentShopping.length > 0 && (
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-surface-raised hover:bg-border/40 text-xs font-semibold text-foreground transition cursor-pointer"
+            >
+              <span>{isCopied ? "✓" : "📋"}</span>
+              <span>{isCopied ? "Kopyalandı!" : "Malzemeleri Kopyala"}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Items List */}

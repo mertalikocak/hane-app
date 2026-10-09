@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taksitlerin Ev Giderlerine Aktarım Planı | Hane App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --surface: #131b2a;
+      --surface-raised: #1c273c;
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --primary: #f97316;
+      --primary-light: #fb923c;
+      --mert: #38bdf8;
+      --havsa: #ec4899;
+      --ortak: #a855f7;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 32px 20px 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .badge-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(249, 115, 22, 0.12);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      color: var(--primary-light);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Core Problem & Logic Alert */
+    .problem-banner {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(236, 72, 153, 0.08));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 36px;
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .problem-icon {
+      font-size: 28px;
+      flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .problem-content h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .problem-content p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .math-pill {
+      font-family: 'JetBrains Mono', monospace;
+      display: inline-block;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #38bdf8;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin: 2px 0;
+    }
+
+    /* Tabs / Option Switcher */
+    .options-nav {
+      display: flex;
+      gap: 10px;
+      background: var(--surface);
+      padding: 6px;
+      border-radius: 16px;
+      border: 1px solid var(--surface-border);
+      margin-bottom: 32px;
+    }
+
+    .option-btn {
+      flex: 1;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .option-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+    }
+
+    .tag-rec {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .option-btn.active .tag-rec {
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+
+    /* Simulation Panel */
+    .panel {
+      display: none;
+      animation: fadeIn 0.25s ease forwards;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 20px;
+      align-items: stretch;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 900px) {
+      .flow-grid {
+        grid-template-columns: 1fr;
+      }
+      .arrow-col {
+        transform: rotate(90deg);
+        padding: 10px 0;
+      }
+    }
+
+    .flow-col {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+
+    .col-title {
+      font-size: 14px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arrow-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--primary);
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .arrow-badge {
+      font-size: 11px;
+      background: var(--surface-raised);
+      border: 1px solid var(--surface-border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    /* Simulation Cards */
+    .sim-card {
+      background: var(--surface-raised);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .sim-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .sim-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      padding: 6px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+    }
+
+    .item-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .user-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .user-pill.mert { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .user-pill.havsa { background: rgba(236, 72, 153, 0.15); color: #ec4899; }
+    .user-pill.ortak { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+
+    .price {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+
+    /* Calculation Result Box */
+    .calc-box {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--surface-border);
+    }
+
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .calc-row.total {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 6px;
+      margin-bottom: 0;
+    }
+
+    /* Pros / Cons Comparison */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 700px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .pro-col h4, .con-col h4 {
+      font-size: 13.5px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pro-col h4 { color: #34d399; }
+    .con-col h4 { color: #f87171; }
+
+    .pro-list, .con-list {
+      list-style: none;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pro-list li::before {
+      content: '✓';
+      color: #34d399;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    .con-list li::before {
+      content: '✕';
+      color: #f87171;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    /* Modal / Action Preview */
+    .action-modal-preview {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 20px;
+      padding: 26px;
+      margin-top: 36px;
+    }
+
+    .action-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .action-header h3 {
+      font-size: 17px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sync-btn-demo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: white;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+      cursor: pointer;
+    }
+
+    .step-box {
+      background: var(--surface-raised);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .final-decision-box {
+      margin-top: 40px;
+      text-align: center;
+      padding: 30px;
+      background: linear-gradient(180deg, rgba(249, 115, 22, 0.06) 0%, transparent 100%);
+      border: 1px solid rgba(249, 115, 22, 0.2);
+      border-radius: 24px;
+    }
+
+    .final-decision-box h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .final-decision-box p {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 20px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="badge-top">⚡ Hane Gider Entegrasyon Mimarisi</div>
+    <h1>Taksitlerin Ev Giderlerine Aktarım Planı</h1>
+    <p class="subtitle">
+      Taksit sayfasındaki bireysel ve ortak taksitler, Ev Giderleri & Aylık Bütçe sekmesine nasıl aktarılmalı? 
+      Aşağıdaki 3 farklı yöntemin matematiksel işleyişini inceleyin.
+    </p>
+  </header>
+
+  <!-- Problem / Mantık Açıklaması -->
+  <div class="problem-banner">
+    <div class="problem-icon">📐</div>
+    <div class="problem-content">
+      <h3>Ev Giderleri Sekmesindeki Mevcut Bölüşüm Formülü</h3>
+      <p>
+        Ev Giderleri sayfasında her kart ekstresi için şu formül çalışır:<br>
+        <span class="math-pill">Ortak Kalan Tutar = Toplam Ekstre - (Mert Bireysel + Havsa Bireysel)</span><br>
+        <span class="math-pill">Mert Toplam Payı = Mert Bireysel + (Ortak Kalan / 2)</span> &bull; 
+        <span class="math-pill">Havsa Toplam Payı = Havsa Bireysel + (Ortak Kalan / 2)</span><br>
+        Taksitleri aktarırken bu formülün bozulmaması ve Mert & Havsa'nın borçlarının kuruşu kuruşuna doğru çıkması gerekir.
+      </p>
+    </div>
+  </div>
+
+  <!-- Yöntem Seçenekleri Sekmeleri -->
+  <div class="options-nav">
+    <button class="option-btn active" onclick="setOption(1)">
+      <span>💳 Seçenek 1: Kart Kart Birebir Aktarım</span>
+      <span class="tag-rec">Önerilen</span>
+    </button>
+    <button class="option-btn" onclick="setOption(2)">
+      <span>📦 Seçenek 2: Tek Kartta Toplu Taksit Özeti</span>
+    </button>
+    <button class="option-btn" onclick="setOption(3)">
+      <span>✂️ Seçenek 3: Bireyselleri Ayrı Harcamaya At</span>
+    </button>
+  </div>
+
+  <!-- ==================== SEÇENEK 1 ==================== -->
+  <div id="option-1" class="panel active">
+    <div class="flow-grid">
+      <!-- SOL: Taksit Sayfası Verisi -->
+      <div class="flow-col">
+        <div class="col-header">
+          <span class="col-title"><span>💳</span> Taksit Takibi Sayfası</span>
+          <span class="arrow-badge">Mevcut Veriler</span>
+        </div>
+
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <span>Garanti BBVA Bonus</span>
+            <span class="price">7.500 ₺</span>
+          </div>
+          <div class="item-row">
+            <span>Dyson V15 (2/6)</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">2.500 ₺</span>
+              <span class="user-pill mert">Mert</span>
+            </div>
+          </div>
+          <div class="item-row">
+            <span>Market & Mutfak (1/3)</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">5.000 ₺</span>
+              <span class="user-pill ortak">Ortak</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <span>Yapı Kredi World</span>
+            <span class="price">3.000 ₺</span>
+          </div>
+          <div class="item-row">
+            <span>Zara Kaban (1/2)</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">1.500 ₺</span>
+              <span class="user-pill havsa">Havsa</span>
+            </div>
+          </div>
+          <div class="item-row">
+            <span>Robot Süpürge (4/6)</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">1.500 ₺</span>
+              <span class="user-pill ortak">Ortak</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-box">
+          <div class="calc-row"><span>Mert Bireysel Taksitleri:</span><span class="price">2.500 ₺</span></div>
+          <div class="calc-row"><span>Havsa Bireysel Taksitleri:</span><span class="price">1.500 ₺</span></div>
+          <div class="calc-row"><span>Ortak Taksitler (%50 / %50):</span><span class="price">6.500 ₺ (3.250 + 3.250)</span></div>
+          <div class="calc-row total"><span>Mert Toplam Pay: <strong style="color:var(--mert)">5.750 ₺</strong></span><span>Havsa Toplam Pay: <strong style="color:var(--havsa)">4.750 ₺</strong></span></div>
+        </div>
+      </div>
+
+      <!-- ORTA: Aktarım Mantığı -->
+      <div class="arrow-col">
+        <span>➔</span>
+        <span class="arrow-badge">Tek Tıkla Aktar</span>
+      </div>
+
+      <!-- SAĞ: Ev Giderleri Sayfasına Yansıması -->
+      <div class="flow-col">
+        <div class="col-header">
+          <span class="col-title"><span>🏠</span> Ev Giderleri & Aylık Bütçe</span>
+          <span class="arrow-badge" style="background:rgba(16,185,129,0.15); color:#34d399;">Hedef Ekran</span>
+        </div>
+
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <span>Garanti BBVA Ekstresi</span>
+            <span class="price">7.500 ₺</span>
+          </div>
+          <div class="item-row">
+            <span>İçindeki Bireysel: Dyson V15</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">2.500 ₺</span>
+              <span class="user-pill mert">Mert</span>
+            </div>
+          </div>
+          <div class="item-row" style="color:var(--text-muted); font-size:11px;">
+            <span>Ortak Kalan Tutar (Otomatik 50/50):</span>
+            <span class="price">5.000 ₺</span>
+          </div>
+        </div>
+
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <span>Yapı Kredi World Ekstresi</span>
+            <span class="price">3.000 ₺</span>
+          </div>
+          <div class="item-row">
+            <span>İçindeki Bireysel: Zara Kaban</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">1.500 ₺</span>
+              <span class="user-pill havsa">Havsa</span>
+            </div>
+          </div>
+          <div class="item-row" style="color:var(--text-muted); font-size:11px;">
+            <span>Ortak Kalan Tutar (Otomatik 50/50):</span>
+            <span class="price">1.500 ₺</span>
+          </div>
+        </div>
+
+        <div class="calc-box">
+          <div class="calc-row"><span>Ev Toplam Ekstre Gideri:</span><span class="price">10.500 ₺</span></div>
+          <div class="calc-row"><span>Mert Ekstre Borcu:</span><span class="price" style="color:var(--mert)">5.750 ₺ (2.500 + 3.250)</span></div>
+          <div class="calc-row"><span>Havsa Ekstre Borcu:</span><span class="price" style="color:var(--havsa)">4.750 ₺ (1.500 + 3.250)</span></div>
+          <div class="calc-row total"><span style="color:#34d399;">✓ Kuruşu Kuruşuna %100 Uyumlu!</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Artılar Eksiler -->
+    <div class="comparison-grid">
+      <div class="pro-col">
+        <h4><span>👍</span> Seçenek 1 Avantajları</h4>
+        <ul class="pro-list">
+          <li><strong>Mükemmel Gerçekçilik:</strong> Bankadan gelen Garanti ekstre tutarı ile taksit sayfasındaki Garanti kart tutarı birbirini birebir doğrular.</li>
+          <li><strong>Ev Giderleri Motoruna %100 Uyumlu:</strong> Ev giderlerinde zaten "Kartın Toplam Ekstresi" ve "İçindeki Bireysel Harcamalar" yapısı var; taksitler doğrudan bu yapıya oturur.</li>
+          <li><strong>Esneklik:</strong> Ekstrenin üstüne ay içinde yapılan taksitsiz nakit/restoran harcamalarını da ekleyebilirsiniz.</li>
+        </ul>
+      </div>
+      <div class="con-col">
+        <h4><span>⚠️</span> Dikkat Edilmesi Gereken</h4>
+        <ul class="con-list">
+          <li>Eğer Ev Giderleri sayfasında zaten "Garanti BBVA" kartı açılmışsa, taksit tutarı mevcut kartın üzerine eklensin mi yoksa kartı güncellesin mi seçeneği sunulmalı.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SEÇENEK 2 ==================== -->
+  <div id="option-2" class="panel">
+    <div class="flow-grid">
+      <!-- SOL -->
+      <div class="flow-col">
+        <div class="col-header">
+          <span class="col-title"><span>💳</span> Taksit Takibi Sayfası</span>
+          <span class="arrow-badge">Tüm Kartlar & Taksitler</span>
+        </div>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+          Tüm kartlardaki bu ay ödenecek taksitler tek bir sepette toplanır:
+        </p>
+        <div class="sim-card">
+          <div class="item-row"><span>Mert Bireysel Taksitleri Toplamı:</span><span class="price">2.500 ₺</span></div>
+          <div class="item-row"><span>Havsa Bireysel Taksitleri Toplamı:</span><span class="price">1.500 ₺</span></div>
+          <div class="item-row"><span>Ortak Taksitler Toplamı:</span><span class="price">6.500 ₺</span></div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-row total"><span>Bu Ayki Genel Taksit Yükü:</span><span class="price">10.500 ₺</span></div>
+        </div>
+      </div>
+
+      <!-- ORTA -->
+      <div class="arrow-col">
+        <span>➔</span>
+        <span class="arrow-badge">Toplu Tek Kart</span>
+      </div>
+
+      <!-- SAĞ -->
+      <div class="flow-col">
+        <div class="col-header">
+          <span class="col-title"><span>🏠</span> Ev Giderleri & Aylık Bütçe</span>
+          <span class="arrow-badge">Tek Kart Ekstresi</span>
+        </div>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:14px;">
+          Ev giderleri sayfasına tek bir kart ekstresi eklenir:
+        </p>
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <span>📦 Kredi Kartı Taksitleri (Bu Ay)</span>
+            <span class="price">10.500 ₺</span>
+          </div>
+          <div class="item-row">
+            <span>İçindeki: Mert Bireysel Taksitleri</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">2.500 ₺</span>
+              <span class="user-pill mert">Mert</span>
+            </div>
+          </div>
+          <div class="item-row">
+            <span>İçindeki: Havsa Bireysel Taksitleri</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="price">1.500 ₺</span>
+              <span class="user-pill havsa">Havsa</span>
+            </div>
+          </div>
+          <div class="item-row" style="color:var(--text-muted); font-size:11px;">
+            <span>Kalan Ortak Taksit Payı (50/50):</span>
+            <span class="price">6.500 ₺</span>
+          </div>
+        </div>
+        <div class="calc-box">
+          <div class="calc-row total"><span>Mert Payı: <strong style="color:var(--mert)">5.750 ₺</strong></span><span>Havsa Payı: <strong style="color:var(--havsa)">4.750 ₺</strong></span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="pro-col">
+        <h4><span>👍</span> Seçenek 2 Avantajları</h4>
+        <ul class="pro-list">
+          <li><strong>Çok Basit ve Sade:</strong> Ev giderlerinde 4-5 farklı kart kalabalığı yaratmaz. Tek bir "Aylık Taksitler" satırı açar.</li>
+          <li><strong>Matematik Yine Kusursuz:</strong> Mert ve Havsa'nın borcu yine kuruşu kuruşuna 5.750 ₺ ve 4.750 ₺ çıkar.</li>
+        </ul>
+      </div>
+      <div class="con-col">
+        <h4><span>⚠️</span> Dezavantajları</h4>
+        <ul class="con-list">
+          <li>Garanti'ye ayrı, Yapı Kredi'ye ayrı kaç TL borç ödeneceğini Ev Giderleri sekmesinde göremezsiniz (Bunun için taksit sekmesine bakmak gerekir).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SEÇENEK 3 ==================== -->
+  <div id="option-3" class="panel">
+    <div class="flow-grid">
+      <!-- SOL -->
+      <div class="flow-col">
+        <div class="col-header">
+          <span class="col-title"><span>💳</span> Taksit Takibi Sayfası</span>
+          <span class="arrow-badge">Kategorik Ayrım</span>
+        </div>
+        <div class="sim-card">
+          <div class="item-row"><span>Ortak Taksitler:</span><span class="price">6.500 ₺</span></div>
+          <div class="item-row"><span>Mert Bireysel Taksitleri:</span><span class="price">2.500 ₺</span></div>
+          <div class="item-row"><span>Havsa Bireysel Taksitleri:</span><span class="price">1.500 ₺</span></div>
+        </div>
+      </div>
+
+      <!-- ORTA -->
+      <div class="arrow-col">
+        <span>➔</span>
+        <span class="arrow-badge">İki Ayrı Tablo</span>
+      </div>
+
+      <!-- SAĞ -->
+      <div class="flow-col">
+        <div class="col-header">
+          <span class="col-title"><span>🏠</span> Ev Giderleri & Aylık Bütçe</span>
+          <span class="arrow-badge">İki Farklı Bölüme Dağıtım</span>
+        </div>
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <span>Kart Ekstresi: Ortak Taksitler</span>
+            <span class="price">6.500 ₺</span>
+          </div>
+          <p style="font-size:11px; color:var(--text-muted);">Kart ekstresi olarak girilir, 3.250 ₺ / 3.250 ₺ bölünür.</p>
+        </div>
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <span>Ortak Kayıt Dışı Bireysel Harcamalar</span>
+          </div>
+          <div class="item-row">
+            <span>Mert Bireysel Taksitleri:</span>
+            <span class="price" style="color:var(--mert)">2.500 ₺</span>
+          </div>
+          <div class="item-row">
+            <span>Havsa Bireysel Taksitleri:</span>
+            <span class="price" style="color:var(--havsa)">1.500 ₺</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="comparison-grid">
+      <div class="pro-col">
+        <h4><span>👍</span> Seçenek 3 Avantajları</h4>
+        <ul class="pro-list">
+          <li>Ortak kart ekstrelerinde sadece gerçekten eve ait ortak şeyler görünür, bireyseller en alttaki kişisel harcamalar listesine gider.</li>
+        </ul>
+      </div>
+      <div class="con-col">
+        <h4><span>⚠️</span> Dezavantajları</h4>
+        <ul class="con-list">
+          <li>Bireysel taksitler karttan çekildiği halde "Ekstre Dışı Harcama" gibi görünür, kafa karıştırabilir.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kullanıcı Etkileşimi (Nasıl Bir Buton Olacak?) -->
+  <div class="action-modal-preview">
+    <div class="action-header">
+      <h3><span>⚡</span> Taksit Sayfasına Eklenecek Buton & Çalışma Akışı</h3>
+      <button class="sync-btn-demo">
+        <span>📥</span> Bu Ayki Ev Giderlerine Yansıt
+      </button>
+    </div>
+
+    <div class="step-box">
+      <div class="step-num">1</div>
+      <div>
+        <strong>Ay Seçimi Onayı:</strong> 
+        Butona basıldığında mini bir modal açılır: <em>"Hangi ayın gider tablosuna aktarılsın?"</em> (Varsayılan: Şu anki ay, örn: Ekim 2026).
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-num">2</div>
+      <div>
+        <strong>Önizleme & Tutar Özeti:</strong> 
+        Aktarılacak kartlar, Mert ve Havsa'nın ekstrelerine eklenecek tutarlar şeffaf biçimde listelenir:
+        <span style="display:block; margin-top:4px; color:var(--primary-light);">
+          &bull; Garanti BBVA Bonus: 7.500 ₺ (Mert Bireysel: 2.500 ₺, Ortak: 5.000 ₺)<br>
+          &bull; Yapı Kredi World: 3.000 ₺ (Havsa Bireysel: 1.500 ₺, Ortak: 1.500 ₺)
+        </span>
+      </div>
+    </div>
+
+    <div class="step-box">
+      <div class="step-num">3</div>
+      <div>
+        <strong>Akıllı Güncelleme / Birleştirme:</strong> 
+        Eğer o ayın bütçesinde zaten bir "Garanti BBVA" ekstresi varsa: 
+        <em>"Mevcut kartın üzerine taksitleri ekle"</em> veya <em>"Yeni taksit satırları olarak ekle"</em> seçenekleri sunulur. Böylece mükerrer kayıt oluşmaz.
+      </div>
+    </div>
+  </div>
+
+  <!-- Karar Kutusu -->
+  <div class="final-decision-box">
+    <h3>Karar & Tavsiye</h3>
+    <p>
+      Bizim önerimiz <strong>Seçenek 1 (Kart Kart Birebir Aktarım)</strong>'dır. Çünkü kredi kartı ekstresi geldiğinde banka ekstrenizle Hane App'teki kart ekstresi kuruşu kuruşuna birbirini tutar ve Mert/Havsa borçları tam oturur.
+    </p>
+    <p style="font-weight:700; color:var(--text);">
+      Bu seçeneklerden hangisi senin kullanım alışkanlığına daha uygun?
+    </p>
+  </div>
+</div>
+
+<script>
+  function setOption(num) {
+    document.querySelectorAll('.option-btn').forEach((btn, idx) => {
+      btn.classList.toggle('active', idx === (num - 1));
+    });
+    document.querySelectorAll('.panel').forEach((panel, idx) => {
+      panel.classList.toggle('active', idx === (num - 1));
+    });
+  }
+</script>
+</body>
+</html>
