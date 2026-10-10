@@ -3,6 +3,7 @@ import type {
   BireyselAyriHarcama,
   BireyselEkstreKalemi,
   BireyselGelirKalemi,
+  HaneTransferi,
   KrediKartiEkstresi,
   KullaniciId,
 } from './haneGiderTypes'
@@ -126,17 +127,26 @@ export interface MahsuplasmaSonucu {
   havsaOdedi: number
   mertPayinaDusen: number
   havsaPayinaDusen: number
+  hamTransferTutari: number
+  hamBorcluKisi: 'mert' | 'havsa' | 'esit'
   borcluKisi: 'mert' | 'havsa' | 'esit'
   alacakliKisi: 'mert' | 'havsa' | 'esit'
   transferTutari: number
+  toplamTransferEdilen: number
+  toplamHavsaToMert: number
+  toplamMertToHavsa: number
   durumMetni: string
+  tamamlandiMi: boolean
 }
 
 /**
- * Ay sonunda kimin kartından/cebinden ne kadar çıktığını ve payına düşenle farkını
- * hesaplayarak net mahsuplaşma (kim kime ne kadar gönderecek) sonucunu döner.
+ * Ay sonunda kimin kartından/cebinden ne kadar çıktığını, payına düşenle farkını ve
+ * yapılan transferleri hesaplayarak güncel net mahsuplaşma sonucunu döner.
  */
-export function ayMahsuplasmaHesapla(kartlar: KrediKartiEkstresi[]): MahsuplasmaSonucu {
+export function ayMahsuplasmaHesapla(
+  kartlar: KrediKartiEkstresi[],
+  transferler: HaneTransferi[] = []
+): MahsuplasmaSonucu {
   const dahilKartlar = toplumaDahilKartlar(kartlar)
 
   let mertOdedi = 0
@@ -165,46 +175,94 @@ export function ayMahsuplasmaHesapla(kartlar: KrediKartiEkstresi[]): Mahsuplasma
   }
 
   const mertNet = mertOdedi - mertPayinaDusen
-  const transferTutari = Math.round(Math.abs(mertNet) * 100) / 100
+  const hamTransferTutari = Math.round(Math.abs(mertNet) * 100) / 100
+  const hamBorcluKisi: 'mert' | 'havsa' | 'esit' =
+    hamTransferTutari < 0.5 ? 'esit' : (mertNet > 0 ? 'havsa' : 'mert')
+
+  // Yapılan transferlerin hesaplanması:
+  // Havsa Mert'e transfer yaparsa Havsa'nın borcu azalır (Mert'in net alacağı -tutar).
+  // Mert Havsa'ya transfer yaparsa Mert'in borcu azalır (Mert'in net alacağı +tutar).
+  let toplamHavsaToMert = 0
+  let toplamMertToHavsa = 0
+
+  for (const t of transferler) {
+    const tutar = Math.max(0, t.tutar)
+    if (t.gonderen === 'havsa' && t.alan === 'mert') {
+      toplamHavsaToMert += tutar
+    } else if (t.gonderen === 'mert' && t.alan === 'havsa') {
+      toplamMertToHavsa += tutar
+    }
+  }
+
+  const toplamTransferEdilen = toplamHavsaToMert + toplamMertToHavsa
+  const kalanMertNet = mertNet - toplamHavsaToMert + toplamMertToHavsa
+  const kalanTransferTutari = Math.round(Math.abs(kalanMertNet) * 100) / 100
 
   const paraStr = (val: number) =>
     new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
 
-  if (transferTutari < 0.5) {
+  // Durum değerlendirmesi
+  if (kalanTransferTutari < 0.5) {
+    const durumMetni =
+      hamTransferTutari >= 0.5 && toplamTransferEdilen >= 0.5
+        ? `Hesaplar Tam Kapandı! 🎉 (${paraStr(toplamTransferEdilen)} ödendi)`
+        : 'Hesaplar tam dengede! Kimsenin birbirine borcu bulunmuyor.'
+
     return {
       mertOdedi,
       havsaOdedi,
       mertPayinaDusen,
       havsaPayinaDusen,
+      hamTransferTutari,
+      hamBorcluKisi,
       borcluKisi: 'esit',
       alacakliKisi: 'esit',
       transferTutari: 0,
-      durumMetni: 'Hesaplar tam dengede! Kimsenin birbirine borcu bulunmuyor.',
+      toplamTransferEdilen,
+      toplamHavsaToMert,
+      toplamMertToHavsa,
+      durumMetni,
+      tamamlandiMi: true,
     }
   }
 
-  if (mertNet > 0) {
+  if (kalanMertNet > 0) {
+    const ekNot = toplamTransferEdilen > 0 ? ` (${paraStr(toplamTransferEdilen)} ödendi)` : ''
     return {
       mertOdedi,
       havsaOdedi,
       mertPayinaDusen,
       havsaPayinaDusen,
+      hamTransferTutari,
+      hamBorcluKisi,
       borcluKisi: 'havsa',
       alacakliKisi: 'mert',
-      transferTutari,
-      durumMetni: `Havsa ➔ Mert'e ${paraStr(transferTutari)} gönderecek`,
+      transferTutari: kalanTransferTutari,
+      toplamTransferEdilen,
+      toplamHavsaToMert,
+      toplamMertToHavsa,
+      durumMetni: `Havsa ➔ Mert'e ${paraStr(kalanTransferTutari)} gönderecek${ekNot}`,
+      tamamlandiMi: false,
     }
   } else {
+    const ekNot = toplamTransferEdilen > 0 ? ` (${paraStr(toplamTransferEdilen)} ödendi)` : ''
     return {
       mertOdedi,
       havsaOdedi,
       mertPayinaDusen,
       havsaPayinaDusen,
+      hamTransferTutari,
+      hamBorcluKisi,
       borcluKisi: 'mert',
       alacakliKisi: 'havsa',
-      transferTutari,
-      durumMetni: `Mert ➔ Havsa'ya ${paraStr(transferTutari)} gönderecek`,
+      transferTutari: kalanTransferTutari,
+      toplamTransferEdilen,
+      toplamHavsaToMert,
+      toplamMertToHavsa,
+      durumMetni: `Mert ➔ Havsa'ya ${paraStr(kalanTransferTutari)} gönderecek${ekNot}`,
+      tamamlandiMi: false,
     }
   }
 }
+
 

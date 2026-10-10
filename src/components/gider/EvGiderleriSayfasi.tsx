@@ -6,6 +6,7 @@ import type {
   BireyselEkstreKalemi,
   BireyselAyriHarcama,
   BireyselGelirKalemi,
+  HaneTransferi,
   KrediKartiEkstresi,
   KullaniciId,
 } from "@/domain/haneGiderTypes";
@@ -114,6 +115,14 @@ export function EvGiderleriSayfasi() {
   const [toastMesaj, setToastMesaj] = useState<string | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 💸 Para Transferi Modal State
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [transferGonderen, setTransferGonderen] = useState<KullaniciId>("havsa");
+  const [transferAlan, setTransferAlan] = useState<KullaniciId>("mert");
+  const [transferTutarStr, setTransferTutarStr] = useState("");
+  const [transferTarih, setTransferTarih] = useState("");
+  const [transferAciklama, setTransferAciklama] = useState("");
+
   const iceAktarInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (mesaj: string) => {
@@ -180,10 +189,10 @@ export function EvGiderleriSayfasi() {
     [veri.krediKartlari]
   );
 
-  // 🤝 Net Mahsuplaşma (Takas) Hesaplaması
+  // 🤝 Net Mahsuplaşma (Takas) Hesaplaması (Transferler dahil)
   const mahsuplasma = useMemo(
-    () => ayMahsuplasmaHesapla(veri.krediKartlari),
-    [veri.krediKartlari]
+    () => ayMahsuplasmaHesapla(veri.krediKartlari, veri.transferler ?? []),
+    [veri.krediKartlari, veri.transferler]
   );
 
   // Kart Eylemleri
@@ -405,11 +414,68 @@ export function EvGiderleriSayfasi() {
     if (!window.confirm("Bu ayın tüm kayıtları silinecektir. Emin misiniz?")) {
       return;
     }
-    setVeri({ krediKartlari: [], bireyselAyriHarcamalar: [], bireyselGelirKalemleri: [] });
+    setVeri({ krediKartlari: [], bireyselAyriHarcamalar: [], bireyselGelirKalemleri: [], transferler: [] });
     setAyriBireyselBolgeAcik(false);
     setAyriGelirBolgeAcik(false);
     showToast("Bu ayın tüm verileri sıfırlandı.");
   }
+
+  // Para Transferi Eylemleri
+  const handleOpenTransferModal = () => {
+    if (mahsuplasma.borcluKisi === "havsa") {
+      setTransferGonderen("havsa");
+      setTransferAlan("mert");
+      setTransferTutarStr(tutarMetniInputIcin(mahsuplasma.transferTutari));
+    } else if (mahsuplasma.borcluKisi === "mert") {
+      setTransferGonderen("mert");
+      setTransferAlan("havsa");
+      setTransferTutarStr(tutarMetniInputIcin(mahsuplasma.transferTutari));
+    } else {
+      setTransferGonderen("havsa");
+      setTransferAlan("mert");
+      setTransferTutarStr("");
+    }
+    setTransferTarih(new Date().toISOString().split("T")[0]);
+    setTransferAciklama("Ay sonu mahsuplaşma ödemesi");
+    setIsTransferModalOpen(true);
+  };
+
+  const handleTransferKaydet = (e: React.FormEvent) => {
+    e.preventDefault();
+    const tutar = Number(transferTutarStr.replace(",", "."));
+    if (!Number.isFinite(tutar) || tutar <= 0) {
+      showToast("Lütfen geçerli bir tutar girin.");
+      return;
+    }
+    if (transferGonderen === transferAlan) {
+      showToast("Gönderen ile alıcı aynı kişi olamaz.");
+      return;
+    }
+
+    const yeni: HaneTransferi = {
+      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "tr-" + Date.now(),
+      gonderen: transferGonderen,
+      alan: transferAlan,
+      tutar,
+      tarih: transferTarih || undefined,
+      aciklama: transferAciklama.trim() || undefined,
+    };
+
+    setVeri((v) => ({
+      ...v,
+      transferler: [...(v.transferler ?? []), yeni],
+    }));
+    setIsTransferModalOpen(false);
+    showToast("💸 Para transferi kaydedildi ve mahsuplaşma tutarından düşüldü!");
+  };
+
+  const handleTransferSil = (id: string) => {
+    setVeri((v) => ({
+      ...v,
+      transferler: (v.transferler ?? []).filter((t) => t.id !== id),
+    }));
+    showToast("Transfer kaydı silindi.");
+  };
 
   async function disaAktar() {
     const sonuc = await yedekDosyasiDisaAktar();
@@ -777,14 +843,87 @@ export function EvGiderleriSayfasi() {
             💡 Kartların bankaya kim tarafından ödendiğini aşağıdaki kart başlıklarındaki{" "}
             <strong>[👤 Mert / 👤 Havsa]</strong> seçicisiyle belirleyebilirsiniz.
           </span>
-          <button
-            type="button"
-            onClick={kopyalaIbanVeyaHesap}
-            className="secondary-button py-1.5 px-3 text-xs font-bold text-foreground cursor-pointer"
-          >
-            📋 Özeti Kopyala
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleOpenTransferModal}
+              className="primary-button py-1.5 px-3 text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+            >
+              <span>💸</span> Para Transferi Yap
+            </button>
+            <button
+              type="button"
+              onClick={kopyalaIbanVeyaHesap}
+              className="secondary-button py-1.5 px-3 text-xs font-bold text-foreground cursor-pointer"
+            >
+              📋 Özeti Kopyala
+            </button>
+          </div>
         </div>
+
+        {/* 💸 Yapılan Transferler Listesi */}
+        {(veri.transferler ?? []).length > 0 && (
+          <div className="mt-4 pt-3.5 border-t border-purple-500/20 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-extrabold text-foreground flex items-center gap-1.5">
+                <span>💸</span> Yapılan Transferler ({veri.transferler!.length})
+              </span>
+              <span className="font-bold text-emerald-400 text-[11px]">
+                Toplam Aktarılan: {para(mahsuplasma.toplamTransferEdilen)}
+              </span>
+            </div>
+            <div className="space-y-1.5">
+              {veri.transferler!.map((tr) => (
+                <div
+                  key={tr.id}
+                  className="flex items-center justify-between gap-3 p-2.5 rounded-2xl bg-surface/80 border border-border/70 text-xs backdrop-blur-xs"
+                >
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`font-black text-[10px] px-2 py-0.5 rounded-full ${
+                        tr.gonderen === "mert"
+                          ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                          : "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                      }`}
+                    >
+                      {KULLANICI_ETIKET[tr.gonderen]}
+                    </span>
+                    <span className="text-muted text-[11px]">➔</span>
+                    <span
+                      className={`font-black text-[10px] px-2 py-0.5 rounded-full ${
+                        tr.alan === "mert"
+                          ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                          : "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                      }`}
+                    >
+                      {KULLANICI_ETIKET[tr.alan]}
+                    </span>
+                    <span className="font-black text-emerald-400 font-mono">
+                      {para(tr.tutar)}
+                    </span>
+                    {tr.tarih && (
+                      <span className="text-[10px] text-muted">({tr.tarih})</span>
+                    )}
+                    {tr.aciklama && (
+                      <span className="text-[11px] text-muted italic">
+                        "{tr.aciklama}"
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleTransferSil(tr.id)}
+                    className="p-1 text-muted hover:text-rose-400 cursor-pointer font-bold transition"
+                    title="Transferi sil"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Uyarı: Aşım Durumu */}
@@ -1092,6 +1231,24 @@ export function EvGiderleriSayfasi() {
           </div>
         )}
       </div>
+
+      {/* 💸 Para Transferi Modalı */}
+      <ParaTransferiModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        gonderen={transferGonderen}
+        alan={transferAlan}
+        tutarStr={transferTutarStr}
+        tarih={transferTarih}
+        aciklama={transferAciklama}
+        onGonderenChange={setTransferGonderen}
+        onAlanChange={setTransferAlan}
+        onTutarChange={setTransferTutarStr}
+        onTarihChange={setTransferTarih}
+        onAciklamaChange={setTransferAciklama}
+        onSubmit={handleTransferKaydet}
+        onerilenTutar={mahsuplasma.transferTutari}
+      />
     </div>
   );
 }
@@ -1405,3 +1562,170 @@ function ModernKartPaneli({
     </div>
   );
 }
+
+// ------------------------------------------------------------------
+// PARA TRANSFERİ MODAL BİLEŞENİ
+// ------------------------------------------------------------------
+
+function ParaTransferiModal({
+  isOpen,
+  onClose,
+  gonderen,
+  alan,
+  tutarStr,
+  tarih,
+  aciklama,
+  onGonderenChange,
+  onAlanChange,
+  onTutarChange,
+  onTarihChange,
+  onAciklamaChange,
+  onSubmit,
+  onerilenTutar,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  gonderen: KullaniciId;
+  alan: KullaniciId;
+  tutarStr: string;
+  tarih: string;
+  aciklama: string;
+  onGonderenChange: (val: KullaniciId) => void;
+  onAlanChange: (val: KullaniciId) => void;
+  onTutarChange: (val: string) => void;
+  onTarihChange: (val: string) => void;
+  onAciklamaChange: (val: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onerilenTutar?: number;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+      <div className="w-full max-w-md rounded-3xl bg-surface border border-border/80 shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150">
+        <div className="flex items-center justify-between pb-3 border-b border-border/60">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">💸</span>
+            <h3 className="text-base font-black text-foreground">Para Transferi Kaydet</h3>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer font-bold"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p className="text-xs text-muted">
+          İki kişi arasındaki para transferini kaydedin; mahsuplaşma kartındaki alacak/borç tutarı otomatik olarak düşecektir.
+        </p>
+
+        <form onSubmit={onSubmit} className="space-y-3.5">
+          {/* Gönderen ve Alan */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-bold text-muted uppercase block mb-1">
+                Gönderen (Ödeyen)
+              </label>
+              <select
+                value={gonderen}
+                onChange={(e) => onGonderenChange(e.target.value as KullaniciId)}
+                className="w-full h-10 rounded-xl bg-surface-raised border border-border px-3 text-xs font-bold text-foreground"
+              >
+                <option value="havsa">Havsa</option>
+                <option value="mert">Mert</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-muted uppercase block mb-1">
+                Alan (Tahsil Eden)
+              </label>
+              <select
+                value={alan}
+                onChange={(e) => onAlanChange(e.target.value as KullaniciId)}
+                className="w-full h-10 rounded-xl bg-surface-raised border border-border px-3 text-xs font-bold text-foreground"
+              >
+                <option value="mert">Mert</option>
+                <option value="havsa">Havsa</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tutar */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-bold text-muted uppercase">
+                Transfer Tutarı (₺)
+              </label>
+              {onerilenTutar !== undefined && onerilenTutar > 0 && (
+                <button
+                  type="button"
+                  onClick={() => onTutarChange(tutarMetniInputIcin(onerilenTutar))}
+                  className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
+                >
+                  Kalanın Tamamı: {para(onerilenTutar)}
+                </button>
+              )}
+            </div>
+            <input
+              type="text"
+              inputMode="decimal"
+              required
+              value={tutarStr}
+              onChange={(e) => onTutarChange(e.target.value)}
+              placeholder="0.00"
+              className="w-full h-10 rounded-xl bg-surface-raised border border-border px-3 text-sm font-extrabold text-foreground font-mono focus:border-primary/50 transition"
+            />
+          </div>
+
+          {/* Tarih */}
+          <div>
+            <label className="text-[11px] font-bold text-muted uppercase block mb-1">
+              Transfer Tarihi
+            </label>
+            <input
+              type="date"
+              value={tarih}
+              onChange={(e) => onTarihChange(e.target.value)}
+              className="w-full h-10 rounded-xl bg-surface-raised border border-border px-3 text-xs font-semibold text-foreground"
+            />
+          </div>
+
+          {/* Açıklama */}
+          <div>
+            <label className="text-[11px] font-bold text-muted uppercase block mb-1">
+              Açıklama (Opsiyonel)
+            </label>
+            <input
+              type="text"
+              value={aciklama}
+              onChange={(e) => onAciklamaChange(e.target.value)}
+              placeholder="Örn. Ekim ayı mahsuplaşma ödemesi"
+              className="w-full h-10 rounded-xl bg-surface-raised border border-border px-3 text-xs font-semibold text-foreground"
+            />
+          </div>
+
+          {/* Butonlar */}
+          <div className="pt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="secondary-button h-10 px-4 text-xs font-bold cursor-pointer"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="submit"
+              className="primary-button h-10 px-5 text-xs font-bold shadow-xs cursor-pointer"
+            >
+              <span>💸</span> Transferi Kaydet
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+

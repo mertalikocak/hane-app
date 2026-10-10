@@ -41,9 +41,21 @@ export interface KrediKartiEkstresi {
   odenenKisi?: 'mert' | 'havsa' | 'ortak'
 }
 
+/** İki kullanıcı arasındaki doğrudan para transferi (mahsuplaşmayı düşüren/kapatan ödeme) */
+export interface HaneTransferi {
+  id: string
+  gonderen: KullaniciId
+  alan: KullaniciId
+  tutar: number
+  tarih?: string
+  aciklama?: string
+}
+
 /** Tek bir ay için saklanan ortak kayıtlar ve ayrı bireysel harcamalar */
 export interface AyHaneGiderVerisi {
   krediKartlari: KrediKartiEkstresi[]
   bireyselAyriHarcamalar: BireyselAyriHarcama[]
   bireyselGelirKalemleri: BireyselGelirKalemi[]
+  transferler?: HaneTransferi[]
 }
+
