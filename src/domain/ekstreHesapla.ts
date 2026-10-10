@@ -120,3 +120,91 @@ export function ayToplamGirisGideri(veri: AyHaneGiderVerisi): number {
   const ayriTop = veri.bireyselAyriHarcamalar.reduce((s, h) => s + Math.max(0, h.tutar), 0)
   return kartTop + ayriTop
 }
+
+export interface MahsuplasmaSonucu {
+  mertOdedi: number
+  havsaOdedi: number
+  mertPayinaDusen: number
+  havsaPayinaDusen: number
+  borcluKisi: 'mert' | 'havsa' | 'esit'
+  alacakliKisi: 'mert' | 'havsa' | 'esit'
+  transferTutari: number
+  durumMetni: string
+}
+
+/**
+ * Ay sonunda kimin kartından/cebinden ne kadar çıktığını ve payına düşenle farkını
+ * hesaplayarak net mahsuplaşma (kim kime ne kadar gönderecek) sonucunu döner.
+ */
+export function ayMahsuplasmaHesapla(kartlar: KrediKartiEkstresi[]): MahsuplasmaSonucu {
+  const dahilKartlar = toplumaDahilKartlar(kartlar)
+
+  let mertOdedi = 0
+  let havsaOdedi = 0
+  let mertPayinaDusen = 0
+  let havsaPayinaDusen = 0
+
+  for (const kart of dahilKartlar) {
+    const h = tekKartHesabi(kart)
+    mertPayinaDusen += h.mertToplam
+    havsaPayinaDusen += h.havsaToplam
+
+    const odeyen = kart.odenenKisi ?? (
+      kart.ad.toLowerCase().includes('havsa')
+        ? 'havsa'
+        : kart.ad.toLowerCase().includes('mert')
+        ? 'mert'
+        : 'mert'
+    )
+
+    if (odeyen === 'mert') {
+      mertOdedi += h.toplam
+    } else if (odeyen === 'havsa') {
+      havsaOdedi += h.toplam
+    }
+  }
+
+  const mertNet = mertOdedi - mertPayinaDusen
+  const transferTutari = Math.round(Math.abs(mertNet) * 100) / 100
+
+  const paraStr = (val: number) =>
+    new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(val)
+
+  if (transferTutari < 0.5) {
+    return {
+      mertOdedi,
+      havsaOdedi,
+      mertPayinaDusen,
+      havsaPayinaDusen,
+      borcluKisi: 'esit',
+      alacakliKisi: 'esit',
+      transferTutari: 0,
+      durumMetni: 'Hesaplar tam dengede! Kimsenin birbirine borcu bulunmuyor.',
+    }
+  }
+
+  if (mertNet > 0) {
+    return {
+      mertOdedi,
+      havsaOdedi,
+      mertPayinaDusen,
+      havsaPayinaDusen,
+      borcluKisi: 'havsa',
+      alacakliKisi: 'mert',
+      transferTutari,
+      durumMetni: `Havsa ➔ Mert'e ${paraStr(transferTutari)} gönderecek`,
+    }
+  } else {
+    return {
+      mertOdedi,
+      havsaOdedi,
+      mertPayinaDusen,
+      havsaPayinaDusen,
+      borcluKisi: 'mert',
+      alacakliKisi: 'havsa',
+      transferTutari,
+      durumMetni: `Mert ➔ Havsa'ya ${paraStr(transferTutari)} gönderecek`,
+    }
+  }
+}
+

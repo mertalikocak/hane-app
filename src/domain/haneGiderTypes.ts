@@ -37,6 +37,8 @@ export interface KrediKartiEkstresi {
    * (yalnızca bu kartın kendi ekranında görünür)
    */
   tumGiderToplamlarindaHaric?: boolean
+  /** Ekstreyi bankaya kimin ödediği (Mahsuplaşma hesabı için: 'mert' | 'havsa' | 'ortak') */
+  odenenKisi?: 'mert' | 'havsa' | 'ortak'
 }
 
 /** Tek bir ay için saklanan ortak kayıtlar ve ayrı bireysel harcamalar */

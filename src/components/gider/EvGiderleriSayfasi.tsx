@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type {
   AyHaneGiderVerisi,
   BireyselEkstreKalemi,
@@ -8,223 +8,231 @@ import type {
   BireyselGelirKalemi,
   KrediKartiEkstresi,
   KullaniciId,
-} from '@/domain/haneGiderTypes'
+} from "@/domain/haneGiderTypes";
 import {
   ayGenelToplamlar,
+  ayMahsuplasmaHesapla,
   ayToplamGelir,
   ayToplamGirisGideri,
   bireyselAyriHarcamaToplamlar,
   bireyselGelirToplamlar,
   tekKartHesabi,
   toplumaDahilKartlar,
-} from '@/domain/ekstreHesapla'
+} from "@/domain/ekstreHesapla";
 import {
   ayAnahtariOlustur,
   ayAnahtariParcala,
   ayVerisiOku,
   ayVerisiYaz,
-} from '@/storage/ayDeposu'
+} from "@/storage/ayDeposu";
 import {
   yedekDosyasiDisaAktar,
   yedekDosyasiOnizle,
   yedekDosyasiniIceAktar,
-} from '@/storage/yedekDeposu'
-import './EvGiderleriSayfasi.css'
+} from "@/storage/yedekDeposu";
 
 const AYLAR = [
-  'Ocak',
-  'Şubat',
-  'Mart',
-  'Nisan',
-  'Mayıs',
-  'Haziran',
-  'Temmuz',
-  'Ağustos',
-  'Eylül',
-  'Ekim',
-  'Kasım',
-  'Aralık',
-] as const
+  "Ocak",
+  "Şubat",
+  "Mart",
+  "Nisan",
+  "Mayıs",
+  "Haziran",
+  "Temmuz",
+  "Ağustos",
+  "Eylül",
+  "Ekim",
+  "Kasım",
+  "Aralık",
+] as const;
 
 const KULLANICI_ETIKET: Record<KullaniciId, string> = {
-  mert: 'Mert',
-  havsa: 'Havsa',
-}
+  mert: "Mert",
+  havsa: "Havsa",
+};
 
 const para = (n: number) =>
-  new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
+  new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
     maximumFractionDigits: 2,
-  }).format(n)
+  }).format(n);
 
-/** Form alanında göstermek için ondalık ayırıcılı tutar metni (gruplama yok) */
+/** Form alanında göstermek için ondalık ayırıcılı tutar metni */
 function tutarMetniInputIcin(tutar: number): string {
-  return new Intl.NumberFormat('tr-TR', {
+  return new Intl.NumberFormat("tr-TR", {
     maximumFractionDigits: 2,
     useGrouping: false,
-  }).format(tutar)
+  }).format(tutar);
 }
 
 function simdikiAyAnahtari(): string {
-  const d = new Date()
-  return ayAnahtariOlustur(d.getFullYear(), d.getMonth())
+  const d = new Date();
+  return ayAnahtariOlustur(d.getFullYear(), d.getMonth());
 }
 
 function ayEtiketi(anahtar: string): string {
-  const { yil, ay } = ayAnahtariParcala(anahtar)
-  return `${AYLAR[ay] ?? '—'} ${yil}`
+  const { yil, ay } = ayAnahtariParcala(anahtar);
+  return `${AYLAR[ay] ?? "—"} ${yil}`;
 }
 
 function ayKaydir(anahtar: string, delta: number): string {
-  const { yil, ay } = ayAnahtariParcala(anahtar)
-  const d = new Date(yil, ay + delta, 1)
-  return ayAnahtariOlustur(d.getFullYear(), d.getMonth())
+  const { yil, ay } = ayAnahtariParcala(anahtar);
+  const d = new Date(yil, ay + delta, 1);
+  return ayAnahtariOlustur(d.getFullYear(), d.getMonth());
 }
 
 function yeniKart(): KrediKartiEkstresi {
   return {
-    id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'kart-' + Date.now(),
-    ad: 'Yeni kayıt',
+    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "kart-" + Date.now(),
+    ad: "Yeni Harcama / Kart",
     toplamEkstre: 0,
     bireyselKalemler: [],
-  }
+    odenenKisi: "mert",
+  };
 }
 
 export function EvGiderleriSayfasi() {
-  const [anahtar, setAnahtar] = useState(simdikiAyAnahtari)
-  const [veri, setVeri] = useState<AyHaneGiderVerisi>(() => ayVerisiOku(simdikiAyAnahtari()))
-  const [ayriBireyselAciklama, setAyriBireyselAciklama] = useState('')
-  const [ayriBireyselTutarStr, setAyriBireyselTutarStr] = useState('')
-  const [ayriBireyselKisi, setAyriBireyselKisi] = useState<KullaniciId>('mert')
-  const [ayriBireyselBolgeAcik, setAyriBireyselBolgeAcik] = useState(false)
-  const oncekiAyriBireyselSayisi = useRef(0)
+  const [anahtar, setAnahtar] = useState(simdikiAyAnahtari);
+  const [veri, setVeri] = useState<AyHaneGiderVerisi>(() => ayVerisiOku(simdikiAyAnahtari()));
 
-  const [ayriGelirAciklama, setAyriGelirAciklama] = useState('')
-  const [ayriGelirTutarStr, setAyriGelirTutarStr] = useState('')
-  const [ayriGelirKisi, setAyriGelirKisi] = useState<KullaniciId>('mert')
-  const [ayriGelirBolgeAcik, setAyriGelirBolgeAcik] = useState(false)
-  const oncekiAyriGelirSayisi = useRef(0)
+  // Ayrı Bireysel Harcama Form State
+  const [ayriBireyselAciklama, setAyriBireyselAciklama] = useState("");
+  const [ayriBireyselTutarStr, setAyriBireyselTutarStr] = useState("");
+  const [ayriBireyselKisi, setAyriBireyselKisi] = useState<KullaniciId>("mert");
+  const [ayriBireyselBolgeAcik, setAyriBireyselBolgeAcik] = useState(false);
+  const [duzenlenenAyriHarcamaId, setDuzenlenenAyriHarcamaId] = useState<string | null>(null);
 
-  const [duzenlenenAyriHarcamaId, setDuzenlenenAyriHarcamaId] = useState<string | null>(null)
-  const [duzenlenenGelirId, setDuzenlenenGelirId] = useState<string | null>(null)
-  const iceAktarInputRef = useRef<HTMLInputElement>(null)
+  // Ayrı Gelir Form State
+  const [ayriGelirAciklama, setAyriGelirAciklama] = useState("");
+  const [ayriGelirTutarStr, setAyriGelirTutarStr] = useState("");
+  const [ayriGelirKisi, setAyriGelirKisi] = useState<KullaniciId>("mert");
+  const [ayriGelirBolgeAcik, setAyriGelirBolgeAcik] = useState(false);
+  const [duzenlenenGelirId, setDuzenlenenGelirId] = useState<string | null>(null);
+
+  // Bildirim Toast State
+  const [toastMesaj, setToastMesaj] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const iceAktarInputRef = useRef<HTMLInputElement>(null);
+
+  const showToast = (mesaj: string) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastMesaj(mesaj);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMesaj(null);
+    }, 3500);
+  };
 
   useEffect(() => {
-    const yeniAy = ayVerisiOku(anahtar)
-    setVeri(yeniAy)
-    setAyriBireyselBolgeAcik(false)
-    setAyriGelirBolgeAcik(false)
-    setDuzenlenenAyriHarcamaId(null)
-    setDuzenlenenGelirId(null)
-    oncekiAyriBireyselSayisi.current = yeniAy.bireyselAyriHarcamalar.length
-    oncekiAyriGelirSayisi.current = yeniAy.bireyselGelirKalemleri.length
-  }, [anahtar])
+    const yeniAy = ayVerisiOku(anahtar);
+    setVeri(yeniAy);
+    setAyriBireyselBolgeAcik(false);
+    setAyriGelirBolgeAcik(false);
+    setDuzenlenenAyriHarcamaId(null);
+    setDuzenlenenGelirId(null);
+  }, [anahtar]);
 
   useEffect(() => {
-    ayVerisiYaz(anahtar, veri)
-  }, [anahtar, veri])
+    ayVerisiYaz(anahtar, veri);
+  }, [anahtar, veri]);
 
-  const genel = useMemo(() => ayGenelToplamlar(veri.krediKartlari), [veri.krediKartlari])
+  // Dinamik Hesaplamalar
+  const genel = useMemo(() => ayGenelToplamlar(veri.krediKartlari), [veri.krediKartlari]);
 
   const ayriBireyselToplam = useMemo(
     () => bireyselAyriHarcamaToplamlar(veri.bireyselAyriHarcamalar),
-    [veri.bireyselAyriHarcamalar],
-  )
+    [veri.bireyselAyriHarcamalar]
+  );
 
   const ayriGelirToplam = useMemo(
     () => bireyselGelirToplamlar(veri.bireyselGelirKalemleri),
-    [veri.bireyselGelirKalemleri],
-  )
+    [veri.bireyselGelirKalemleri]
+  );
 
-  const mertGider = genel.mert + ayriBireyselToplam.mert
-  const havsaGider = genel.havsa + ayriBireyselToplam.havsa
-  const mertGelir = ayriGelirToplam.mert
-  const havsaGelir = ayriGelirToplam.havsa
-  const mertKalan = mertGelir - mertGider
-  const havsaKalan = havsaGelir - havsaGider
+  const mertGider = genel.mert + ayriBireyselToplam.mert;
+  const havsaGider = genel.havsa + ayriBireyselToplam.havsa;
+  const mertGelir = ayriGelirToplam.mert;
+  const havsaGelir = ayriGelirToplam.havsa;
+  const mertKalan = mertGelir - mertGider;
+  const havsaKalan = havsaGelir - havsaGider;
 
-  const evGideriToplami = useMemo(() => ayToplamGirisGideri(veri), [veri])
-  const evGelirToplami = useMemo(() => ayToplamGelir(veri), [veri])
-  const evKalan = evGelirToplami - evGideriToplami
+  const evGideriToplami = useMemo(() => ayToplamGirisGideri(veri), [veri]);
+  const evGelirToplami = useMemo(() => ayToplamGelir(veri), [veri]);
+  const evKalan = evGelirToplami - evGideriToplami;
 
   const kayitToplamlari = useMemo(
     () =>
-      toplumaDahilKartlar(veri.krediKartlari).reduce((s, k) => s + Math.max(0, k.toplamEkstre), 0),
-    [veri.krediKartlari],
-  )
+      toplumaDahilKartlar(veri.krediKartlari).reduce(
+        (s, k) => s + Math.max(0, k.toplamEkstre),
+        0
+      ),
+    [veri.krediKartlari]
+  );
 
   const ayriBireyselHarcamalarToplami = useMemo(
     () => veri.bireyselAyriHarcamalar.reduce((s, h) => s + Math.max(0, h.tutar), 0),
-    [veri.bireyselAyriHarcamalar],
-  )
-
-  useEffect(() => {
-    const len = veri.bireyselAyriHarcamalar.length
-    if (oncekiAyriBireyselSayisi.current > 0 && len === 0) {
-      setAyriBireyselBolgeAcik(false)
-    }
-    oncekiAyriBireyselSayisi.current = len
-  }, [veri.bireyselAyriHarcamalar.length])
-
-  useEffect(() => {
-    const len = veri.bireyselGelirKalemleri.length
-    if (oncekiAyriGelirSayisi.current > 0 && len === 0) {
-      setAyriGelirBolgeAcik(false)
-    }
-    oncekiAyriGelirSayisi.current = len
-  }, [veri.bireyselGelirKalemleri.length])
+    [veri.bireyselAyriHarcamalar]
+  );
 
   const herhangiAsim = useMemo(
     () => toplumaDahilKartlar(veri.krediKartlari).some((k) => tekKartHesabi(k).asim),
-    [veri.krediKartlari],
-  )
+    [veri.krediKartlari]
+  );
 
+  // 🤝 Net Mahsuplaşma (Takas) Hesaplaması
+  const mahsuplasma = useMemo(
+    () => ayMahsuplasmaHesapla(veri.krediKartlari),
+    [veri.krediKartlari]
+  );
+
+  // Kart Eylemleri
   function kartGuncelle(id: string, guncel: Partial<KrediKartiEkstresi>) {
     setVeri((v) => ({
       ...v,
       krediKartlari: v.krediKartlari.map((k) =>
-        k.id === id ? { ...k, ...guncel } : k,
+        k.id === id ? { ...k, ...guncel } : k
       ),
-    }))
+    }));
   }
 
   function kartSil(id: string) {
-    setVeri((v) => ({
-      ...v,
-      krediKartlari: v.krediKartlari.filter((k) => k.id !== id),
-    }))
+    if (window.confirm("Bu kart / harcama kaydını silmek istediğinize emin misiniz?")) {
+      setVeri((v) => ({
+        ...v,
+        krediKartlari: v.krediKartlari.filter((k) => k.id !== id),
+      }));
+      showToast("Kayıt başarıyla silindi.");
+    }
   }
 
   function kartEkle() {
     setVeri((v) => ({
       ...v,
-      krediKartlari: [...v.krediKartlari, yeniKart()],
-    }))
+      krediKartlari: [yeniKart(), ...v.krediKartlari],
+    }));
+    showToast("Yeni kayıt eklendi.");
   }
 
-  function bireyselEkle(kartId: string, kalem: Omit<BireyselEkstreKalemi, 'id'>) {
-    const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'b-' + Date.now()
+  function bireyselEkle(kartId: string, kalem: Omit<BireyselEkstreKalemi, "id">) {
+    const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "b-" + Date.now();
     setVeri((v) => ({
       ...v,
       krediKartlari: v.krediKartlari.map((k) =>
         k.id === kartId
           ? {
               ...k,
-              bireyselKalemler: [
-                ...k.bireyselKalemler,
-                { ...kalem, id },
-              ],
+              bireyselKalemler: [...k.bireyselKalemler, { ...kalem, id }],
             }
-          : k,
+          : k
       ),
-    }))
+    }));
   }
 
   function bireyselGuncelle(
     kartId: string,
     kalemId: string,
-    guncel: Omit<BireyselEkstreKalemi, 'id'>,
+    guncel: Omit<BireyselEkstreKalemi, "id">
   ) {
     setVeri((v) => ({
       ...v,
@@ -233,12 +241,12 @@ export function EvGiderleriSayfasi() {
           ? {
               ...k,
               bireyselKalemler: k.bireyselKalemler.map((x) =>
-                x.id === kalemId ? { ...x, ...guncel } : x,
+                x.id === kalemId ? { ...x, ...guncel } : x
               ),
             }
-          : k,
+          : k
       ),
-    }))
+    }));
   }
 
   function bireyselSil(kartId: string, kalemId: string) {
@@ -250,15 +258,17 @@ export function EvGiderleriSayfasi() {
               ...k,
               bireyselKalemler: k.bireyselKalemler.filter((x) => x.id !== kalemId),
             }
-          : k,
+          : k
       ),
-    }))
+    }));
   }
 
+  // Ayrı Bireysel Harcama Eylemleri
   function ayriBireyselHarcamaFormGonder(e: React.FormEvent) {
-    e.preventDefault()
-    const tutar = Number(ayriBireyselTutarStr.replace(',', '.'))
-    if (!Number.isFinite(tutar) || tutar <= 0) return
+    e.preventDefault();
+    const tutar = Number(ayriBireyselTutarStr.replace(",", "."));
+    if (!Number.isFinite(tutar) || tutar <= 0) return;
+
     if (duzenlenenAyriHarcamaId) {
       setVeri((v) => ({
         ...v,
@@ -267,63 +277,59 @@ export function EvGiderleriSayfasi() {
             ? {
                 ...h,
                 kullaniciId: ayriBireyselKisi,
-                aciklama: ayriBireyselAciklama.trim() || 'Bireysel harcama',
+                aciklama: ayriBireyselAciklama.trim() || "Bireysel harcama",
                 tutar,
               }
-            : h,
+            : h
         ),
-      }))
-      setDuzenlenenAyriHarcamaId(null)
+      }));
+      setDuzenlenenAyriHarcamaId(null);
+      showToast("Bireysel harcama güncellendi.");
     } else {
-      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'h-' + Date.now()
+      const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "h-" + Date.now();
       const yeni: BireyselAyriHarcama = {
         id,
         kullaniciId: ayriBireyselKisi,
-        aciklama: ayriBireyselAciklama.trim() || 'Bireysel harcama',
+        aciklama: ayriBireyselAciklama.trim() || "Bireysel harcama",
         tutar,
-      }
+      };
       setVeri((v) => ({
         ...v,
         bireyselAyriHarcamalar: [...v.bireyselAyriHarcamalar, yeni],
-      }))
+      }));
+      showToast("Bireysel harcama eklendi.");
     }
-    setAyriBireyselAciklama('')
-    setAyriBireyselTutarStr('')
+    setAyriBireyselAciklama("");
+    setAyriBireyselTutarStr("");
   }
 
   function ayriBireyselHarcamaDuzenle(h: BireyselAyriHarcama) {
-    setDuzenlenenAyriHarcamaId(h.id)
-    setDuzenlenenGelirId(null)
-    setAyriBireyselKisi(h.kullaniciId)
-    setAyriBireyselAciklama(h.aciklama)
-    setAyriBireyselTutarStr(tutarMetniInputIcin(h.tutar))
-  }
-
-  function ayriBireyselDuzenleIptal() {
-    setDuzenlenenAyriHarcamaId(null)
-    setAyriBireyselAciklama('')
-    setAyriBireyselTutarStr('')
+    setDuzenlenenAyriHarcamaId(h.id);
+    setAyriBireyselKisi(h.kullaniciId);
+    setAyriBireyselAciklama(h.aciklama);
+    setAyriBireyselTutarStr(tutarMetniInputIcin(h.tutar));
+    setAyriBireyselBolgeAcik(true);
   }
 
   function ayriBireyselHarcamaSil(id: string) {
-    setDuzenlenenAyriHarcamaId((d) => {
-      if (d === id) {
-        setAyriBireyselAciklama('')
-        setAyriBireyselTutarStr('')
-        return null
-      }
-      return d
-    })
     setVeri((v) => ({
       ...v,
       bireyselAyriHarcamalar: v.bireyselAyriHarcamalar.filter((h) => h.id !== id),
-    }))
+    }));
+    if (duzenlenenAyriHarcamaId === id) {
+      setDuzenlenenAyriHarcamaId(null);
+      setAyriBireyselAciklama("");
+      setAyriBireyselTutarStr("");
+    }
+    showToast("Harcama silindi.");
   }
 
+  // Ayrı Gelir Eylemleri
   function ayriGelirFormGonder(e: React.FormEvent) {
-    e.preventDefault()
-    const tutar = Number(ayriGelirTutarStr.replace(',', '.'))
-    if (!Number.isFinite(tutar) || tutar <= 0) return
+    e.preventDefault();
+    const tutar = Number(ayriGelirTutarStr.replace(",", "."));
+    if (!Number.isFinite(tutar) || tutar <= 0) return;
+
     if (duzenlenenGelirId) {
       setVeri((v) => ({
         ...v,
@@ -332,882 +338,1070 @@ export function EvGiderleriSayfasi() {
             ? {
                 ...g,
                 kullaniciId: ayriGelirKisi,
-                aciklama: ayriGelirAciklama.trim() || 'Gelir',
+                aciklama: ayriGelirAciklama.trim() || "Gelir",
                 tutar,
               }
-            : g,
+            : g
         ),
-      }))
-      setDuzenlenenGelirId(null)
+      }));
+      setDuzenlenenGelirId(null);
+      showToast("Gelir kalemi güncellendi.");
     } else {
-      const id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'g-' + Date.now()
+      const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "g-" + Date.now();
       const yeni: BireyselGelirKalemi = {
         id,
         kullaniciId: ayriGelirKisi,
-        aciklama: ayriGelirAciklama.trim() || 'Gelir',
+        aciklama: ayriGelirAciklama.trim() || "Gelir",
         tutar,
-      }
+      };
       setVeri((v) => ({
         ...v,
         bireyselGelirKalemleri: [...v.bireyselGelirKalemleri, yeni],
-      }))
+      }));
+      showToast("Gelir kalemi eklendi.");
     }
-    setAyriGelirAciklama('')
-    setAyriGelirTutarStr('')
+    setAyriGelirAciklama("");
+    setAyriGelirTutarStr("");
   }
 
   function ayriGelirDuzenle(g: BireyselGelirKalemi) {
-    setDuzenlenenGelirId(g.id)
-    setDuzenlenenAyriHarcamaId(null)
-    setAyriGelirKisi(g.kullaniciId)
-    setAyriGelirAciklama(g.aciklama)
-    setAyriGelirTutarStr(tutarMetniInputIcin(g.tutar))
-  }
-
-  function ayriGelirDuzenleIptal() {
-    setDuzenlenenGelirId(null)
-    setAyriGelirAciklama('')
-    setAyriGelirTutarStr('')
+    setDuzenlenenGelirId(g.id);
+    setAyriGelirKisi(g.kullaniciId);
+    setAyriGelirAciklama(g.aciklama);
+    setAyriGelirTutarStr(tutarMetniInputIcin(g.tutar));
+    setAyriGelirBolgeAcik(true);
   }
 
   function ayriGelirSil(id: string) {
-    setDuzenlenenGelirId((d) => {
-      if (d === id) {
-        setAyriGelirAciklama('')
-        setAyriGelirTutarStr('')
-        return null
-      }
-      return d
-    })
     setVeri((v) => ({
       ...v,
       bireyselGelirKalemleri: v.bireyselGelirKalemleri.filter((g) => g.id !== id),
-    }))
+    }));
+    if (duzenlenenGelirId === id) {
+      setDuzenlenenGelirId(null);
+      setAyriGelirAciklama("");
+      setAyriGelirTutarStr("");
+    }
+    showToast("Gelir silindi.");
   }
 
+  // Geçmiş / Veri Yönetimi
   function oncekiAyBorcunuGetir() {
     if (
       !window.confirm(
-        'Önceki ayın borcu mevcut aya getirilecektir. Onaylıyor musunuz?',
+        "Önceki ayın tüm kayıtları bu aya kopyalanacaktır. Mevcut verilerin üzerine yazılacak, onaylıyor musunuz?"
       )
     ) {
-      return
+      return;
     }
-    const oncekiAnahtar = ayKaydir(anahtar, -1)
-    const onceki = ayVerisiOku(oncekiAnahtar)
-    const kopya: AyHaneGiderVerisi = structuredClone(onceki)
-    setVeri(kopya)
+    const oncekiAnahtar = ayKaydir(anahtar, -1);
+    const onceki = ayVerisiOku(oncekiAnahtar);
+    const kopya: AyHaneGiderVerisi = structuredClone(onceki);
+    setVeri(kopya);
+    showToast("Önceki ayın kayıtları başarıyla bu aya aktarıldı.");
   }
 
   function buAySifirla() {
-    if (
-      !window.confirm(
-        'Bu ayın tüm kayıtları silinecektir. Emin misiniz?',
-      )
-    ) {
-      return
+    if (!window.confirm("Bu ayın tüm kayıtları silinecektir. Emin misiniz?")) {
+      return;
     }
-    setVeri({ krediKartlari: [], bireyselAyriHarcamalar: [], bireyselGelirKalemleri: [] })
-    setAyriBireyselBolgeAcik(false)
-    setAyriGelirBolgeAcik(false)
-    setAyriBireyselAciklama('')
-    setAyriBireyselTutarStr('')
-    setAyriGelirAciklama('')
-    setAyriGelirTutarStr('')
-    setDuzenlenenAyriHarcamaId(null)
-    setDuzenlenenGelirId(null)
-  }
-
-  function veriyiYenidenYukle() {
-    const guncel = ayVerisiOku(anahtar)
-    setVeri(guncel)
-    setAyriBireyselBolgeAcik(false)
-    setAyriGelirBolgeAcik(false)
-    setDuzenlenenAyriHarcamaId(null)
-    setDuzenlenenGelirId(null)
-    setAyriBireyselAciklama('')
-    setAyriBireyselTutarStr('')
-    setAyriGelirAciklama('')
-    setAyriGelirTutarStr('')
-    oncekiAyriBireyselSayisi.current = guncel.bireyselAyriHarcamalar.length
-    oncekiAyriGelirSayisi.current = guncel.bireyselGelirKalemleri.length
+    setVeri({ krediKartlari: [], bireyselAyriHarcamalar: [], bireyselGelirKalemleri: [] });
+    setAyriBireyselBolgeAcik(false);
+    setAyriGelirBolgeAcik(false);
+    showToast("Bu ayın tüm verileri sıfırlandı.");
   }
 
   async function disaAktar() {
-    const sonuc = await yedekDosyasiDisaAktar()
+    const sonuc = await yedekDosyasiDisaAktar();
     if (!sonuc.basarili) {
-      window.alert(sonuc.hata)
-      return
+      showToast(sonuc.hata ?? "Dışa aktarma hatası");
+      return;
     }
-    if (sonuc.yontem === 'indir') {
-      window.alert(`${sonuc.aySayisi} ay verisi indirildi.`)
+    if (sonuc.yontem === "indir") {
+      showToast(`${sonuc.aySayisi} ay verisi başarıyla indirildi.`);
     }
   }
 
   function iceAktarDosyaSecildi(e: React.ChangeEvent<HTMLInputElement>) {
-    const dosya = e.target.files?.[0]
-    e.target.value = ''
-    if (!dosya) return
+    const dosya = e.target.files?.[0];
+    e.target.value = "";
+    if (!dosya) return;
 
-    const okuyucu = new FileReader()
+    const okuyucu = new FileReader();
     okuyucu.onload = () => {
       try {
-        const icerik = JSON.parse(String(okuyucu.result)) as unknown
-        const onizleme = yedekDosyasiOnizle(icerik)
+        const icerik = JSON.parse(String(okuyucu.result)) as unknown;
+        const onizleme = yedekDosyasiOnizle(icerik);
         if (!onizleme.basarili) {
-          window.alert(onizleme.hata)
-          return
+          showToast(onizleme.hata ?? "Dosya uyumsuz.");
+          return;
         }
         const onay = window.confirm(
-          `${onizleme.aySayisi} ay verisi içe aktarılacak. Aynı ayların mevcut kayıtları güncellenecek. Devam edilsin mi?`,
-        )
-        if (!onay) return
+          `${onizleme.aySayisi} ay verisi içe aktarılacak. Aynı ayların mevcut kayıtları güncellenecek. Devam edilsin mi?`
+        );
+        if (!onay) return;
 
-        const sonuc = yedekDosyasiniIceAktar(icerik)
+        const sonuc = yedekDosyasiniIceAktar(icerik);
         if (!sonuc.basarili) {
-          window.alert(sonuc.hata)
-          return
+          showToast(sonuc.hata ?? "İçe aktarılamadı.");
+          return;
         }
-        veriyiYenidenYukle()
-        window.alert(`${sonuc.aySayisi} ay verisi başarıyla içe aktarıldı.`)
+        const guncel = ayVerisiOku(anahtar);
+        setVeri(guncel);
+        showToast(`${sonuc.aySayisi} ay verisi başarıyla yüklendi.`);
       } catch {
-        window.alert('Dosya okunamadı. Geçerli bir JSON yedek dosyası seçin.')
+        showToast("Dosya okunamadı. Geçerli bir JSON yedek dosyası seçin.");
       }
-    }
-    okuyucu.readAsText(dosya, 'utf-8')
+    };
+    okuyucu.readAsText(dosya, "utf-8");
   }
 
-  return (
-    <div className="ev-gider">
-      <header className="ev-gider__ust">
-        <div className="ev-gider__ust-satir">
-          <h1 className="ev-gider__baslik">💰 Ev Giderleri & Bütçe</h1>
-          <button type="button" className="ev-gider__btn ev-gider__btn--tehlike" onClick={buAySifirla}>
-            Sıfırla
-          </button>
-        </div>
+  const kopyalaIbanVeyaHesap = () => {
+    navigator.clipboard?.writeText(
+      `Hane Gider Hesabı (${ayEtiketi(anahtar)}): ${mahsuplasma.durumMetni}`
+    );
+    showToast("📋 Hesaplaşma özeti panoya kopyalandı!");
+  };
 
-        <div className="ev-gider__ay-panel">
-          <div className="ev-gider__ay-panel-sol">
+  return (
+    <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Toast Bildirim */}
+      {toastMesaj && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-foreground text-background shadow-xl text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <span>✨</span>
+          <span>{toastMesaj}</span>
+        </div>
+      )}
+
+      {/* 📅 Modern Kontrol Çubuğu (Ay Seçici & Hızlı Aksiyonlar) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-3xl bg-surface border border-border/80 shadow-xs">
+        {/* Ay Gezgini */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center p-1 rounded-2xl bg-surface-raised border border-border/70">
             <button
               type="button"
-              className="ev-gider__btn ev-gider__btn--ince"
-              onClick={oncekiAyBorcunuGetir}
-              title="Önceki ayın tüm kayıtlarını bu aya kopyalar"
-            >
-              Önceki borcu getir
-            </button>
-          </div>
-          <div className="ev-gider__ay-panel-orta">
-            <button
-              type="button"
-              className="ev-gider__btn ev-gider__btn--ikon"
               onClick={() => setAnahtar((a) => ayKaydir(a, -1))}
-              aria-label="Önceki ay"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-sm font-black text-muted hover:text-foreground hover:bg-surface transition cursor-pointer"
+              title="Önceki ay"
             >
               ‹
             </button>
-            <span className="ev-gider__ay-etiket">{ayEtiketi(anahtar)}</span>
+            <span className="px-3 text-xs sm:text-sm font-extrabold text-foreground min-w-[110px] text-center">
+              📅 {ayEtiketi(anahtar)}
+            </span>
             <button
               type="button"
-              className="ev-gider__btn ev-gider__btn--ikon"
               onClick={() => setAnahtar((a) => ayKaydir(a, 1))}
-              aria-label="Sonraki ay"
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-sm font-black text-muted hover:text-foreground hover:bg-surface transition cursor-pointer"
+              title="Sonraki ay"
             >
               ›
             </button>
           </div>
-          <div className="ev-gider__ay-panel-sag">
+
+          {anahtar !== simdikiAyAnahtari() && (
             <button
               type="button"
-              className="ev-gider__btn ev-gider__btn--birincil"
               onClick={() => setAnahtar(simdikiAyAnahtari())}
+              className="px-3 py-2 rounded-2xl bg-primary/10 border border-primary/30 text-xs font-bold text-primary hover:bg-primary/20 transition cursor-pointer"
             >
-              Bu ay
+              Bu Ay
             </button>
-          </div>
+          )}
         </div>
 
-        <div className="ev-gider__yedek-satir">
-          <button type="button" className="ev-gider__btn ev-gider__btn--ince" onClick={disaAktar}>
-            Dışa aktar
-          </button>
+        {/* Eylem Butonları */}
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            className="ev-gider__btn ev-gider__btn--ince"
-            onClick={() => iceAktarInputRef.current?.click()}
+            onClick={oncekiAyBorcunuGetir}
+            className="secondary-button h-9 px-3 text-xs font-bold text-muted hover:text-foreground"
+            title="Önceki ayın tüm kayıtlarını bu aya kopyalar"
           >
-            İçe aktar
+            <span>🔄</span> Önceki Borcu Getir
           </button>
+
+          <button
+            type="button"
+            onClick={disaAktar}
+            className="secondary-button h-9 px-2.5 text-xs font-bold text-muted hover:text-foreground"
+            title="Tüm verileri JSON olarak indir"
+          >
+            <span>📤</span> Dışa Aktar
+          </button>
+
+          <button
+            type="button"
+            onClick={() => iceAktarInputRef.current?.click()}
+            className="secondary-button h-9 px-2.5 text-xs font-bold text-muted hover:text-foreground"
+            title="JSON yedeğini yükle"
+          >
+            <span>📥</span> İçe Aktar
+          </button>
+
           <input
             ref={iceAktarInputRef}
             type="file"
             accept=".json,application/json"
-            className="ev-gider__yedek-dosya-gizli"
+            className="hidden"
             onChange={iceAktarDosyaSecildi}
-            aria-hidden="true"
-            tabIndex={-1}
           />
-        </div>
-      </header>
 
-      <div className="ev-gider__ozet ev-gider__ozet--ortali">
-        <div className="ev-gider__ozet-kutu">
-          <div className="ev-gider__ozet-isim">Mert (bu ay özeti)</div>
-          <div className="ev-gider__ozet-denge">
-            <div className="ev-gider__ozet-denge-satir">
-              <span>Gelir</span>
-              <span>{para(mertGelir)}</span>
-            </div>
-            <div className="ev-gider__ozet-denge-blok">
-              <div className="ev-gider__ozet-denge-satir">
-                <span>Gider</span>
-                <span>{para(mertGider)}</span>
-              </div>
-              <div className="ev-gider__ozet-kisi-detay ev-gider__ozet-kisi-detay--gider-alti">
-                <div className="ev-gider__ozet-kisi-detay-satir">
-                  <span>Hane</span>
-                  <span>{para(genel.mert)}</span>
-                </div>
-                <div className="ev-gider__ozet-kisi-detay-satir">
-                  <span>Bireysel</span>
-                  <span>{para(ayriBireyselToplam.mert)}</span>
-                </div>
-              </div>
-            </div>
-            <div
-              className={
-                mertKalan < -0.005
-                  ? 'ev-gider__ozet-denge-satir ev-gider__ozet-denge-satir--kalan ev-gider__ozet-denge-satir--eksi'
-                  : 'ev-gider__ozet-denge-satir ev-gider__ozet-denge-satir--kalan'
-              }
-            >
-              <span>Kalan</span>
-              <span>{para(mertKalan)}</span>
-            </div>
-          </div>
-        </div>
-        <div className="ev-gider__ozet-kutu">
-          <div className="ev-gider__ozet-isim">Havsa (bu ay özeti)</div>
-          <div className="ev-gider__ozet-denge">
-            <div className="ev-gider__ozet-denge-satir">
-              <span>Gelir</span>
-              <span>{para(havsaGelir)}</span>
-            </div>
-            <div className="ev-gider__ozet-denge-blok">
-              <div className="ev-gider__ozet-denge-satir">
-                <span>Gider</span>
-                <span>{para(havsaGider)}</span>
-              </div>
-              <div className="ev-gider__ozet-kisi-detay ev-gider__ozet-kisi-detay--gider-alti">
-                <div className="ev-gider__ozet-kisi-detay-satir">
-                  <span>Hane</span>
-                  <span>{para(genel.havsa)}</span>
-                </div>
-                <div className="ev-gider__ozet-kisi-detay-satir">
-                  <span>Bireysel</span>
-                  <span>{para(ayriBireyselToplam.havsa)}</span>
-                </div>
-              </div>
-            </div>
-            <div
-              className={
-                havsaKalan < -0.005
-                  ? 'ev-gider__ozet-denge-satir ev-gider__ozet-denge-satir--kalan ev-gider__ozet-denge-satir--eksi'
-                  : 'ev-gider__ozet-denge-satir ev-gider__ozet-denge-satir--kalan'
-              }
-            >
-              <span>Kalan</span>
-              <span>{para(havsaKalan)}</span>
-            </div>
-          </div>
-        </div>
-        <div className="ev-gider__ozet-kutu ev-gider__ozet-kutu--ev">
-          <div className="ev-gider__ozet-isim ev-gider__ozet-isim--ev-tek">Ev (bu ay özeti)</div>
-          <div className="ev-gider__ozet-denge">
-            <div className="ev-gider__ozet-denge-satir">
-              <span>Gelir</span>
-              <span>{para(evGelirToplami)}</span>
-            </div>
-            <div className="ev-gider__ozet-denge-blok">
-              <div className="ev-gider__ozet-denge-satir">
-                <span>Gider</span>
-                <span>{para(evGideriToplami)}</span>
-              </div>
-              <div className="ev-gider__ozet-kirilim ev-gider__ozet-kirilim--gider-alti">
-                <div className="ev-gider__ozet-kirilim-satir">
-                  <span>Ortak kayıt toplamları</span>
-                  <span>{para(kayitToplamlari)}</span>
-                </div>
-                <div className="ev-gider__ozet-kirilim-satir">
-                  <span>Bireysel</span>
-                  <span>{para(ayriBireyselHarcamalarToplami)}</span>
-                </div>
-              </div>
-            </div>
-            <div
-              className={
-                evKalan < -0.005
-                  ? 'ev-gider__ozet-denge-satir ev-gider__ozet-denge-satir--kalan ev-gider__ozet-denge-satir--eksi'
-                  : 'ev-gider__ozet-denge-satir ev-gider__ozet-denge-satir--kalan'
-              }
-            >
-              <span>Kalan</span>
-              <span>{para(evKalan)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {herhangiAsim ? (
-        <div className="ev-gider__uyari" role="status">
-          Uyarı: Bazı kayıtlarda bireysel kalemlerin toplamı, toplam tutarı aşıyor. Kontrol edin;
-          hesaplamada toplam üst sınırı baz alınır.
-        </div>
-      ) : null}
-
-      <div className="ev-gider__arac-satir">
-        <button type="button" className="ev-gider__btn ev-gider__btn--birincil" onClick={kartEkle}>
-          + Kredi kartı / harcama ekle
-        </button>
-      </div>
-
-      {veri.krediKartlari.length === 0 ? (
-        <p className="ev-gider__bos">
-          Bu ay için henüz kayıt yok. Yukarıdan kredi kartı veya harcama (ör. kira) ekleyebilirsiniz.
-        </p>
-      ) : null}
-
-      {veri.krediKartlari.map((kart) => (
-        <KartPaneli
-          key={kart.id}
-          kart={kart}
-          onAdDegis={(ad) => kartGuncelle(kart.id, { ad })}
-          onToplamDegis={(toplamEkstre) => kartGuncelle(kart.id, { toplamEkstre })}
-          onToplamlardanHaricDegis={(tumGiderToplamlarindaHaric) =>
-            kartGuncelle(kart.id, { tumGiderToplamlarindaHaric })
-          }
-          onSil={() => kartSil(kart.id)}
-          onBireyselEkle={(k) => bireyselEkle(kart.id, k)}
-          onBireyselGuncelle={(kalemId, k) => bireyselGuncelle(kart.id, kalemId, k)}
-          onBireyselSil={(kalemId) => bireyselSil(kart.id, kalemId)}
-        />
-      ))}
-
-      {!ayriBireyselBolgeAcik ? (
-        <div className="ev-gider__bireysel-kapali ev-gider__bireysel-ayri-ac-wrapper">
           <button
             type="button"
-            className="ev-gider__btn ev-gider__btn--birincil"
-            onClick={() => setAyriBireyselBolgeAcik(true)}
+            onClick={buAySifirla}
+            className="h-9 px-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 text-rose-500 hover:bg-rose-500/20 text-xs font-bold transition cursor-pointer"
+            title="Bu ayın kayıtlarını temizle"
           >
-            Bireysel — kredi kartı / harcama
-            {veri.bireyselAyriHarcamalar.length > 0
-              ? ` (${veri.bireyselAyriHarcamalar.length})`
-              : ''}
+            <span>🗑️</span> Sıfırla
+          </button>
+
+          <button
+            type="button"
+            onClick={kartEkle}
+            className="primary-button h-9 px-3.5 text-xs font-bold shadow-xs"
+          >
+            <span>➕</span> Kayıt Ekle
           </button>
         </div>
-      ) : (
-        <section
-          className="ev-gider__bireysel-ayri-bolum ev-gider__bireysel-ayri-bolum--ortak-alti"
-          aria-labelledby="bireysel-ayri-baslik"
-        >
-          <h2 className="ev-gider__bireysel-ayri-baslik" id="bireysel-ayri-baslik">
-            Bireysel — kredi kartı / harcama
-          </h2>
+      </div>
 
-          {veri.bireyselAyriHarcamalar.length === 0 ? (
-            <p className="ev-gider__bos">Henüz bireysel harcama yok.</p>
-          ) : (
-            <table className="ev-gider__tablo">
-              <thead>
-                <tr>
-                  <th>Kişi</th>
-                  <th>Açıklama</th>
-                  <th>Tutar</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
+      {/* 📊 Üst KPI Özet Kartları (Mert, Havsa & Ev Dengesi) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+        {/* Mert (Bu Ay) */}
+        <div className="p-5 rounded-3xl bg-surface border border-sky-500/30 shadow-xs relative overflow-hidden flex flex-col justify-between space-y-3">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-sky-500" />
+          <div>
+            <div className="flex items-center justify-between text-muted mb-1">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-sky-400">
+                Mert (Bu Ay Dengesi)
+              </span>
+              <span className="text-base">👤</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-foreground">
+                {para(mertKalan)}
+              </span>
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  mertKalan >= 0
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                    : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                }`}
+              >
+                {mertKalan >= 0 ? "Kalan" : "Ekside"}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-border/60 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Gelir:</span>
+              <span className="font-bold text-emerald-400">{para(mertGelir)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Gider (Toplam):</span>
+              <span className="font-bold text-rose-400">{para(mertGider)}</span>
+            </div>
+            <div className="text-[11px] text-muted flex items-center justify-between pl-2 border-l-2 border-sky-500/40">
+              <span>Hane: {para(genel.mert)}</span>
+              <span>Bireysel: {para(ayriBireyselToplam.mert)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Havsa (Bu Ay) */}
+        <div className="p-5 rounded-3xl bg-surface border border-pink-500/30 shadow-xs relative overflow-hidden flex flex-col justify-between space-y-3">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-pink-500" />
+          <div>
+            <div className="flex items-center justify-between text-muted mb-1">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-pink-400">
+                Havsa (Bu Ay Dengesi)
+              </span>
+              <span className="text-base">👤</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-foreground">
+                {para(havsaKalan)}
+              </span>
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  havsaKalan >= 0
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                    : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                }`}
+              >
+                {havsaKalan >= 0 ? "Kalan" : "Ekside"}
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-border/60 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Gelir:</span>
+              <span className="font-bold text-emerald-400">{para(havsaGelir)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Gider (Toplam):</span>
+              <span className="font-bold text-rose-400">{para(havsaGider)}</span>
+            </div>
+            <div className="text-[11px] text-muted flex items-center justify-between pl-2 border-l-2 border-pink-500/40">
+              <span>Hane: {para(genel.havsa)}</span>
+              <span>Bireysel: {para(ayriBireyselToplam.havsa)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Ev (Bu Ay Genel) */}
+        <div className="p-5 rounded-3xl bg-surface border border-purple-500/30 shadow-xs relative overflow-hidden flex flex-col justify-between space-y-3">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-purple-500" />
+          <div>
+            <div className="flex items-center justify-between text-muted mb-1">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-purple-400">
+                Ev Ortak Havuzu
+              </span>
+              <span className="text-base">🏠</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-foreground">
+                {para(evKalan)}
+              </span>
+              <span
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  evKalan >= 0
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                    : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                }`}
+              >
+                Net Bakiye
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-border/60 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Toplam Giriş Gideri:</span>
+              <span className="font-bold text-rose-400">{para(evGideriToplami)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted">Ortak Kayıtlar Toplamı:</span>
+              <span className="font-bold text-foreground">{para(kayitToplamlari)}</span>
+            </div>
+            <div className="text-[11px] text-muted flex items-center justify-between pl-2 border-l-2 border-purple-500/40">
+              <span>Ayrı Bireysel: {para(ayriBireyselHarcamalarToplami)}</span>
+              <span>Toplam Gelir: {para(evGelirToplami)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 🤝 MADDE 2: AY SONU NET MAHSUPLAŞMA (KİM KİME NE ÖDEYECEK?) */}
+      <div className="p-5 rounded-3xl bg-gradient-to-r from-sky-500/10 via-purple-500/10 to-pink-500/10 border border-purple-500/30 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🤝</span>
+            <div>
+              <h3 className="text-sm sm:text-base font-black text-foreground">
+                Ay Sonu Net Mahsuplaşma (Hesaplaşma)
+              </h3>
+              <p className="text-xs text-muted">
+                Ortak harcamalar ve kart ödemeleri dengelenerek tek bir transfer tutarı çıkarılır.
+              </p>
+            </div>
+          </div>
+          <span className="self-start sm:self-auto text-[11px] font-bold px-3 py-1 rounded-full bg-surface border border-border/80 text-foreground">
+            ⚡ Otomatik Hesaplama
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 rounded-2xl bg-surface/70 border border-border/60 backdrop-blur-xs items-center">
+          {/* Mert'in Harcama Payı */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center font-black text-sm shrink-0">
+              M
+            </div>
+            <div className="text-xs">
+              <span className="font-black text-foreground block">Mert</span>
+              <span className="text-muted block">
+                Cebinden Çıkan: <strong className="text-foreground">{para(mahsuplasma.mertOdedi)}</strong>
+              </span>
+              <span className="text-muted block">
+                Payına Düşen: <strong className="text-sky-400">{para(mahsuplasma.mertPayinaDusen)}</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Transfer Durumu & Tutar Rozeti */}
+          <div className="text-center py-2 px-3 rounded-xl bg-surface-raised border border-border/60">
+            {mahsuplasma.transferTutari === 0 ? (
+              <div>
+                <span className="text-sm font-black text-emerald-400 block">
+                  🎉 Hesaplar Tam Dengede!
+                </span>
+                <span className="text-[11px] text-muted">Kimsenin birbirine borcu bulunmuyor.</span>
+              </div>
+            ) : (
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-0.5">
+                  Gereken Tek Havale
+                </span>
+                <div className="text-base sm:text-lg font-black text-emerald-400 tracking-tight">
+                  {mahsuplasma.durumMetni}
+                </div>
+                <span className="text-[10px] text-muted block mt-0.5">
+                  Bu transfer yapıldığında ortak hesap 0 TL ile tamamen kapanır.
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Havsa'nın Harcama Payı */}
+          <div className="flex items-center gap-3 md:justify-end">
+            <div className="text-xs md:text-right">
+              <span className="font-black text-foreground block">Havsa</span>
+              <span className="text-muted block">
+                Cebinden Çıkan: <strong className="text-foreground">{para(mahsuplasma.havsaOdedi)}</strong>
+              </span>
+              <span className="text-muted block">
+                Payına Düşen: <strong className="text-pink-400">{para(mahsuplasma.havsaPayinaDusen)}</strong>
+              </span>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-pink-500/20 border border-pink-500/40 text-pink-400 flex items-center justify-center font-black text-sm shrink-0">
+              H
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3 flex-wrap text-[11px] text-muted">
+          <span>
+            💡 Kartların bankaya kim tarafından ödendiğini aşağıdaki kart başlıklarındaki{" "}
+            <strong>[👤 Mert / 👤 Havsa]</strong> seçicisiyle belirleyebilirsiniz.
+          </span>
+          <button
+            type="button"
+            onClick={kopyalaIbanVeyaHesap}
+            className="secondary-button py-1.5 px-3 text-xs font-bold text-foreground cursor-pointer"
+          >
+            📋 Özeti Kopyala
+          </button>
+        </div>
+      </div>
+
+      {/* Uyarı: Aşım Durumu */}
+      {herhangiAsim && (
+        <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-500 font-bold">
+          <span className="text-xl">⚠️</span>
+          <span>
+            Uyarı: Bazı kayıtlarda bireysel kalemlerin toplamı, kartın toplam tutarını aşıyor.
+            Hesaplamada toplam ekstre tutarı üst sınır olarak baz alınmaktadır.
+          </span>
+        </div>
+      )}
+
+      {/* 💳 Kredi Kartları ve Harcama Kayıtları Bölümü */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-black text-foreground flex items-center gap-2">
+            <span>💳</span> Kredi Kartları ve Ortak Harcamalar ({veri.krediKartlari.length})
+          </h2>
+          <button
+            type="button"
+            onClick={kartEkle}
+            className="text-xs font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
+          >
+            <span>➕</span> Yeni Kart Ekle
+          </button>
+        </div>
+
+        {veri.krediKartlari.length === 0 ? (
+          <div className="p-10 text-center rounded-3xl border border-dashed border-border/80 bg-surface/50 space-y-2">
+            <span className="text-3xl block">💳</span>
+            <h4 className="text-sm font-bold text-foreground">Bu Ay İçin Kayıt Yok</h4>
+            <p className="text-xs text-muted max-w-sm mx-auto">
+              Yukarıdaki "Kayıt Ekle" butonuyla kredi kartı ekstresi veya kira/aidat gibi harcama ekleyebilirsiniz.
+            </p>
+          </div>
+        ) : (
+          veri.krediKartlari.map((kart) => (
+            <ModernKartPaneli
+              key={kart.id}
+              kart={kart}
+              onAdDegis={(ad) => kartGuncelle(kart.id, { ad })}
+              onToplamDegis={(toplamEkstre) => kartGuncelle(kart.id, { toplamEkstre })}
+              onOdeyenDegis={(odenenKisi) => kartGuncelle(kart.id, { odenenKisi })}
+              onToplamlardanHaricDegis={(tumGiderToplamlarindaHaric) =>
+                kartGuncelle(kart.id, { tumGiderToplamlarindaHaric })
+              }
+              onSil={() => kartSil(kart.id)}
+              onBireyselEkle={(k) => bireyselEkle(kart.id, k)}
+              onBireyselGuncelle={(kalemId, k) => bireyselGuncelle(kart.id, kalemId, k)}
+              onBireyselSil={(kalemId) => bireyselSil(kart.id, kalemId)}
+            />
+          ))
+        )}
+      </div>
+
+      {/* 🛍️ Bireysel Ayrı Harcamalar (Ortak Olmayan Harcamalar) */}
+      <div className="p-5 rounded-3xl bg-surface border border-border/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🛍️</span>
+            <div>
+              <h3 className="text-sm font-black text-foreground">
+                Ortak Dışı Bireysel Harcamalar ({veri.bireyselAyriHarcamalar.length})
+              </h3>
+              <p className="text-xs text-muted">
+                Ortak ekstre paylaşımına girmeyen, tamamen kişinin kendine ait harcamaları.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAyriBireyselBolgeAcik((v) => !v)}
+            className="secondary-button text-xs font-bold px-3 py-1.5"
+          >
+            {ayriBireyselBolgeAcik ? "▲ Gizle" : "▼ Listele & Ekle"}
+          </button>
+        </div>
+
+        {ayriBireyselBolgeAcik && (
+          <div className="space-y-4 pt-2 border-t border-border/60 animate-in fade-in duration-150">
+            {veri.bireyselAyriHarcamalar.length > 0 && (
+              <div className="space-y-2">
                 {veri.bireyselAyriHarcamalar.map((h) => (
-                  <tr key={h.id}>
-                    <td>{KULLANICI_ETIKET[h.kullaniciId]}</td>
-                    <td>{h.aciklama}</td>
-                    <td>{para(h.tutar)}</td>
-                    <td>
-                      <div className="ev-gider__tablo-eylem">
+                  <div
+                    key={h.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-surface-raised border border-border/60 text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`font-black text-[10px] px-2 py-0.5 rounded-full ${
+                          h.kullaniciId === "mert"
+                            ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                            : "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                        }`}
+                      >
+                        {KULLANICI_ETIKET[h.kullaniciId]}
+                      </span>
+                      <span className="font-bold text-foreground">{h.aciklama}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="font-extrabold text-foreground">{para(h.tutar)}</span>
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          className="ev-gider__btn ev-gider__btn--kalem"
                           onClick={() => ayriBireyselHarcamaDuzenle(h)}
-                          aria-label="Harcamayı düzenle"
+                          className="p-1 text-muted hover:text-foreground cursor-pointer"
                           title="Düzenle"
                         >
                           ✎
                         </button>
                         <button
                           type="button"
-                          className="ev-gider__btn"
                           onClick={() => ayriBireyselHarcamaSil(h.id)}
-                          aria-label="Harcamayı sil"
+                          className="p-1 text-rose-500 hover:text-rose-400 cursor-pointer"
+                          title="Sil"
                         >
-                          Sil
+                          ✕
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          )}
+              </div>
+            )}
 
-          <form className="ev-gider__form-satir" onSubmit={ayriBireyselHarcamaFormGonder}>
-            <div className="ev-gider__alan">
-              <label htmlFor="ayri-bireysel-kisi">Kişi</label>
-              <select
-                id="ayri-bireysel-kisi"
-                value={ayriBireyselKisi}
-                onChange={(e) => setAyriBireyselKisi(e.target.value as KullaniciId)}
-              >
-                <option value="mert">Mert</option>
-                <option value="havsa">Havsa</option>
-              </select>
-            </div>
-            <div className="ev-gider__alan">
-              <label htmlFor="ayri-bireysel-ack">Açıklama</label>
-              <input
-                id="ayri-bireysel-ack"
-                value={ayriBireyselAciklama}
-                onChange={(e) => setAyriBireyselAciklama(e.target.value)}
-                placeholder="Örn. Kişisel kart harcaması"
-                autoComplete="off"
-              />
-            </div>
-            <div className="ev-gider__alan">
-              <label htmlFor="ayri-bireysel-tutar">Tutar (₺)</label>
-              <input
-                id="ayri-bireysel-tutar"
-                type="text"
-                inputMode="decimal"
-                value={ayriBireyselTutarStr}
-                onChange={(e) => setAyriBireyselTutarStr(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="ev-gider__form-eylem-grup">
-              <button type="submit" className="ev-gider__btn ev-gider__btn--birincil">
-                {duzenlenenAyriHarcamaId ? 'Güncelle' : 'Harcamayı ekle'}
-              </button>
-              {duzenlenenAyriHarcamaId ? (
-                <button
-                  type="button"
-                  className="ev-gider__btn"
-                  onClick={ayriBireyselDuzenleIptal}
-                >
-                  Vazgeç
-                </button>
-              ) : null}
-            </div>
-          </form>
-
-          <div className="ev-gider__bireysel-gizle">
-            <button
-              type="button"
-              className="ev-gider__btn"
-              onClick={() => {
-                ayriBireyselDuzenleIptal()
-                setAyriBireyselBolgeAcik(false)
-              }}
+            {/* Ayrı Harcama Ekleme / Düzenleme Formu */}
+            <form
+              onSubmit={ayriBireyselHarcamaFormGonder}
+              className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 p-3.5 rounded-2xl bg-surface-raised border border-border/70"
             >
-              Gizle
-            </button>
-          </div>
-        </section>
-      )}
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase block mb-1">
+                  Kişi
+                </label>
+                <select
+                  value={ayriBireyselKisi}
+                  onChange={(e) => setAyriBireyselKisi(e.target.value as KullaniciId)}
+                  className="w-full h-9 rounded-xl bg-surface border border-border px-2 text-xs font-bold text-foreground"
+                >
+                  <option value="mert">Mert</option>
+                  <option value="havsa">Havsa</option>
+                </select>
+              </div>
 
-      {!ayriGelirBolgeAcik ? (
-        <div className="ev-gider__bireysel-kapali ev-gider__gelir-ac-wrapper">
+              <div className="sm:col-span-2">
+                <label className="text-[10px] font-bold text-muted uppercase block mb-1">
+                  Açıklama
+                </label>
+                <input
+                  type="text"
+                  value={ayriBireyselAciklama}
+                  onChange={(e) => setAyriBireyselAciklama(e.target.value)}
+                  placeholder="Örn. Kişisel kıyafet alışverişi"
+                  className="w-full h-9 rounded-xl bg-surface border border-border px-3 text-xs font-semibold text-foreground"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase block mb-1">
+                  Tutar (₺)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={ayriBireyselTutarStr}
+                    onChange={(e) => setAyriBireyselTutarStr(e.target.value)}
+                    placeholder="0"
+                    className="w-full h-9 rounded-xl bg-surface border border-border px-3 text-xs font-bold text-foreground font-mono"
+                  />
+                  <button type="submit" className="primary-button h-9 px-3 text-xs font-bold shrink-0">
+                    {duzenlenenAyriHarcamaId ? "Kaydet" : "Ekle"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+      </div>
+
+      {/* 💼 Bireysel Gelir Kalemleri */}
+      <div className="p-5 rounded-3xl bg-surface border border-border/80 shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">💼</span>
+            <div>
+              <h3 className="text-sm font-black text-foreground">
+                Bireysel Gelir Kalemleri ({veri.bireyselGelirKalemleri.length})
+              </h3>
+              <p className="text-xs text-muted">
+                Maaş, prim, ek kazanç vb. kişisel gelir girişleri (gider hesaplarını etkilemez).
+              </p>
+            </div>
+          </div>
           <button
             type="button"
-            className="ev-gider__btn ev-gider__btn--birincil"
-            onClick={() => setAyriGelirBolgeAcik(true)}
+            onClick={() => setAyriGelirBolgeAcik((v) => !v)}
+            className="secondary-button text-xs font-bold px-3 py-1.5"
           >
-            Bireysel gelir kalemleri
-            {veri.bireyselGelirKalemleri.length > 0
-              ? ` (${veri.bireyselGelirKalemleri.length})`
-              : ''}
+            {ayriGelirBolgeAcik ? "▲ Gizle" : "▼ Listele & Ekle"}
           </button>
         </div>
-      ) : (
-        <section
-          className="ev-gider__bireysel-ayri-bolum ev-gider__gelir-bolum"
-          aria-labelledby="bireysel-gelir-baslik"
-        >
-          <h2 className="ev-gider__bireysel-ayri-baslik" id="bireysel-gelir-baslik">
-            Bireysel gelir kalemleri
-          </h2>
 
-          {veri.bireyselGelirKalemleri.length === 0 ? (
-            <p className="ev-gider__bos">Henüz gelir kalemi yok.</p>
-          ) : (
-            <table className="ev-gider__tablo">
-              <thead>
-                <tr>
-                  <th>Kişi</th>
-                  <th>Açıklama</th>
-                  <th>Tutar</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
+        {ayriGelirBolgeAcik && (
+          <div className="space-y-4 pt-2 border-t border-border/60 animate-in fade-in duration-150">
+            {veri.bireyselGelirKalemleri.length > 0 && (
+              <div className="space-y-2">
                 {veri.bireyselGelirKalemleri.map((g) => (
-                  <tr key={g.id}>
-                    <td>{KULLANICI_ETIKET[g.kullaniciId]}</td>
-                    <td>{g.aciklama}</td>
-                    <td>{para(g.tutar)}</td>
-                    <td>
-                      <div className="ev-gider__tablo-eylem">
+                  <div
+                    key={g.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-surface-raised border border-border/60 text-xs"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className={`font-black text-[10px] px-2 py-0.5 rounded-full ${
+                          g.kullaniciId === "mert"
+                            ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                            : "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                        }`}
+                      >
+                        {KULLANICI_ETIKET[g.kullaniciId]}
+                      </span>
+                      <span className="font-bold text-foreground">{g.aciklama}</span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="font-extrabold text-emerald-400">{para(g.tutar)}</span>
+                      <div className="flex items-center gap-1">
                         <button
                           type="button"
-                          className="ev-gider__btn ev-gider__btn--kalem"
                           onClick={() => ayriGelirDuzenle(g)}
-                          aria-label="Geliri düzenle"
+                          className="p-1 text-muted hover:text-foreground cursor-pointer"
                           title="Düzenle"
                         >
                           ✎
                         </button>
                         <button
                           type="button"
-                          className="ev-gider__btn"
                           onClick={() => ayriGelirSil(g.id)}
-                          aria-label="Geliri sil"
+                          className="p-1 text-rose-500 hover:text-rose-400 cursor-pointer"
+                          title="Sil"
                         >
-                          Sil
+                          ✕
                         </button>
                       </div>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          )}
+              </div>
+            )}
 
-          <form className="ev-gider__form-satir" onSubmit={ayriGelirFormGonder}>
-            <div className="ev-gider__alan">
-              <label htmlFor="ayri-gelir-kisi">Kişi</label>
-              <select
-                id="ayri-gelir-kisi"
-                value={ayriGelirKisi}
-                onChange={(e) => setAyriGelirKisi(e.target.value as KullaniciId)}
-              >
-                <option value="mert">Mert</option>
-                <option value="havsa">Havsa</option>
-              </select>
-            </div>
-            <div className="ev-gider__alan">
-              <label htmlFor="ayri-gelir-ack">Açıklama</label>
-              <input
-                id="ayri-gelir-ack"
-                value={ayriGelirAciklama}
-                onChange={(e) => setAyriGelirAciklama(e.target.value)}
-                placeholder="Örn. Maaş, ikramiye"
-                autoComplete="off"
-              />
-            </div>
-            <div className="ev-gider__alan">
-              <label htmlFor="ayri-gelir-tutar">Tutar (₺)</label>
-              <input
-                id="ayri-gelir-tutar"
-                type="text"
-                inputMode="decimal"
-                value={ayriGelirTutarStr}
-                onChange={(e) => setAyriGelirTutarStr(e.target.value)}
-                placeholder="0"
-              />
-            </div>
-            <div className="ev-gider__form-eylem-grup">
-              <button type="submit" className="ev-gider__btn ev-gider__btn--birincil">
-                {duzenlenenGelirId ? 'Güncelle' : 'Geliri ekle'}
-              </button>
-              {duzenlenenGelirId ? (
-                <button type="button" className="ev-gider__btn" onClick={ayriGelirDuzenleIptal}>
-                  Vazgeç
-                </button>
-              ) : null}
-            </div>
-          </form>
-
-          <div className="ev-gider__bireysel-gizle">
-            <button
-              type="button"
-              className="ev-gider__btn"
-              onClick={() => {
-                ayriGelirDuzenleIptal()
-                setAyriGelirBolgeAcik(false)
-              }}
+            {/* Gelir Ekleme Formu */}
+            <form
+              onSubmit={ayriGelirFormGonder}
+              className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 p-3.5 rounded-2xl bg-surface-raised border border-border/70"
             >
-              Gizle
-            </button>
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase block mb-1">
+                  Kişi
+                </label>
+                <select
+                  value={ayriGelirKisi}
+                  onChange={(e) => setAyriGelirKisi(e.target.value as KullaniciId)}
+                  className="w-full h-9 rounded-xl bg-surface border border-border px-2 text-xs font-bold text-foreground"
+                >
+                  <option value="mert">Mert</option>
+                  <option value="havsa">Havsa</option>
+                </select>
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="text-[10px] font-bold text-muted uppercase block mb-1">
+                  Açıklama
+                </label>
+                <input
+                  type="text"
+                  value={ayriGelirAciklama}
+                  onChange={(e) => setAyriGelirAciklama(e.target.value)}
+                  placeholder="Örn. Maaş, ikramiye"
+                  className="w-full h-9 rounded-xl bg-surface border border-border px-3 text-xs font-semibold text-foreground"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-muted uppercase block mb-1">
+                  Tutar (₺)
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={ayriGelirTutarStr}
+                    onChange={(e) => setAyriGelirTutarStr(e.target.value)}
+                    placeholder="0"
+                    className="w-full h-9 rounded-xl bg-surface border border-border px-3 text-xs font-bold text-foreground font-mono"
+                  />
+                  <button type="submit" className="primary-button h-9 px-3 text-xs font-bold shrink-0">
+                    {duzenlenenGelirId ? "Kaydet" : "Ekle"}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
-        </section>
-      )}
+        )}
+      </div>
     </div>
-  )
+  );
 }
 
-function KartPaneli({
+// ------------------------------------------------------------------
+// MODERN KART PANELİ (KREDİ KARTI / HARCAMA BİLEŞENİ)
+// ------------------------------------------------------------------
+
+function ModernKartPaneli({
   kart,
   onAdDegis,
   onToplamDegis,
+  onOdeyenDegis,
   onToplamlardanHaricDegis,
   onSil,
   onBireyselEkle,
   onBireyselGuncelle,
   onBireyselSil,
 }: {
-  kart: KrediKartiEkstresi
-  onAdDegis: (ad: string) => void
-  onToplamDegis: (t: number) => void
-  onToplamlardanHaricDegis: (haric: boolean) => void
-  onSil: () => void
-  onBireyselEkle: (k: Omit<BireyselEkstreKalemi, 'id'>) => void
-  onBireyselGuncelle: (kalemId: string, k: Omit<BireyselEkstreKalemi, 'id'>) => void
-  onBireyselSil: (kalemId: string) => void
+  kart: KrediKartiEkstresi;
+  onAdDegis: (ad: string) => void;
+  onToplamDegis: (t: number) => void;
+  onOdeyenDegis: (odeyen: "mert" | "havsa" | "ortak") => void;
+  onToplamlardanHaricDegis: (haric: boolean) => void;
+  onSil: () => void;
+  onBireyselEkle: (k: Omit<BireyselEkstreKalemi, "id">) => void;
+  onBireyselGuncelle: (kalemId: string, k: Omit<BireyselEkstreKalemi, "id">) => void;
+  onBireyselSil: (kalemId: string) => void;
 }) {
-  const h = tekKartHesabi(kart)
-  const [aciklama, setAciklama] = useState('')
-  const [tutarStr, setTutarStr] = useState('')
-  const [kullanici, setKullanici] = useState<KullaniciId>('mert')
-  const [bireyselBolgeAcik, setBireyselBolgeAcik] = useState(false)
-  const [duzenlenenKalemId, setDuzenlenenKalemId] = useState<string | null>(null)
-  const oncekiKalemSayisi = useRef(0)
+  const h = tekKartHesabi(kart);
+  const [bireyselAcik, setBireyselAcik] = useState(kart.bireyselKalemler.length > 0);
+  const [kalemAciklama, setKalemAciklama] = useState("");
+  const [kalemTutarStr, setKalemTutarStr] = useState("");
+  const [kalemKisi, setKalemKisi] = useState<KullaniciId>("mert");
+  const [duzenlenenKalemId, setDuzenlenenKalemId] = useState<string | null>(null);
+
+  const seciliOdeyen =
+    kart.odenenKisi ??
+    (kart.ad.toLowerCase().includes("havsa")
+      ? "havsa"
+      : kart.ad.toLowerCase().includes("mert")
+      ? "mert"
+      : "mert");
 
   function kalemFormunuTemizle() {
-    setDuzenlenenKalemId(null)
-    setAciklama('')
-    setTutarStr('')
+    setDuzenlenenKalemId(null);
+    setKalemAciklama("");
+    setKalemTutarStr("");
+  }
+
+  function kalemKaydet(e: React.FormEvent) {
+    e.preventDefault();
+    const tutar = Number(kalemTutarStr.replace(",", "."));
+    if (!Number.isFinite(tutar) || tutar <= 0) return;
+
+    const yeni = {
+      kullaniciId: kalemKisi,
+      aciklama: kalemAciklama.trim() || "Bireysel kalem",
+      tutar,
+    };
+
+    if (duzenlenenKalemId) {
+      onBireyselGuncelle(duzenlenenKalemId, yeni);
+    } else {
+      onBireyselEkle(yeni);
+    }
+    kalemFormunuTemizle();
   }
 
   function kalemDuzenle(bk: BireyselEkstreKalemi) {
-    setDuzenlenenKalemId(bk.id)
-    setKullanici(bk.kullaniciId)
-    setAciklama(bk.aciklama)
-    setTutarStr(tutarMetniInputIcin(bk.tutar))
-  }
-
-  function kalemSil(kalemId: string) {
-    if (duzenlenenKalemId === kalemId) {
-      kalemFormunuTemizle()
-    }
-    onBireyselSil(kalemId)
-  }
-
-  useEffect(() => {
-    const len = kart.bireyselKalemler.length
-    if (oncekiKalemSayisi.current > 0 && len === 0) {
-      setBireyselBolgeAcik(false)
-    }
-    oncekiKalemSayisi.current = len
-  }, [kart.bireyselKalemler.length])
-
-  function kalemiKaydet(e: React.FormEvent) {
-    e.preventDefault()
-    const tutar = Number(tutarStr.replace(',', '.'))
-    if (!Number.isFinite(tutar) || tutar <= 0) return
-    const kalem = {
-      kullaniciId: kullanici,
-      aciklama: aciklama.trim() || 'Bireysel kalem',
-      tutar,
-    }
-    if (duzenlenenKalemId) {
-      onBireyselGuncelle(duzenlenenKalemId, kalem)
-    } else {
-      onBireyselEkle(kalem)
-    }
-    kalemFormunuTemizle()
+    setDuzenlenenKalemId(bk.id);
+    setKalemKisi(bk.kullaniciId);
+    setKalemAciklama(bk.aciklama);
+    setKalemTutarStr(tutarMetniInputIcin(bk.tutar));
+    setBireyselAcik(true);
   }
 
   return (
-    <section
-      className={
+    <div
+      className={`p-5 rounded-3xl border transition shadow-xs space-y-4 ${
         kart.tumGiderToplamlarindaHaric
-          ? 'ev-gider__kart ev-gider__kart--toplamlar-disinda'
-          : 'ev-gider__kart'
-      }
-      aria-labelledby={bireyselBolgeAcik ? `kart-baslik-${kart.id}` : undefined}
+          ? "bg-surface/50 border-border/50 opacity-70"
+          : "bg-surface border-border/80"
+      }`}
     >
-      <div className="ev-gider__kart-ust">
-        <div className="ev-gider__alan" style={{ flex: '2 1 200px' }}>
-          <label htmlFor={`ad-${kart.id}`}>Kayıt adı</label>
-          <input
-            id={`ad-${kart.id}`}
-            value={kart.ad}
-            onChange={(e) => onAdDegis(e.target.value)}
-            autoComplete="off"
-          />
+      {/* Kart Üst Bar (Başlık, Tutar, Ödeyen ve İşlemler) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Kart Başlığı ve Toplam Tutar Girişi */}
+        <div className="flex items-center gap-3 flex-1">
+          <div className="w-10 h-10 rounded-2xl bg-surface-raised border border-border/70 flex items-center justify-center text-lg shrink-0">
+            💳
+          </div>
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-bold text-muted uppercase block">Kayıt Adı</label>
+              <input
+                type="text"
+                value={kart.ad}
+                onChange={(e) => onAdDegis(e.target.value)}
+                placeholder="Örn. Garanti Bonus"
+                className="w-full h-8 px-2.5 rounded-xl bg-surface-raised border border-border/70 text-xs font-bold text-foreground focus:border-primary/50 transition"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-muted uppercase block">Toplam Tutar (₺)</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                value={kart.toplamEkstre || ""}
+                onChange={(e) => onToplamDegis(Number(e.target.value))}
+                placeholder="0.00"
+                className="w-full h-8 px-2.5 rounded-xl bg-surface-raised border border-border/70 text-xs font-extrabold text-foreground font-mono focus:border-primary/50 transition"
+              />
+            </div>
+          </div>
         </div>
-        <div className="ev-gider__alan" style={{ flex: '1 1 140px' }}>
-          <label htmlFor={`toplam-${kart.id}`}>Toplam</label>
-          <input
-            id={`toplam-${kart.id}`}
-            type="number"
-            min={0}
-            step={0.01}
-            value={kart.toplamEkstre || ''}
-            onChange={(e) => onToplamDegis(Number(e.target.value))}
-          />
-        </div>
-        <button type="button" className="ev-gider__btn ev-gider__btn--tehlike" onClick={onSil}>
-          Kaydı sil
-        </button>
-      </div>
 
-      <div className="ev-gider__kart-haric-satir">
-        <label className="ev-gider__kart-haric-etiket" htmlFor={`haric-${kart.id}`}>
-          <input
-            id={`haric-${kart.id}`}
-            type="checkbox"
-            checked={Boolean(kart.tumGiderToplamlarindaHaric)}
-            onChange={(e) => onToplamlardanHaricDegis(e.target.checked)}
-          />
-          <span>Tüm giderlere dahil etme</span>
-        </label>
-      </div>
+        {/* Ödeyen Seçici & Aksiyonlar */}
+        <div className="flex items-center gap-2 self-end sm:self-center flex-wrap">
+          {/* Ekstreyi Ödeyen Kişi Seçici (Madde 2 - Mahsuplaşma İçin) */}
+          <div className="flex items-center p-0.5 rounded-xl bg-surface-raised border border-border/70 text-[11px] font-bold">
+            <span className="text-muted text-[10px] px-2 font-semibold">Ödeyen:</span>
+            <button
+              type="button"
+              onClick={() => onOdeyenDegis("mert")}
+              className={`px-2 py-1 rounded-lg transition cursor-pointer ${
+                seciliOdeyen === "mert"
+                  ? "bg-sky-500/20 text-sky-400 font-extrabold shadow-xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              Mert
+            </button>
+            <button
+              type="button"
+              onClick={() => onOdeyenDegis("havsa")}
+              className={`px-2 py-1 rounded-lg transition cursor-pointer ${
+                seciliOdeyen === "havsa"
+                  ? "bg-pink-500/20 text-pink-400 font-extrabold shadow-xs"
+                  : "text-muted hover:text-foreground"
+              }`}
+            >
+              Havsa
+            </button>
+          </div>
 
-      {!bireyselBolgeAcik ? (
-        <div className="ev-gider__bireysel-kapali">
+          {/* Dahil Etme Checkbox */}
+          <label
+            className="flex items-center gap-1.5 text-[11px] font-semibold text-muted hover:text-foreground cursor-pointer px-2 py-1 rounded-xl bg-surface-raised/70 border border-border/60"
+            title="İşaretlenirse genel hesaplamalara katılmaz"
+          >
+            <input
+              type="checkbox"
+              checked={Boolean(kart.tumGiderToplamlarindaHaric)}
+              onChange={(e) => onToplamlardanHaricDegis(e.target.checked)}
+              className="accent-primary rounded-sm"
+            />
+            <span>Hariç Tut</span>
+          </label>
+
+          {/* Sil Butonu */}
           <button
             type="button"
-            className="ev-gider__btn ev-gider__btn--birincil"
-            onClick={() => setBireyselBolgeAcik(true)}
+            onClick={onSil}
+            className="w-8 h-8 flex items-center justify-center rounded-xl text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+            title="Kaydı sil"
           >
-            Bireysel ekstre kalemleri
-            {kart.bireyselKalemler.length > 0
-              ? ` (${kart.bireyselKalemler.length})`
-              : ''}
+            ✕
           </button>
         </div>
-      ) : (
-        <>
-          <h2 className="ev-gider__baslik ev-gider__bireysel-baslik" id={`kart-baslik-${kart.id}`}>
-            Bireysel ekstre kalemleri
-          </h2>
+      </div>
 
-          {kart.bireyselKalemler.length === 0 ? (
-            <p className="ev-gider__bos">Henüz bireysel kalem yok.</p>
-          ) : (
-            <table className="ev-gider__tablo">
-              <thead>
-                <tr>
-                  <th>Kişi</th>
-                  <th>Açıklama</th>
-                  <th>Tutar</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
+      {/* Kart Alt Paylaşım Özeti */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 rounded-2xl bg-surface-raised/70 border border-border/60 text-xs">
+        <div>
+          <span className="text-muted block text-[10px] uppercase font-bold">Ortak Taban</span>
+          <span className="font-extrabold text-foreground">
+            {para(h.ortakTaban)}{" "}
+            <span className="text-muted font-normal text-[11px]">
+              (yarı pay: {para(h.ortakTaban / 2)})
+            </span>
+          </span>
+        </div>
+        <div>
+          <span className="text-muted block text-[10px] uppercase font-bold">Mert'in Payı</span>
+          <span className="font-extrabold text-sky-400">{para(h.mertToplam)}</span>
+        </div>
+        <div className="col-span-2 sm:col-span-1">
+          <span className="text-muted block text-[10px] uppercase font-bold">Havsa'nın Payı</span>
+          <span className="font-extrabold text-pink-400">{para(h.havsaToplam)}</span>
+        </div>
+      </div>
+
+      {/* Bireysel Ekstre Kalemleri Bölümü */}
+      <div className="space-y-3 pt-1">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setBireyselAcik((v) => !v)}
+            className="text-xs font-bold text-muted hover:text-foreground flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>🏷️</span>
+            <span>Bireysel Kalemler ({kart.bireyselKalemler.length})</span>
+            <span className="text-[10px]">{bireyselAcik ? "▲" : "▼"}</span>
+          </button>
+          <span className="text-[11px] text-muted">
+            {kart.bireyselKalemler.length === 0
+              ? "Tamamı ortak paylaşılır"
+              : `Bireysel Toplam: ${para(h.mertBireysel + h.havsaBireysel)}`}
+          </span>
+        </div>
+
+        {bireyselAcik && (
+          <div className="space-y-3 pl-2 sm:pl-4 border-l-2 border-border/60 animate-in fade-in duration-150">
+            {/* Kalemler Listesi */}
+            {kart.bireyselKalemler.length > 0 && (
+              <div className="space-y-1.5">
                 {kart.bireyselKalemler.map((bk) => (
-                  <tr key={bk.id}>
-                    <td>{KULLANICI_ETIKET[bk.kullaniciId]}</td>
-                    <td>{bk.aciklama}</td>
-                    <td>{para(bk.tutar)}</td>
-                    <td>
-                      <div className="ev-gider__tablo-eylem">
-                        <button
-                          type="button"
-                          className="ev-gider__btn ev-gider__btn--kalem"
-                          onClick={() => kalemDuzenle(bk)}
-                          aria-label="Kalemi düzenle"
-                          title="Düzenle"
-                        >
-                          ✎
-                        </button>
-                        <button
-                          type="button"
-                          className="ev-gider__btn"
-                          onClick={() => kalemSil(bk.id)}
-                          aria-label="Kalemi sil"
-                        >
-                          Sil
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                  <div
+                    key={bk.id}
+                    className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-raised border border-border/60 text-xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                          bk.kullaniciId === "mert"
+                            ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                            : "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                        }`}
+                      >
+                        {KULLANICI_ETIKET[bk.kullaniciId]}
+                      </span>
+                      <span className="font-semibold text-foreground">{bk.aciklama}</span>
+                    </div>
 
-          <form className="ev-gider__form-satir" onSubmit={kalemiKaydet}>
-            <div className="ev-gider__alan">
-              <label htmlFor={`kis-${kart.id}`}>Kişi</label>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground font-mono">
+                        {para(bk.tutar)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => kalemDuzenle(bk)}
+                        className="p-1 text-muted hover:text-foreground cursor-pointer"
+                        title="Düzenle"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onBireyselSil(bk.id)}
+                        className="p-1 text-rose-500 hover:text-rose-400 cursor-pointer"
+                        title="Sil"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Hızlı Kalem Ekleme Formu */}
+            <form onSubmit={kalemKaydet} className="flex items-center gap-2 flex-wrap">
               <select
-                id={`kis-${kart.id}`}
-                value={kullanici}
-                onChange={(e) => setKullanici(e.target.value as KullaniciId)}
+                value={kalemKisi}
+                onChange={(e) => setKalemKisi(e.target.value as KullaniciId)}
+                className="h-8 rounded-xl bg-surface-raised border border-border px-2 text-xs font-bold text-foreground"
               >
                 <option value="mert">Mert</option>
                 <option value="havsa">Havsa</option>
               </select>
-            </div>
-            <div className="ev-gider__alan">
-              <label htmlFor={`ack-${kart.id}`}>Açıklama</label>
+
               <input
-                id={`ack-${kart.id}`}
-                value={aciklama}
-                onChange={(e) => setAciklama(e.target.value)}
-                placeholder="Örn. Kişisel alışveriş"
-                autoComplete="off"
+                type="text"
+                value={kalemAciklama}
+                onChange={(e) => setKalemAciklama(e.target.value)}
+                placeholder="Kişisel harcama açıklaması"
+                className="flex-1 min-w-[140px] h-8 rounded-xl bg-surface-raised border border-border px-2.5 text-xs font-semibold text-foreground"
               />
-            </div>
-            <div className="ev-gider__alan">
-              <label htmlFor={`tut-${kart.id}`}>Tutar (₺)</label>
+
               <input
-                id={`tut-${kart.id}`}
                 type="text"
                 inputMode="decimal"
-                value={tutarStr}
-                onChange={(e) => setTutarStr(e.target.value)}
-                placeholder="0"
+                value={kalemTutarStr}
+                onChange={(e) => setKalemTutarStr(e.target.value)}
+                placeholder="Tutar (₺)"
+                className="w-24 h-8 rounded-xl bg-surface-raised border border-border px-2.5 text-xs font-bold text-foreground font-mono"
               />
-            </div>
-            <div className="ev-gider__form-eylem-grup">
-              <button type="submit" className="ev-gider__btn ev-gider__btn--birincil">
-                {duzenlenenKalemId ? 'Güncelle' : 'Kalemi ekle'}
+
+              <button
+                type="submit"
+                className="primary-button h-8 px-3 text-xs font-bold shrink-0"
+              >
+                {duzenlenenKalemId ? "Kaydet" : "+ Kalem Ekle"}
               </button>
-              {duzenlenenKalemId ? (
-                <button type="button" className="ev-gider__btn" onClick={kalemFormunuTemizle}>
+
+              {duzenlenenKalemId && (
+                <button
+                  type="button"
+                  onClick={kalemFormunuTemizle}
+                  className="secondary-button h-8 px-2.5 text-xs font-bold shrink-0"
+                >
                   Vazgeç
                 </button>
-              ) : null}
-            </div>
-          </form>
-
-          <div className="ev-gider__bireysel-gizle">
-            <button
-              type="button"
-              className="ev-gider__btn"
-              onClick={() => {
-                kalemFormunuTemizle()
-                setBireyselBolgeAcik(false)
-              }}
-            >
-              Gizle
-            </button>
+              )}
+            </form>
           </div>
-        </>
-      )}
-
-      <div className="ev-gider__alt-ozet">
-        <span>
-          Ortak paya taban: <strong>{para(h.ortakTaban)}</strong> (her birine yarısı:{' '}
-          <strong>{para(h.ortakTaban / 2)}</strong>)
-        </span>
-        <span>
-          Bu kayıt — Mert: <strong>{para(h.mertToplam)}</strong>, Havsa:{' '}
-          <strong>{para(h.havsaToplam)}</strong>
-        </span>
+        )}
       </div>
-    </section>
-  )
+    </div>
+  );
 }
