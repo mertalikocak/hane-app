@@ -74,18 +74,28 @@ export default function WeddingPage() {
   }, [data]);
 
   const filtrelenmisMaddeler = useMemo(() => {
-    return data.maddeler.filter((madde) => {
-      if (seciliKategori !== "tum" && madde.kategori !== seciliKategori) return false;
-      if (seciliDurum === "bekleyen" && madde.tamamlandi) return false;
-      if (seciliDurum === "tamamlanan" && !madde.tamamlandi) return false;
-      if (aramaMetni.trim()) {
-        const query = aramaMetni.toLowerCase();
-        const baslikMatch = madde.baslik.toLowerCase().includes(query);
-        const notlarMatch = madde.notlar?.toLowerCase().includes(query);
-        if (!baslikMatch && !notlarMatch) return false;
-      }
-      return true;
-    });
+    return data.maddeler
+      .filter((madde) => {
+        if (seciliKategori !== "tum" && madde.kategori !== seciliKategori) return false;
+        if (seciliDurum === "bekleyen" && madde.tamamlandi) return false;
+        if (seciliDurum === "tamamlanan" && !madde.tamamlandi) return false;
+        if (aramaMetni.trim()) {
+          const query = aramaMetni.toLowerCase();
+          const baslikMatch = madde.baslik.toLowerCase().includes(query);
+          const notlarMatch = madde.notlar?.toLowerCase().includes(query);
+          if (!baslikMatch && !notlarMatch) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        // Ödenenler (tamamlandı) aşağıya düşsün
+        if (!a.tamamlandi && b.tamamlandi) return -1;
+        if (a.tamamlandi && !b.tamamlandi) return 1;
+        if (a.tamamlandi && b.tamamlandi && a.tamamlanmaTarihi && b.tamamlanmaTarihi) {
+          return b.tamamlanmaTarihi.localeCompare(a.tamamlanmaTarihi);
+        }
+        return 0;
+      });
   }, [data.maddeler, seciliKategori, seciliDurum, aramaMetni]);
 
   const handleToggle = (id: string) => {
@@ -325,21 +335,34 @@ export default function WeddingPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {filtrelenmisMaddeler.map((item) => {
+            {filtrelenmisMaddeler.map((item, index) => {
               const katMeta = KATEGORI_ETIKETLERI[item.kategori] || {
                 label: "Diğer",
                 icon: "✨",
               };
+              const isFirstCompleted =
+                seciliDurum === "tum" &&
+                item.tamamlandi &&
+                (index === 0 || !filtrelenmisMaddeler[index - 1].tamamlandi);
 
               return (
-                <div
-                  key={item.id}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all gap-3 ${
-                    item.tamamlandi
-                      ? "bg-surface-raised/40 border-border/50 opacity-80"
-                      : "bg-surface border-border/80 hover:border-rose-500/40 shadow-2xs"
-                  }`}
-                >
+                <div key={item.id} className="space-y-2">
+                  {isFirstCompleted && (
+                    <div className="pt-4 pb-1.5 flex items-center gap-3">
+                      <div className="h-px bg-border/80 flex-1" />
+                      <span className="text-[11px] font-bold text-muted uppercase tracking-wider flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-raised border border-border/70">
+                        <span className="text-emerald-500 font-black">✓</span> Ödenen / Kumbaradan Düşenler ({stats.tamamlananSayisi})
+                      </span>
+                      <div className="h-px bg-border/80 flex-1" />
+                    </div>
+                  )}
+                  <div
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl border transition-all gap-3 ${
+                      item.tamamlandi
+                        ? "bg-surface-raised/40 border-border/50 opacity-80"
+                        : "bg-surface border-border/80 hover:border-rose-500/40 shadow-2xs"
+                    }`}
+                  >
                   {/* Sol Kısım: Checkbox ve Başlık */}
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <button
@@ -438,8 +461,9 @@ export default function WeddingPage() {
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
           </div>
         )}
       </div>
