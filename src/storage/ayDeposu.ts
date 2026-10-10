@@ -1,4 +1,9 @@
-import type { AyHaneGiderVerisi, BireyselAyriHarcama, BireyselGelirKalemi } from '../domain/haneGiderTypes'
+import type {
+  AyHaneGiderVerisi,
+  BireyselAyriHarcama,
+  BireyselGelirKalemi,
+  HaneTransferi,
+} from '../domain/haneGiderTypes'
 
 export const AY_STORAGE_ON_EK = 'hane-gider-ay:'
 
@@ -38,10 +43,18 @@ function gelirListesiOku(o: Record<string, unknown>): BireyselGelirKalemi[] {
   return []
 }
 
+function transferListesiOku(o: Record<string, unknown>): HaneTransferi[] {
+  if (Array.isArray(o.transferler)) {
+    return o.transferler as HaneTransferi[]
+  }
+  return []
+}
+
 const bosAyVerisi = (): AyHaneGiderVerisi => ({
   krediKartlari: [],
   bireyselAyriHarcamalar: [],
   bireyselGelirKalemleri: [],
+  transferler: [],
 })
 
 /** localStorage ham JSON nesnesini ay verisine dönüştürür */
@@ -54,6 +67,7 @@ export function ayVerisiNesnedenParse(o: unknown): AyHaneGiderVerisi | null {
     krediKartlari: kayit.krediKartlari as AyHaneGiderVerisi['krediKartlari'],
     bireyselAyriHarcamalar: ayriHarcamaListesiOku(kayit),
     bireyselGelirKalemleri: gelirListesiOku(kayit),
+    transferler: transferListesiOku(kayit),
   }
 }
 
