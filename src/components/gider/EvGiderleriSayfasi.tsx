@@ -124,6 +124,9 @@ export function EvGiderleriSayfasi() {
   const [transferAciklama, setTransferAciklama] = useState("");
   const [bireyselGidereYansit, setBireyselGidereYansit] = useState(false);
 
+  // 📋 Özet Modal State
+  const [isOzetModalOpen, setIsOzetModalOpen] = useState(false);
+
   const iceAktarInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (mesaj: string) => {
@@ -652,6 +655,15 @@ export function EvGiderleriSayfasi() {
             title="Bu ayın kayıtlarını temizle"
           >
             <span>🗑️</span> Sıfırla
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsOzetModalOpen(true)}
+            className="secondary-button h-9 px-3 text-xs font-bold text-foreground cursor-pointer flex items-center gap-1.5"
+            title="Aylık bütçe ve harcama özetini görüntüle ve kopyala"
+          >
+            <span>📋</span> Özetle
           </button>
 
           <button
@@ -1295,6 +1307,25 @@ export function EvGiderleriSayfasi() {
         onSubmit={handleTransferKaydet}
         onerilenTutar={mahsuplasma.transferTutari}
       />
+
+      {/* 📋 Aylık Bütçe ve Gider Özeti Modalı */}
+      <OzetModal
+        isOpen={isOzetModalOpen}
+        onClose={() => setIsOzetModalOpen(false)}
+        ayEtiketiStr={ayEtiketi(anahtar)}
+        veri={veri}
+        mertGider={mertGider}
+        havsaGider={havsaGider}
+        mertGelir={mertGelir}
+        havsaGelir={havsaGelir}
+        mertKalan={mertKalan}
+        havsaKalan={havsaKalan}
+        evGideriToplami={evGideriToplami}
+        evGelirToplami={evGelirToplami}
+        evKalan={evKalan}
+        mahsuplasma={mahsuplasma}
+        showToast={showToast}
+      />
     </div>
   );
 }
@@ -1794,6 +1825,275 @@ function ParaTransferiModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// AYLIK BÜTÇE VE GİDER ÖZETİ MODAL BİLEŞENİ
+// ------------------------------------------------------------------
+
+function OzetModal({
+  isOpen,
+  onClose,
+  ayEtiketiStr,
+  veri,
+  mertGider,
+  havsaGider,
+  mertGelir,
+  havsaGelir,
+  mertKalan,
+  havsaKalan,
+  evGideriToplami,
+  evGelirToplami,
+  evKalan,
+  mahsuplasma,
+  showToast,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  ayEtiketiStr: string;
+  veri: AyHaneGiderVerisi;
+  mertGider: number;
+  havsaGider: number;
+  mertGelir: number;
+  havsaGelir: number;
+  mertKalan: number;
+  havsaKalan: number;
+  evGideriToplami: number;
+  evGelirToplami: number;
+  evKalan: number;
+  mahsuplasma: import("@/domain/ekstreHesapla").MahsuplasmaSonucu;
+  showToast: (msg: string) => void;
+}) {
+  const [ozetMod, setOzetMod] = useState<"ortak" | "mert" | "havsa">("ortak");
+  const [kopyalandi, setKopyalandi] = useState(false);
+
+  if (!isOpen) return null;
+
+  // Seçili moda göre metin üretimi
+  const ozetMetniUret = (): string => {
+    const satirlar: string[] = [];
+
+    if (ozetMod === "ortak") {
+      satirlar.push(`🏡 HANE GİDER & BÜTÇE ÖZETİ (${ayEtiketiStr})`);
+      satirlar.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      satirlar.push(`💰 GELİR KALEMLERİ:`);
+      const gelirler = veri.bireyselGelirKalemleri ?? [];
+      if (gelirler.length === 0) {
+        satirlar.push(`• Gelir kaydı bulunmuyor`);
+      } else {
+        gelirler.forEach((g) => {
+          satirlar.push(`• [${KULLANICI_ETIKET[g.kullaniciId]}] ${g.aciklama}: ${para(g.tutar)}`);
+        });
+      }
+      satirlar.push(`👉 TOPLAM GELİR: ${para(evGelirToplami)}`);
+      satirlar.push(``);
+      satirlar.push(`💳 GİDER KALEMLERİ:`);
+      const kartlar = toplumaDahilKartlar(veri.krediKartlari);
+      if (kartlar.length === 0 && veri.bireyselAyriHarcamalar.length === 0) {
+        satirlar.push(`• Gider kaydı bulunmuyor`);
+      } else {
+        kartlar.forEach((k) => {
+          const h = tekKartHesabi(k);
+          satirlar.push(`• ${k.ad}: ${para(k.toplamEkstre)} (Ortak Payı: ${para(h.ortakTaban)})`);
+        });
+        veri.bireyselAyriHarcamalar.forEach((b) => {
+          satirlar.push(`• [Ayrı Bireysel / ${KULLANICI_ETIKET[b.kullaniciId]}] ${b.aciklama}: ${para(b.tutar)}`);
+        });
+      }
+      satirlar.push(`👉 TOPLAM GİDER: ${para(evGideriToplami)}`);
+      satirlar.push(``);
+      satirlar.push(`🤝 AY SONU MAHSUPLAŞMA:`);
+      satirlar.push(`• ${mahsuplasma.durumMetni}`);
+      if (mahsuplasma.transferTutari > 0) {
+        satirlar.push(`• Kalan Transfer Tutarı: ${para(mahsuplasma.transferTutari)}`);
+      }
+      satirlar.push(``);
+      satirlar.push(`📊 NET KALAN:`);
+      satirlar.push(`👉 Ev Net Kalanı: ${para(evKalan)}`);
+      satirlar.push(`• Mert Kalan Bakiye: ${para(mertKalan)}`);
+      satirlar.push(`• Havsa Kalan Bakiye: ${para(havsaKalan)}`);
+    } else if (ozetMod === "mert") {
+      satirlar.push(`👤 MERT - AYLIK GİDER ÖZETİ (${ayEtiketiStr})`);
+      satirlar.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      satirlar.push(`💰 GELİR KALEMLERİ:`);
+      const mertGelirler = (veri.bireyselGelirKalemleri ?? []).filter((g) => g.kullaniciId === "mert");
+      if (mertGelirler.length === 0) {
+        satirlar.push(`• Gelir kaydı bulunmuyor`);
+      } else {
+        mertGelirler.forEach((g) => {
+          satirlar.push(`• ${g.aciklama}: ${para(g.tutar)}`);
+        });
+      }
+      satirlar.push(`👉 TOPLAM GELİR: ${para(mertGelir)}`);
+      satirlar.push(``);
+      satirlar.push(`💳 GİDER KALEMLERİ:`);
+      toplumaDahilKartlar(veri.krediKartlari).forEach((k) => {
+        const h = tekKartHesabi(k);
+        if (h.mertToplam > 0) {
+          const detay = h.mertBireysel > 0 ? ` (Ortak: ${para(h.ortakTaban / 2)} + Bireysel: ${para(h.mertBireysel)})` : ` (Ortak Payı)`;
+          satirlar.push(`• ${k.ad}: ${para(h.mertToplam)}${detay}`);
+        }
+      });
+      const mertAyri = veri.bireyselAyriHarcamalar.filter((b) => b.kullaniciId === "mert");
+      mertAyri.forEach((b) => {
+        satirlar.push(`• [Bireysel] ${b.aciklama}: ${para(b.tutar)}`);
+      });
+      satirlar.push(`👉 TOPLAM GİDER: ${para(mertGider)}`);
+      satirlar.push(``);
+      satirlar.push(`🤝 MAHSUPLAŞMA / HESAPLAŞMA:`);
+      if (mahsuplasma.borcluKisi === "havsa") {
+        satirlar.push(`• Havsa'dan Gelecek Para: ${para(mahsuplasma.transferTutari)}`);
+      } else if (mahsuplasma.borcluKisi === "mert") {
+        satirlar.push(`• Havsa'ya Gönderilecek Para: ${para(mahsuplasma.transferTutari)}`);
+      } else {
+        satirlar.push(`• Hesaplar Tam Dengede (0 ₺)`);
+      }
+      satirlar.push(``);
+      satirlar.push(`📊 KALAN NET PARA:`);
+      satirlar.push(`👉 Kalan Bakiye: ${para(mertKalan)}`);
+    } else {
+      satirlar.push(`👤 HAVSA - AYLIK GİDER ÖZETİ (${ayEtiketiStr})`);
+      satirlar.push(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+      satirlar.push(`💰 GELİR KALEMLERİ:`);
+      const havsaGelirler = (veri.bireyselGelirKalemleri ?? []).filter((g) => g.kullaniciId === "havsa");
+      if (havsaGelirler.length === 0) {
+        satirlar.push(`• Gelir kaydı bulunmuyor`);
+      } else {
+        havsaGelirler.forEach((g) => {
+          satirlar.push(`• ${g.aciklama}: ${para(g.tutar)}`);
+        });
+      }
+      satirlar.push(`👉 TOPLAM GELİR: ${para(havsaGelir)}`);
+      satirlar.push(``);
+      satirlar.push(`💳 GİDER KALEMLERİ:`);
+      toplumaDahilKartlar(veri.krediKartlari).forEach((k) => {
+        const h = tekKartHesabi(k);
+        if (h.havsaToplam > 0) {
+          const detay = h.havsaBireysel > 0 ? ` (Ortak: ${para(h.ortakTaban / 2)} + Bireysel: ${para(h.havsaBireysel)})` : ` (Ortak Payı)`;
+          satirlar.push(`• ${k.ad}: ${para(h.havsaToplam)}${detay}`);
+        }
+      });
+      const havsaAyri = veri.bireyselAyriHarcamalar.filter((b) => b.kullaniciId === "havsa");
+      havsaAyri.forEach((b) => {
+        satirlar.push(`• [Bireysel] ${b.aciklama}: ${para(b.tutar)}`);
+      });
+      satirlar.push(`👉 TOPLAM GİDER: ${para(havsaGider)}`);
+      satirlar.push(``);
+      satirlar.push(`🤝 MAHSUPLAŞMA / HESAPLAŞMA:`);
+      if (mahsuplasma.borcluKisi === "mert") {
+        satirlar.push(`• Mert'ten Gelecek Para: ${para(mahsuplasma.transferTutari)}`);
+      } else if (mahsuplasma.borcluKisi === "havsa") {
+        satirlar.push(`• Mert'e Gönderilecek Para: ${para(mahsuplasma.transferTutari)}`);
+      } else {
+        satirlar.push(`• Hesaplar Tam Dengede (0 ₺)`);
+      }
+      satirlar.push(``);
+      satirlar.push(`📊 KALAN NET PARA:`);
+      satirlar.push(`👉 Kalan Bakiye: ${para(havsaKalan)}`);
+    }
+
+    return satirlar.join("\n");
+  };
+
+  const handleKopyala = () => {
+    const metin = ozetMetniUret();
+    navigator.clipboard?.writeText(metin);
+    setKopyalandi(true);
+    showToast("📋 Özet metni panoya kopyalandı!");
+    setTimeout(() => setKopyalandi(false), 2500);
+  };
+
+  const guncelMetin = ozetMetniUret();
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150">
+      <div className="w-full max-w-xl rounded-3xl bg-surface border border-border/80 shadow-2xl p-5 sm:p-6 space-y-4 animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
+        {/* Modal Başlık */}
+        <div className="flex items-center justify-between pb-3 border-b border-border/60 shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">📋</span>
+            <div>
+              <h3 className="text-base font-black text-foreground">Aylık Bütçe ve Gider Özeti</h3>
+              <p className="text-xs text-muted">{ayEtiketiStr} dönemi gelir, gider ve mahsuplaşma dökümü</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer font-bold"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Özet Modu Seçici (Ortak / Mert / Havsa) */}
+        <div className="flex items-center p-1 rounded-2xl bg-surface-raised border border-border/70 shrink-0">
+          <button
+            type="button"
+            onClick={() => setOzetMod("ortak")}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              ozetMod === "ortak"
+                ? "bg-purple-500/20 text-purple-400 border border-purple-500/40 shadow-xs"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            <span>👥</span> Ortak Hane Özeti
+          </button>
+          <button
+            type="button"
+            onClick={() => setOzetMod("mert")}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              ozetMod === "mert"
+                ? "bg-sky-500/20 text-sky-400 border border-sky-500/40 shadow-xs"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            <span>👤</span> Mert Özeti
+          </button>
+          <button
+            type="button"
+            onClick={() => setOzetMod("havsa")}
+            className={`flex-1 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+              ozetMod === "havsa"
+                ? "bg-pink-500/20 text-pink-400 border border-pink-500/40 shadow-xs"
+                : "text-muted hover:text-foreground"
+            }`}
+          >
+            <span>👤</span> Havsa Özeti
+          </button>
+        </div>
+
+        {/* Metin Önizleme Kutusu */}
+        <div className="flex-1 min-h-0 overflow-y-auto rounded-2xl bg-surface-raised/90 border border-border/80 p-4 font-mono text-xs text-foreground/90 leading-relaxed whitespace-pre-wrap select-all">
+          {guncelMetin}
+        </div>
+
+        {/* Alt Aksiyon Butonları */}
+        <div className="pt-2 flex items-center justify-between gap-2 shrink-0 border-t border-border/60">
+          <span className="text-[11px] text-muted hidden sm:inline">
+            💡 WhatsApp veya Notlar'a yapıştırmak için kopyalayabilirsiniz.
+          </span>
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={onClose}
+              className="secondary-button h-10 px-4 text-xs font-bold cursor-pointer"
+            >
+              Kapat
+            </button>
+            <button
+              type="button"
+              onClick={handleKopyala}
+              className="primary-button h-10 px-5 text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+            >
+              <span>{kopyalandi ? "✅" : "📋"}</span>
+              <span>{kopyalandi ? "Kopyalandı!" : "Metni Kopyala"}</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
