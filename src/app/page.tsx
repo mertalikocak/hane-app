@@ -10,6 +10,7 @@ import { getProfiles, getActiveProfileId, getProfileStats } from "@/storage/body
 import { getCalendarEvents } from "@/storage/calendarStorage";
 import { getWishlistItems } from "@/storage/wishlistStorage";
 import { getCleaningStats, CLEANING_EVENT_NAME } from "@/storage/cleaningStorage";
+import { getWeddingData, getWeddingStats, WEDDING_EVENT_NAME } from "@/storage/weddingStorage";
 import { YedekModal } from "@/components/navigation/YedekModal";
 
 const para = (n: number) =>
@@ -35,6 +36,11 @@ export default function DashboardPage() {
     cleanedTodayCount: 0,
     dueRoomsCount: 0,
     freshRoomsCount: 0,
+  });
+  const [weddingStats, setWeddingStats] = useState({
+    kalanKumbara: 0,
+    toplamMaddeSayisi: 0,
+    tamamlananSayisi: 0,
   });
   const [isLoaded, setIsLoaded] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
@@ -109,6 +115,15 @@ export default function DashboardPage() {
         dueRoomsCount: cleanSt.dueRoomsCount,
         freshRoomsCount: cleanSt.freshRoomsCount,
       });
+
+      // 8. Wedding Stats
+      const wedData = getWeddingData();
+      const wedSt = getWeddingStats(wedData);
+      setWeddingStats({
+        kalanKumbara: wedSt.kalanKumbara,
+        toplamMaddeSayisi: wedSt.toplamMaddeSayisi,
+        tamamlananSayisi: wedSt.tamamlananSayisi,
+      });
     } catch (e) {
       console.error("Dashboard loading error", e);
     } finally {
@@ -125,6 +140,7 @@ export default function DashboardPage() {
     window.addEventListener("calendar_events_updated", handleProfileChange);
     window.addEventListener("wishlist_items_updated", handleProfileChange);
     window.addEventListener(CLEANING_EVENT_NAME, handleProfileChange);
+    window.addEventListener(WEDDING_EVENT_NAME, handleProfileChange);
     window.addEventListener("storage", handleProfileChange);
 
     return () => {
@@ -133,6 +149,7 @@ export default function DashboardPage() {
       window.removeEventListener("calendar_events_updated", handleProfileChange);
       window.removeEventListener("wishlist_items_updated", handleProfileChange);
       window.removeEventListener(CLEANING_EVENT_NAME, handleProfileChange);
+      window.removeEventListener(WEDDING_EVENT_NAME, handleProfileChange);
       window.removeEventListener("storage", handleProfileChange);
     };
   }, []);
@@ -422,6 +439,47 @@ export default function DashboardPage() {
             className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 transition"
           >
             <span>İstek Listesini Aç</span>
+            <span>→</span>
+          </Link>
+        </div>
+
+        {/* Card: Hane Wedding */}
+        <div className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs hover:shadow-md hover:border-amber-500/40 transition-all group">
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-2xl group-hover:scale-110 transition-transform">
+                💍
+              </span>
+              <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-600 dark:text-amber-400">
+                {isLoaded ? `${weddingStats.tamamlananSayisi}/${weddingStats.toplamMaddeSayisi} Tamam` : "..."}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Hane Wedding</h2>
+            <p className="mt-1 text-xs sm:text-sm text-muted">
+              Düğün bütçesi, ortak kumbara ve hazırlık harcamaları takibi.
+            </p>
+
+            <div className="mt-5 space-y-2 rounded-2xl bg-surface-raised p-4 border border-border/50">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Kalan Kumbara:</span>
+                <span className="font-bold text-amber-500 dark:text-amber-400">
+                  {isLoaded ? para(weddingStats.kalanKumbara) : "..."}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-muted">Kalan Kalemler:</span>
+                <span className="font-bold text-foreground">
+                  {isLoaded ? `${weddingStats.toplamMaddeSayisi - weddingStats.tamamlananSayisi} Alınacak` : "..."}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Link
+            href="/wedding"
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 px-4 py-2.5 text-sm font-semibold text-stone-950 shadow-sm transition"
+          >
+            <span>Düğün Kumbarasını Aç</span>
             <span>→</span>
           </Link>
         </div>

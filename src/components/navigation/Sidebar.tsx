@@ -78,6 +78,12 @@ const navItems: NavItem[] = [
     description: "Ev temizlik & oda bakım takibi",
   },
   {
+    name: "Hane Wedding",
+    href: "/wedding",
+    icon: "💍",
+    description: "Düğün bütçesi & ortak kumbara",
+  },
+  {
     name: "Hane Car",
     href: "/cardolist",
     icon: "🚗",
