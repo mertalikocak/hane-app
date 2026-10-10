@@ -122,6 +122,7 @@ export function EvGiderleriSayfasi() {
   const [transferTutarStr, setTransferTutarStr] = useState("");
   const [transferTarih, setTransferTarih] = useState("");
   const [transferAciklama, setTransferAciklama] = useState("");
+  const [bireyselGidereYansit, setBireyselGidereYansit] = useState(false);
 
   const iceAktarInputRef = useRef<HTMLInputElement>(null);
 
@@ -420,7 +421,6 @@ export function EvGiderleriSayfasi() {
     showToast("Bu ayın tüm verileri sıfırlandı.");
   }
 
-  // Para Transferi Eylemleri
   const handleOpenTransferModal = () => {
     if (mahsuplasma.borcluKisi === "havsa") {
       setTransferGonderen("havsa");
@@ -436,7 +436,8 @@ export function EvGiderleriSayfasi() {
       setTransferTutarStr("");
     }
     setTransferTarih(new Date().toISOString().split("T")[0]);
-    setTransferAciklama("Ay sonu mahsuplaşma ödemesi");
+    setTransferAciklama("Nakit avans / borç ödemesi");
+    setBireyselGidereYansit(false);
     setIsTransferModalOpen(true);
   };
 
@@ -452,27 +453,58 @@ export function EvGiderleriSayfasi() {
       return;
     }
 
+    const transferId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "tr-" + Date.now();
+    let bireyselHarcamaId: string | undefined = undefined;
+
+    let yeniBireyseller = [...veri.bireyselAyriHarcamalar];
+    if (bireyselGidereYansit) {
+      bireyselHarcamaId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "h-" + Date.now();
+      const aciklamaMetni = transferAciklama.trim()
+        ? `[Nakit/Borç] ${transferAciklama.trim()}`
+        : `${KULLANICI_ETIKET[transferGonderen]}'dan alınan nakit/avans`;
+      yeniBireyseller = [
+        ...yeniBireyseller,
+        {
+          id: bireyselHarcamaId,
+          kullaniciId: transferAlan,
+          aciklama: aciklamaMetni,
+          tutar,
+        },
+      ];
+    }
+
     const yeni: HaneTransferi = {
-      id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "tr-" + Date.now(),
+      id: transferId,
       gonderen: transferGonderen,
       alan: transferAlan,
       tutar,
       tarih: transferTarih || undefined,
       aciklama: transferAciklama.trim() || undefined,
+      bireyselGidereYansit,
+      bireyselHarcamaId,
     };
 
     setVeri((v) => ({
       ...v,
       transferler: [...(v.transferler ?? []), yeni],
+      bireyselAyriHarcamalar: yeniBireyseller,
     }));
     setIsTransferModalOpen(false);
-    showToast("💸 Para transferi kaydedildi ve mahsuplaşma tutarından düşüldü!");
+    showToast(
+      bireyselGidereYansit
+        ? `💸 Transfer kaydedildi ve ${KULLANICI_ETIKET[transferAlan]}'in bütçesine gider yazıldı!`
+        : "💸 Para transferi kaydedildi ve mahsuplaşma tutarından düşüldü!"
+    );
   };
 
   const handleTransferSil = (id: string) => {
+    const silinecek = (veri.transferler ?? []).find((t) => t.id === id);
     setVeri((v) => ({
       ...v,
       transferler: (v.transferler ?? []).filter((t) => t.id !== id),
+      bireyselAyriHarcamalar: silinecek?.bireyselHarcamaId
+        ? v.bireyselAyriHarcamalar.filter((h) => h.id !== silinecek.bireyselHarcamaId)
+        : v.bireyselAyriHarcamalar,
     }));
     showToast("Transfer kaydı silindi.");
   };
@@ -909,6 +941,11 @@ export function EvGiderleriSayfasi() {
                         "{tr.aciklama}"
                       </span>
                     )}
+                    {tr.bireyselGidereYansit && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        {KULLANICI_ETIKET[tr.alan]}'e Gider Yazıldı
+                      </span>
+                    )}
                   </div>
 
                   <button
@@ -1241,11 +1278,13 @@ export function EvGiderleriSayfasi() {
         tutarStr={transferTutarStr}
         tarih={transferTarih}
         aciklama={transferAciklama}
+        bireyselGidereYansit={bireyselGidereYansit}
         onGonderenChange={setTransferGonderen}
         onAlanChange={setTransferAlan}
         onTutarChange={setTransferTutarStr}
         onTarihChange={setTransferTarih}
         onAciklamaChange={setTransferAciklama}
+        onBireyselGidereYansitChange={setBireyselGidereYansit}
         onSubmit={handleTransferKaydet}
         onerilenTutar={mahsuplasma.transferTutari}
       />
@@ -1575,11 +1614,13 @@ function ParaTransferiModal({
   tutarStr,
   tarih,
   aciklama,
+  bireyselGidereYansit,
   onGonderenChange,
   onAlanChange,
   onTutarChange,
   onTarihChange,
   onAciklamaChange,
+  onBireyselGidereYansitChange,
   onSubmit,
   onerilenTutar,
 }: {
@@ -1590,11 +1631,13 @@ function ParaTransferiModal({
   tutarStr: string;
   tarih: string;
   aciklama: string;
+  bireyselGidereYansit: boolean;
   onGonderenChange: (val: KullaniciId) => void;
   onAlanChange: (val: KullaniciId) => void;
   onTutarChange: (val: string) => void;
   onTarihChange: (val: string) => void;
   onAciklamaChange: (val: string) => void;
+  onBireyselGidereYansitChange: (val: boolean) => void;
   onSubmit: (e: React.FormEvent) => void;
   onerilenTutar?: number;
 }) {
@@ -1702,9 +1745,29 @@ function ParaTransferiModal({
               type="text"
               value={aciklama}
               onChange={(e) => onAciklamaChange(e.target.value)}
-              placeholder="Örn. Ekim ayı mahsuplaşma ödemesi"
+              placeholder="Örn. Nakit avans, borç"
               className="w-full h-10 rounded-xl bg-surface-raised border border-border px-3 text-xs font-semibold text-foreground"
             />
+          </div>
+
+          {/* 🎯 Bireysel Gidere Yansıt Checkbox */}
+          <div className="p-3 rounded-2xl bg-surface-raised/70 border border-border/70">
+            <label className="flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={bireyselGidereYansit}
+                onChange={(e) => onBireyselGidereYansitChange(e.target.checked)}
+                className="mt-0.5 accent-primary rounded-sm w-4 h-4 cursor-pointer shrink-0"
+              />
+              <div>
+                <span className="text-xs font-bold text-foreground block">
+                  Bu tutarı {KULLANICI_ETIKET[alan]} için bireysel harcama (gider) olarak da ekle
+                </span>
+                <span className="text-[11px] text-muted block mt-0.5 leading-relaxed">
+                  Elden nakit borç/avans alındığında seçin: Mahsuplaşmadan düşerken, aynı zamanda {KULLANICI_ETIKET[alan]}'in aylık bütçesine eksi (-) yazar.
+                </span>
+              </div>
+            </label>
           </div>
 
           {/* Butonlar */}

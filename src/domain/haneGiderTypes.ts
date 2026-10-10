@@ -49,6 +49,10 @@ export interface HaneTransferi {
   tutar: number
   tarih?: string
   aciklama?: string
+  /** Alan kişinin bireysel harcamalarına da gider (eksi bakiye) olarak işlendi mi? */
+  bireyselGidereYansit?: boolean
+  /** Bireysel harcama satırıyla ilişki id'si */
+  bireyselHarcamaId?: string
 }
 
 /** Tek bir ay için saklanan ortak kayıtlar ve ayrı bireysel harcamalar */
