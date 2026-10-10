@@ -884,10 +884,6 @@ export function EvGiderleriSayfasi() {
 
         <div className="mt-3.5 pt-3 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-muted">
           <div className="space-y-1.5 max-w-xl">
-            <p>
-              💡 <strong>Ödeyen Belirleme:</strong> Kartların bankaya kim tarafından ödendiğini aşağıdaki kart başlıklarındaki{" "}
-              <strong>[👤 Mert / 👤 Havsa]</strong> seçicisiyle belirleyebilirsiniz.
-            </p>
             <p className="text-muted/90 leading-relaxed">
               📌 <strong>Harcama vs. Para Transferi:</strong> Eğer iki kişinin birlikte yaptığı ortak bir harcamaysa{" "}
               <em>"Ortak Harcama"</em> olarak girmelisiniz (Ödeyen kişi kimse o seçilir). Fakat birinin bireysel harcamasını diğeri karşılıyorsa veya elden nakit borç/avans verildiyse{" "}
