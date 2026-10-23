@@ -49,39 +49,69 @@ export function GiderV2LedgerTable({
           ? "mert"
           : "mert");
 
-      // Kartın / Harcamanın ortak tabanı
       const isHarcama = kart.kayitTipi === "harcama";
-      if (h.ortakTaban > 0 || kart.bireyselKalemler.length === 0) {
+      const kimeAit = kart.kimeAit ?? "ortak";
+
+      if (kimeAit === "mert") {
         items.push({
           id: `kart-base-${kart.id}`,
           tur: "kart",
           ad: kart.ad,
-          detay: isHarcama ? "Ortak Harcama" : kart.bireyselKalemler.length > 0 ? "Ortak Paylaşım Kısmı" : "Kredi Kartı Ekstresi",
+          detay: isHarcama ? "Bireysel Harcama (Mert)" : "Bireysel Kredi Kartı (Mert)",
           odeyen,
-          kimeAit: "ortak",
-          tutar: h.ortakTaban,
-          mertYuku: h.ortakTaban / 2,
-          havsaYuku: h.ortakTaban / 2,
+          kimeAit: "mert",
+          tutar: kart.toplamEkstre,
+          mertYuku: kart.toplamEkstre,
+          havsaYuku: 0,
           orijinalKartId: kart.id,
         });
-      }
-
-      // Kartın ekstre içi bireysel kalemleri
-      for (const bk of kart.bireyselKalemler) {
-        const isMert = bk.kullaniciId === "mert";
+      } else if (kimeAit === "havsa") {
         items.push({
-          id: `kart-kalem-${bk.id}`,
-          tur: "bireysel_kalem",
-          ad: `${kart.ad} › ${bk.aciklama}`,
-          detay: `Ekstre içi bireysel (${KULLANICI_ETIKET[bk.kullaniciId]})`,
+          id: `kart-base-${kart.id}`,
+          tur: "kart",
+          ad: kart.ad,
+          detay: isHarcama ? "Bireysel Harcama (Havsa)" : "Bireysel Kredi Kartı (Havsa)",
           odeyen,
-          kimeAit: bk.kullaniciId,
-          tutar: bk.tutar,
-          mertYuku: isMert ? bk.tutar : 0,
-          havsaYuku: !isMert ? bk.tutar : 0,
+          kimeAit: "havsa",
+          tutar: kart.toplamEkstre,
+          mertYuku: 0,
+          havsaYuku: kart.toplamEkstre,
           orijinalKartId: kart.id,
-          orijinalKalemId: bk.id,
         });
+      } else {
+        // Ortak Kart / Harcama tabanı
+        if (h.ortakTaban > 0 || kart.bireyselKalemler.length === 0) {
+          items.push({
+            id: `kart-base-${kart.id}`,
+            tur: "kart",
+            ad: kart.ad,
+            detay: isHarcama ? "Ortak Harcama" : kart.bireyselKalemler.length > 0 ? "Ortak Paylaşım Kısmı" : "Kredi Kartı Ekstresi",
+            odeyen,
+            kimeAit: "ortak",
+            tutar: h.ortakTaban,
+            mertYuku: h.ortakTaban / 2,
+            havsaYuku: h.ortakTaban / 2,
+            orijinalKartId: kart.id,
+          });
+        }
+
+        // Kartın ekstre içi bireysel kalemleri
+        for (const bk of kart.bireyselKalemler) {
+          const isMert = bk.kullaniciId === "mert";
+          items.push({
+            id: `kart-kalem-${bk.id}`,
+            tur: "bireysel_kalem",
+            ad: `${kart.ad} › ${bk.aciklama}`,
+            detay: `Ekstre içi bireysel (${KULLANICI_ETIKET[bk.kullaniciId]})`,
+            odeyen,
+            kimeAit: bk.kullaniciId,
+            tutar: bk.tutar,
+            mertYuku: isMert ? bk.tutar : 0,
+            havsaYuku: !isMert ? bk.tutar : 0,
+            orijinalKartId: kart.id,
+            orijinalKalemId: bk.id,
+          });
+        }
       }
     }
 

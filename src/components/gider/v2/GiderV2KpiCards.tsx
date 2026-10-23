@@ -11,6 +11,8 @@ interface GiderV2KpiCardsProps {
 export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
   const {
     genel,
+    ortakPay,
+    kisiselToplam,
     ayriBireyselToplam,
     mertGider,
     havsaGider,
@@ -76,8 +78,8 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
             <span className="font-bold text-rose-400">{para(mertGider)}</span>
           </div>
           <div className="text-[11px] text-muted flex items-center justify-between pt-1 pl-2 border-l-2 border-sky-500/40">
-            <span>Ortak Pay: {para(genel.mert)}</span>
-            <span>Kişisel: {para(ayriBireyselToplam.mert)}</span>
+            <span>Ortak Pay: {para(ortakPay.mert)}</span>
+            <span>Kişisel: {para(kisiselToplam.mert)}</span>
           </div>
         </div>
       </div>
@@ -131,8 +133,8 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
             <span className="font-bold text-rose-400">{para(havsaGider)}</span>
           </div>
           <div className="text-[11px] text-muted flex items-center justify-between pt-1 pl-2 border-l-2 border-pink-500/40">
-            <span>Ortak Pay: {para(genel.havsa)}</span>
-            <span>Kişisel: {para(ayriBireyselToplam.havsa)}</span>
+            <span>Ortak Pay: {para(ortakPay.havsa)}</span>
+            <span>Kişisel: {para(kisiselToplam.havsa)}</span>
           </div>
         </div>
       </div>
@@ -168,7 +170,7 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
 
         <div className="pt-3 border-t border-border/70 space-y-2 text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-muted">Ortak Kartlar & Harcamalar:</span>
+            <span className="text-muted">Kartlar & Harcamalar:</span>
             <span className="font-bold text-foreground">{para(kayitToplamlari)}</span>
           </div>
           <div className="flex items-center justify-between">

@@ -22,6 +22,7 @@ interface KartModalProps {
     ad: string;
     toplamEkstre: number;
     odenenKisi: "mert" | "havsa" | "ortak";
+    kimeAit?: "ortak" | "mert" | "havsa";
     tumGiderToplamlarindaHaric?: boolean;
     kayitTipi?: "kart" | "harcama";
   }) => void;
@@ -35,6 +36,7 @@ export function KartEkleDuzenleModal({
   initialData,
 }: KartModalProps) {
   const [kayitTipi, setKayitTipi] = useState<"kart" | "harcama">("kart");
+  const [kimeAit, setKimeAit] = useState<"ortak" | "mert" | "havsa">("ortak");
   const [ad, setAd] = useState("");
   const [toplamStr, setToplamStr] = useState("");
   const [odenenKisi, setOdenenKisi] = useState<"mert" | "havsa" | "ortak">("mert");
@@ -48,12 +50,14 @@ export function KartEkleDuzenleModal({
         initialData.odenenKisi ??
           (initialData.ad.toLowerCase().includes("havsa") ? "havsa" : "mert")
       );
+      setKimeAit(initialData.kimeAit ?? "ortak");
       setTumGiderToplamlarindaHaric(Boolean(initialData.tumGiderToplamlarindaHaric));
       setKayitTipi(initialData.kayitTipi ?? (initialData.bireyselKalemler.length > 0 ? "kart" : "kart"));
     } else {
       setAd("");
       setToplamStr("");
       setOdenenKisi("mert");
+      setKimeAit("ortak");
       setTumGiderToplamlarindaHaric(false);
       setKayitTipi("kart");
     }
@@ -85,6 +89,7 @@ export function KartEkleDuzenleModal({
       ad: ad.trim(),
       toplamEkstre: tutar,
       odenenKisi,
+      kimeAit,
       tumGiderToplamlarindaHaric,
       kayitTipi,
     });
@@ -101,8 +106,8 @@ export function KartEkleDuzenleModal({
               {initialData
                 ? kayitTipi === "kart"
                   ? "Kartı Düzenle"
-                  : "Ortak Harcamayı Düzenle"
-                : "Yeni Kart veya Ortak Harcama Ekle"}
+                  : "Harcamayı Düzenle"
+                : "Yeni Kart veya Harcama Ekle"}
             </h3>
           </div>
           <button
@@ -145,8 +150,8 @@ export function KartEkleDuzenleModal({
                 }`}
               >
                 <span className="text-xl">🧾</span>
-                <span className="font-black text-foreground">Ortak Harcama</span>
-                <span className="text-[10px] text-muted">Kira, fatura, ortak gider (tek kalem)</span>
+                <span className="font-black text-foreground">Tek Seferlik Harcama</span>
+                <span className="text-[10px] text-muted">Kira, fatura, alışveriş (tek kalem)</span>
               </button>
             </div>
           </div>
@@ -184,6 +189,56 @@ export function KartEkleDuzenleModal({
             />
           </div>
 
+          {/* Harcama / Kart Kapsamı: Ortak mı, Bireysel mi? */}
+          <div>
+            <label className="text-[11px] font-extrabold uppercase tracking-wider text-muted block mb-1">
+              Kapsam (Ortak mı, Bireysel mi?)
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setKimeAit("ortak")}
+                className={`py-2 px-2 rounded-xl border text-xs font-black transition cursor-pointer flex flex-col items-center gap-1 ${
+                  kimeAit === "ortak"
+                    ? "bg-purple-500/20 text-purple-400 border-purple-500 shadow-xs ring-1 ring-purple-500/30"
+                    : "bg-surface-raised border-border text-muted hover:text-foreground"
+                }`}
+              >
+                <span>👥 Ortak</span>
+                <span className="text-[9px] font-normal text-muted">50/50 Bölüş</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setKimeAit("mert")}
+                className={`py-2 px-2 rounded-xl border text-xs font-black transition cursor-pointer flex flex-col items-center gap-1 ${
+                  kimeAit === "mert"
+                    ? "bg-sky-500/20 text-sky-400 border-sky-500 shadow-xs ring-1 ring-sky-500/30"
+                    : "bg-surface-raised border-border text-muted hover:text-foreground"
+                }`}
+              >
+                <span>👤 Bireysel (Mert)</span>
+                <span className="text-[9px] font-normal text-muted">%100 Mert</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setKimeAit("havsa")}
+                className={`py-2 px-2 rounded-xl border text-xs font-black transition cursor-pointer flex flex-col items-center gap-1 ${
+                  kimeAit === "havsa"
+                    ? "bg-pink-500/20 text-pink-400 border-pink-500 shadow-xs ring-1 ring-pink-500/30"
+                    : "bg-surface-raised border-border text-muted hover:text-foreground"
+                }`}
+              >
+                <span>👤 Bireysel (Havsa)</span>
+                <span className="text-[9px] font-normal text-muted">%100 Havsa</span>
+              </button>
+            </div>
+            <p className="text-[10px] text-muted mt-1.5">
+              * Bireysel seçilirse harcama ortak havuza dahil edilmez, doğrudan o kişinin bireysel giderine yazılır.
+            </p>
+          </div>
+
           <div>
             <label className="text-[11px] font-extrabold uppercase tracking-wider text-muted block mb-1">
               Kimin Kartı / Hesabından Ödendi?
@@ -216,7 +271,7 @@ export function KartEkleDuzenleModal({
               </button>
             </div>
             <p className="text-[10px] text-muted mt-1.5">
-              * Mahsuplaşma hesabında bu tutar doğrudan seçilen kişinin ödediği toplamına yazılır.
+              * Kimin ödediğinden bağımsız olarak harcama seçilen kapsamdaki kişinin yükümlülüğüne yazılır.
             </p>
           </div>
 

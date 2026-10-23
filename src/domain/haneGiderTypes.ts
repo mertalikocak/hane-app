@@ -39,8 +39,10 @@ export interface KrediKartiEkstresi {
   tumGiderToplamlarindaHaric?: boolean
   /** Ekstreyi bankaya kimin ödediği (Mahsuplaşma hesabı için: 'mert' | 'havsa' | 'ortak') */
   odenenKisi?: 'mert' | 'havsa' | 'ortak'
-  /** Kayıt türü: Kredi Kartı ekstresi veya tek seferlik Ortak Harcama */
+  /** Kayıt türü: Kredi Kartı ekstresi veya tek seferlik Harcama */
   kayitTipi?: 'kart' | 'harcama'
+  /** Harcama / Kart kapsamı: Ortak mı, yoksa şahsi bireysel mi? ('ortak' | 'mert' | 'havsa') */
+  kimeAit?: 'ortak' | 'mert' | 'havsa'
 }
 
 /** İki kullanıcı arasındaki doğrudan para transferi (mahsuplaşmayı düşüren/kapatan ödeme) */

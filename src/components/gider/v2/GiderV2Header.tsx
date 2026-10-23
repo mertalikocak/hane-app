@@ -273,7 +273,7 @@ export function GiderV2Header({
           }`}
         >
           <span>💳</span>
-          <span>Ortak Kartlar & Harcamalar</span>
+          <span>Kartlar & Harcamalar</span>
           <span className="text-[11px] px-1.5 py-0.2 rounded-md bg-black/20 font-mono">
             {kartSayisi}
           </span>

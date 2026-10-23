@@ -25,6 +25,33 @@ function bireyselToplam(
 /** Bir kart için ortak pay ve kişi başı net borç */
 export function tekKartHesabi(kart: KrediKartiEkstresi) {
   const toplam = Math.max(0, kart.toplamEkstre)
+  const kimeAit = kart.kimeAit ?? 'ortak'
+
+  if (kimeAit === 'mert') {
+    return {
+      toplam,
+      mertBireysel: toplam,
+      havsaBireysel: 0,
+      ortakTaban: 0,
+      mertToplam: toplam,
+      havsaToplam: 0,
+      asim: false,
+    }
+  }
+
+  if (kimeAit === 'havsa') {
+    return {
+      toplam,
+      mertBireysel: 0,
+      havsaBireysel: toplam,
+      ortakTaban: 0,
+      mertToplam: 0,
+      havsaToplam: toplam,
+      asim: false,
+    }
+  }
+
+  // kimeAit === 'ortak' (varsayılan hane ortak kartı / harcaması)
   const mertBireysel = bireyselToplam(kart.bireyselKalemler, 'mert')
   const havsaBireysel = bireyselToplam(kart.bireyselKalemler, 'havsa')
   const bireyselToplami = mertBireysel + havsaBireysel

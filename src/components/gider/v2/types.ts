@@ -28,6 +28,8 @@ export interface LedgerItem {
 
 export interface GiderV2Calculations {
   genel: { mert: number; havsa: number };
+  ortakPay: { mert: number; havsa: number };
+  kisiselToplam: { mert: number; havsa: number };
   ayriBireyselToplam: { mert: number; havsa: number };
   ayriGelirToplam: { mert: number; havsa: number };
   mertGider: number;

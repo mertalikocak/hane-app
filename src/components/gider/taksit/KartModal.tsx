@@ -257,46 +257,52 @@ export function KartModal({
             </p>
           </div>
 
-          {/* Kart Sahibi */}
+          {/* Kart Kapsamı: Ortak mı Bireysel mi? */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-foreground block">
-              Kart Kime Ait?
+              Kart Kapsamı (Ortak mı, Bireysel mi?) *
             </label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => setKartSahibi("mert")}
-                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                  kartSahibi === "mert"
-                    ? "bg-primary text-white border-primary shadow-xs"
+                onClick={() => setKartSahibi("ortak")}
+                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                  kartSahibi === "ortak"
+                    ? "bg-purple-600 text-white border-purple-600 shadow-xs"
                     : "bg-surface-raised border-border text-foreground hover:bg-border/30"
                 }`}
               >
-                👤 Mert
+                <span>👥 Ortak</span>
+                <span className="text-[10px] opacity-80">Hane Kartı</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setKartSahibi("mert")}
+                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                  kartSahibi === "mert"
+                    ? "bg-sky-600 text-white border-sky-600 shadow-xs"
+                    : "bg-surface-raised border-border text-foreground hover:bg-border/30"
+                }`}
+              >
+                <span>👤 Bireysel</span>
+                <span className="text-[10px] opacity-80">Mert</span>
               </button>
               <button
                 type="button"
                 onClick={() => setKartSahibi("havsa")}
-                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
                   kartSahibi === "havsa"
-                    ? "bg-primary text-white border-primary shadow-xs"
+                    ? "bg-pink-600 text-white border-pink-600 shadow-xs"
                     : "bg-surface-raised border-border text-foreground hover:bg-border/30"
                 }`}
               >
-                👤 Havsa
-              </button>
-              <button
-                type="button"
-                onClick={() => setKartSahibi("ortak")}
-                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                  kartSahibi === "ortak"
-                    ? "bg-primary text-white border-primary shadow-xs"
-                    : "bg-surface-raised border-border text-foreground hover:bg-border/30"
-                }`}
-              >
-                👥 Ortak
+                <span>👤 Bireysel</span>
+                <span className="text-[10px] opacity-80">Havsa</span>
               </button>
             </div>
+            <p className="text-[11px] text-muted">
+              * Bireysel kartlar hane giderlerine aktarıldığında ortak havuza dahil edilmez, doğrudan o kişinin şahsi harcaması olarak işlenir.
+            </p>
           </div>
 
           {/* Kart Renk Teması */}

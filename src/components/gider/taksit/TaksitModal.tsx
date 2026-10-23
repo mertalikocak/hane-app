@@ -194,7 +194,14 @@ export function TaksitModal({
               <select
                 required
                 value={kartId}
-                onChange={(e) => setKartId(e.target.value)}
+                onChange={(e) => {
+                  const newId = e.target.value;
+                  setKartId(newId);
+                  const selectedKart = kartlar.find((k) => k.id === newId);
+                  if (selectedKart && !editingTaksit) {
+                    setSahip(selectedKart.kartSahibi);
+                  }
+                }}
                 className="field font-medium"
               >
                 {kartlar.map((k) => (
@@ -312,46 +319,52 @@ export function TaksitModal({
             </div>
           </div>
 
-          {/* Taksit Kime Ait? */}
+          {/* Taksit Kapsamı: Ortak mı Bireysel mi? */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-foreground block">
-              Taksit Kime Ait?
+              Taksit Kapsamı (Ortak mı, Bireysel mi?) *
             </label>
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => setSahip("mert")}
-                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                  sahip === "mert"
-                    ? "bg-primary text-white border-primary shadow-xs"
+                onClick={() => setSahip("ortak")}
+                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                  sahip === "ortak"
+                    ? "bg-purple-600 text-white border-purple-600 shadow-xs"
                     : "bg-surface-raised border-border text-foreground hover:bg-border/30"
                 }`}
               >
-                👤 Mert
+                <span>👥 Ortak</span>
+                <span className="text-[10px] opacity-80">50/50 Hane</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSahip("mert")}
+                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                  sahip === "mert"
+                    ? "bg-sky-600 text-white border-sky-600 shadow-xs"
+                    : "bg-surface-raised border-border text-foreground hover:bg-border/30"
+                }`}
+              >
+                <span>👤 Bireysel</span>
+                <span className="text-[10px] opacity-80">Mert</span>
               </button>
               <button
                 type="button"
                 onClick={() => setSahip("havsa")}
-                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
                   sahip === "havsa"
-                    ? "bg-primary text-white border-primary shadow-xs"
+                    ? "bg-pink-600 text-white border-pink-600 shadow-xs"
                     : "bg-surface-raised border-border text-foreground hover:bg-border/30"
                 }`}
               >
-                👤 Havsa
-              </button>
-              <button
-                type="button"
-                onClick={() => setSahip("ortak")}
-                className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer ${
-                  sahip === "ortak"
-                    ? "bg-primary text-white border-primary shadow-xs"
-                    : "bg-surface-raised border-border text-foreground hover:bg-border/30"
-                }`}
-              >
-                👥 Ortak
+                <span>👤 Bireysel</span>
+                <span className="text-[10px] opacity-80">Havsa</span>
               </button>
             </div>
+            <p className="text-[11px] text-muted">
+              * Bireysel taksitler hane giderine aktarıldığında ortak havuza dahil edilmez, doğrudan o kişinin şahsi harcaması olarak işlenir.
+            </p>
           </div>
 
           {/* Kategori */}

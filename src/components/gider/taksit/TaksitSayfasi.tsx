@@ -50,11 +50,11 @@ export function TaksitSayfasi() {
   const [isAktarimModalOpen, setIsAktarimModalOpen] = useState(false);
   const [aktarimMesaj, setAktarimMesaj] = useState<string | null>(null);
 
-  // Akordiyon: Katlanmış (Gizlenmiş) Kart ID'leri
-  const [collapsedKartIds, setCollapsedKartIds] = useState<string[]>([]);
+  // Akordiyon: Açık olan Kart ID'leri (Varsayılan olarak tüm taksit listeleri KAPALI)
+  const [openKartIds, setOpenKartIds] = useState<string[]>([]);
 
   const toggleKartCollapse = (kartId: string) => {
-    setCollapsedKartIds((prev) =>
+    setOpenKartIds((prev) =>
       prev.includes(kartId) ? prev.filter((id) => id !== kartId) : [...prev, kartId]
     );
   };
@@ -564,6 +564,25 @@ export function TaksitSayfasi() {
             </span>
           </button>
 
+          {/* Tümünü Aç / Kapat Butonu */}
+          {kartlar.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (openKartIds.length > 0) {
+                  setOpenKartIds([]);
+                } else {
+                  setOpenKartIds(kartlar.map((k) => k.id));
+                }
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-surface-raised border border-border/70 text-xs font-bold text-muted hover:text-foreground hover:border-primary/50 transition cursor-pointer shadow-xs"
+              title={openKartIds.length > 0 ? "Tüm taksit listelerini daralt/kapat" : "Tüm taksit listelerini aç"}
+            >
+              <span>{openKartIds.length > 0 ? "📁" : "📂"}</span>
+              <span>{openKartIds.length > 0 ? "Tümünü Kapat" : "Tümünü Aç"}</span>
+            </button>
+          )}
+
         </div>
 
         {/* Yeni Ekle Butonları */}
@@ -655,7 +674,7 @@ export function TaksitSayfasi() {
                 onDeleteKart={handleDeleteKart}
                 onPayAllForKart={handlePayAllForKart}
                 onToggleAktif={handleToggleKartAktif}
-                isCollapsed={collapsedKartIds.includes(kart.id)}
+                isCollapsed={!openKartIds.includes(kart.id)}
                 onToggleCollapse={toggleKartCollapse}
               />
             );

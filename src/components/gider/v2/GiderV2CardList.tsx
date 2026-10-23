@@ -55,10 +55,10 @@ export function GiderV2CardList({
         <div>
           <h3 className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
             <span>💳</span>
-            <span>Ortak Kartlar ve Harcamalar ({kartlar.length})</span>
+            <span>Kartlar & Harcamalar ({kartlar.length})</span>
           </h3>
           <p className="text-xs text-muted">
-            Kredi kartı ekstreleri veya doğrudan ortak harcamalar (kira, fatura, ortak alışveriş).
+            Kredi kartı ekstreleri veya tek seferlik harcamalar (ortak veya şahsi bireysel).
           </p>
         </div>
 
@@ -85,7 +85,7 @@ export function GiderV2CardList({
           <span className="text-4xl block">💳</span>
           <h4 className="text-sm font-bold text-foreground">Bu Ay İçin Henüz Kayıt Eklenmemiş</h4>
           <p className="text-xs text-muted max-w-sm mx-auto">
-            Hemen yukarıdaki "Yeni Kart / Harcama Ekle" butonunu kullanarak kredi kartı ekstresi ya da kira/fatura gibi ortak harcama ekleyebilirsiniz.
+            Hemen yukarıdaki "Yeni Kart / Harcama Ekle" butonunu kullanarak kredi kartı ekstresi ya da fatura/kira/alışveriş gibi harcama ekleyebilirsiniz.
           </p>
           <button
             type="button"
@@ -101,6 +101,8 @@ export function GiderV2CardList({
           {kartlar.map((kart) => {
             const h = tekKartHesabi(kart);
             const isHarcama = kart.kayitTipi === "harcama";
+            const kimeAit = kart.kimeAit ?? "ortak";
+            const isBireysel = kimeAit === "mert" || kimeAit === "havsa";
             const odeyen =
               kart.odenenKisi ??
               (kart.ad.toLowerCase().includes("havsa")
@@ -132,6 +134,24 @@ export function GiderV2CardList({
                           {kart.ad}
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          {/* Kapsam Rozeti */}
+                          <span
+                            className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                              kimeAit === "mert"
+                                ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                                : kimeAit === "havsa"
+                                ? "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                                : "bg-purple-500/15 text-purple-400 border border-purple-500/30"
+                            }`}
+                          >
+                            {kimeAit === "mert"
+                              ? "👤 Bireysel (Mert)"
+                              : kimeAit === "havsa"
+                              ? "👤 Bireysel (Havsa)"
+                              : "👥 Hane Ortak"}
+                          </span>
+
+                          {/* Ödeyen Rozeti */}
                           <span
                             className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                               odeyen === "mert"
@@ -143,7 +163,7 @@ export function GiderV2CardList({
                           </span>
 
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-surface-raised text-muted border border-border">
-                            {isHarcama ? "🧾 Ortak Harcama" : "💳 Kredi Kartı"}
+                            {isHarcama ? "🧾 Harcama" : "💳 Kredi Kartı"}
                           </span>
 
                           {kart.tumGiderToplamlarindaHaric && (
@@ -195,47 +215,89 @@ export function GiderV2CardList({
 
                     <div className="text-right text-xs">
                       <span className="text-muted block text-[10px] uppercase font-bold">
-                        {isHarcama ? "Kişi Başı Ortak Pay" : "Kişi Başı Ortak Taban"}
+                        {isBireysel
+                          ? "Hane Ortak Payı"
+                          : isHarcama
+                          ? "Kişi Başı Ortak Pay"
+                          : "Kişi Başı Ortak Taban"}
                       </span>
                       <span className="font-bold text-purple-400 font-mono">
-                        {para(isHarcama ? kart.toplamEkstre / 2 : h.ortakTaban / 2)}
+                        {isBireysel
+                          ? "0,00 ₺ (Bireysel)"
+                          : para(isHarcama ? kart.toplamEkstre / 2 : h.ortakTaban / 2)}
                       </span>
                     </div>
                   </div>
 
                   {/* Pay Dağılım Kartları */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-sky-500/5 border border-sky-500/20">
-                      <span className="text-[10px] font-bold text-sky-400 uppercase block">
-                        Mert'in Payı
-                      </span>
-                      <span className="font-extrabold text-foreground font-mono">
-                        {para(isHarcama ? kart.toplamEkstre / 2 : h.mertToplam)}
-                      </span>
-                      {!isHarcama && h.mertBireysel > 0 && (
-                        <span className="text-[10px] text-muted block mt-0.5">
-                          (Bireysel: {para(h.mertBireysel)})
-                        </span>
+                  {isBireysel ? (
+                    <div>
+                      {kimeAit === "mert" ? (
+                        <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-bold text-sky-400 uppercase">
+                            Mert'in Bireysel Payı (%100)
+                          </span>
+                          <span className="font-extrabold text-foreground font-mono">
+                            {para(h.mertToplam)}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl bg-pink-500/10 border border-pink-500/25 flex items-center justify-between text-xs">
+                          <span className="text-[10px] font-bold text-pink-400 uppercase">
+                            Havsa'nın Bireysel Payı (%100)
+                          </span>
+                          <span className="font-extrabold text-foreground font-mono">
+                            {para(h.havsaToplam)}
+                          </span>
+                        </div>
                       )}
                     </div>
-
-                    <div className="p-2.5 rounded-xl bg-pink-500/5 border border-pink-500/20">
-                      <span className="text-[10px] font-bold text-pink-400 uppercase block">
-                        Havsa'nın Payı
-                      </span>
-                      <span className="font-extrabold text-foreground font-mono">
-                        {para(isHarcama ? kart.toplamEkstre / 2 : h.havsaToplam)}
-                      </span>
-                      {!isHarcama && h.havsaBireysel > 0 && (
-                        <span className="text-[10px] text-muted block mt-0.5">
-                          (Bireysel: {para(h.havsaBireysel)})
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2.5 rounded-xl bg-sky-500/5 border border-sky-500/20">
+                        <span className="text-[10px] font-bold text-sky-400 uppercase block">
+                          Mert'in Payı
                         </span>
-                      )}
-                    </div>
-                  </div>
+                        <span className="font-extrabold text-foreground font-mono">
+                          {para(h.mertToplam)}
+                        </span>
+                        {!isHarcama && h.mertBireysel > 0 && (
+                          <span className="text-[10px] text-muted block mt-0.5">
+                            (Bireysel Kalem: {para(h.mertBireysel)})
+                          </span>
+                        )}
+                      </div>
 
-                  {/* Bireysel Ekstre Kalemleri (Yalnızca Kredi Kartı için; Ortak Harcamada bireysel kalem olmaz) */}
-                  {isHarcama ? (
+                      <div className="p-2.5 rounded-xl bg-pink-500/5 border border-pink-500/20">
+                        <span className="text-[10px] font-bold text-pink-400 uppercase block">
+                          Havsa'nın Payı
+                        </span>
+                        <span className="font-extrabold text-foreground font-mono">
+                          {para(h.havsaToplam)}
+                        </span>
+                        {!isHarcama && h.havsaBireysel > 0 && (
+                          <span className="text-[10px] text-muted block mt-0.5">
+                            (Bireysel Kalem: {para(h.havsaBireysel)})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Bireysel Ekstre Kalemleri veya Bireysel Kart Bilgisi */}
+                  {isBireysel ? (
+                    <div className="pt-2 border-t border-border/50 text-[11px] text-muted flex items-center justify-between">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <span>ℹ️</span>
+                        <span>
+                          Tamamen {kimeAit === "mert" ? "Mert'in" : "Havsa'nın"} şahsi bireysel harcamasıdır. Ortak havuza girmez.
+                        </span>
+                      </span>
+                      <span className="font-bold text-foreground font-mono shrink-0">
+                        {para(kart.toplamEkstre)} (Bireysel)
+                      </span>
+                    </div>
+                  ) : isHarcama ? (
                     <div className="pt-2 border-t border-border/50 text-[11px] text-muted flex items-center justify-between">
                       <span className="flex items-center gap-1.5 font-medium">
                         <span>ℹ️</span>

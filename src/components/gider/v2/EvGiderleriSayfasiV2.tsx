@@ -12,6 +12,8 @@ import type {
 } from "@/domain/haneGiderTypes";
 import {
   ayGenelToplamlar,
+  ayHaneOrtakPayi,
+  ayEkstreIciBireyselToplamlar,
   ayMahsuplasmaHesapla,
   ayToplamGelir,
   ayToplamGirisGideri,
@@ -121,11 +123,20 @@ export function EvGiderleriSayfasiV2() {
   // Dinamik Hesaplamalar (Şeffaf Bütçe Motoru)
   const calc = useMemo<GiderV2Calculations>(() => {
     const genel = ayGenelToplamlar(veri.krediKartlari);
+    const haneOrtakPayi = ayHaneOrtakPayi(veri.krediKartlari);
+    const ekstreIciBireysel = ayEkstreIciBireyselToplamlar(veri.krediKartlari);
     const ayriBireyselToplam = bireyselAyriHarcamaToplamlar(veri.bireyselAyriHarcamalar);
     const ayriGelirToplam = bireyselGelirToplamlar(veri.bireyselGelirKalemleri);
 
-    const mertGider = genel.mert + ayriBireyselToplam.mert;
-    const havsaGider = genel.havsa + ayriBireyselToplam.havsa;
+    // Kişisel Giderler = Bireysel kartlar + Ekstre içi bireysel kalemler + Ayrı bireysel harcamalar
+    const kisiselToplam = {
+      mert: ekstreIciBireysel.mert + ayriBireyselToplam.mert,
+      havsa: ekstreIciBireysel.havsa + ayriBireyselToplam.havsa,
+    };
+    const ortakPay = haneOrtakPayi;
+
+    const mertGider = ortakPay.mert + kisiselToplam.mert;
+    const havsaGider = ortakPay.havsa + kisiselToplam.havsa;
     const mertGelir = ayriGelirToplam.mert;
     const havsaGelir = ayriGelirToplam.havsa;
     const mertKalan = mertGelir - mertGider;
@@ -156,6 +167,8 @@ export function EvGiderleriSayfasiV2() {
 
     return {
       genel,
+      ortakPay,
+      kisiselToplam,
       ayriBireyselToplam,
       ayriGelirToplam,
       mertGider,
@@ -195,6 +208,7 @@ export function EvGiderleriSayfasiV2() {
     ad: string;
     toplamEkstre: number;
     odenenKisi: "mert" | "havsa" | "ortak";
+    kimeAit?: "ortak" | "mert" | "havsa";
     tumGiderToplamlarindaHaric?: boolean;
     kayitTipi?: "kart" | "harcama";
   }) => {
@@ -209,9 +223,10 @@ export function EvGiderleriSayfasiV2() {
                 ad: kayit.ad,
                 toplamEkstre: kayit.toplamEkstre,
                 odenenKisi: kayit.odenenKisi,
+                kimeAit: kayit.kimeAit ?? "ortak",
                 tumGiderToplamlarindaHaric: kayit.tumGiderToplamlarindaHaric,
                 kayitTipi: kayit.kayitTipi,
-                bireyselKalemler: kayit.kayitTipi === "harcama" ? [] : k.bireyselKalemler,
+                bireyselKalemler: (kayit.kayitTipi === "harcama" || kayit.kimeAit === "mert" || kayit.kimeAit === "havsa") ? [] : k.bireyselKalemler,
               }
             : k
         ),
@@ -225,6 +240,7 @@ export function EvGiderleriSayfasiV2() {
         ad: kayit.ad,
         toplamEkstre: kayit.toplamEkstre,
         odenenKisi: kayit.odenenKisi,
+        kimeAit: kayit.kimeAit ?? "ortak",
         tumGiderToplamlarindaHaric: kayit.tumGiderToplamlarindaHaric,
         kayitTipi: kayit.kayitTipi,
         bireyselKalemler: [],
@@ -233,7 +249,7 @@ export function EvGiderleriSayfasiV2() {
         ...v,
         krediKartlari: [yeni, ...v.krediKartlari],
       }));
-      showToast(kayit.kayitTipi === "harcama" ? "Yeni ortak harcama eklendi." : "Yeni kart eklendi.");
+      showToast(kayit.kayitTipi === "harcama" ? "Yeni harcama eklendi." : "Yeni kart eklendi.");
     }
   };
 
@@ -501,14 +517,14 @@ export function EvGiderleriSayfasiV2() {
         bireyselSayisi={veri.bireyselAyriHarcamalar.length + veri.bireyselGelirKalemleri.length}
       />
 
+      {/* 3 Adet Şeffaf KPI Kartı (Mert, Havsa, Ev) - Her sekmede daima görünür */}
+      <GiderV2KpiCards calc={calc} />
+
       {/* ------------------------------------------------------------- */}
       {/* GÖRÜNÜM 1: GENEL BAKIŞ & MAHSUPLAŞMA                          */}
       {/* ------------------------------------------------------------- */}
       {activeView === "ozet" && (
         <div className="space-y-6">
-          {/* 3 Adet Şeffaf KPI Kartı (Mert, Havsa, Ev) */}
-          <GiderV2KpiCards calc={calc} />
-
           {/* Akıllı Mahsuplaşma & Hesaplaşma Kartı */}
           <GiderV2MahsuplasmaCard
             mahsuplasma={calc.mahsuplasma}
@@ -573,7 +589,13 @@ export function EvGiderleriSayfasiV2() {
                       </div>
                       <div className="flex items-center justify-between text-[11px] text-muted pt-1 border-t border-border/50">
                         <span>Ödeyen: <strong className="text-foreground">{odeyen === "mert" ? "Mert" : "Havsa"}</strong></span>
-                        <span>Ortak: <strong className="text-purple-400">{para(h.ortakTaban / 2)}</strong></span>
+                        {k.kimeAit === "mert" ? (
+                          <span className="text-sky-400 font-bold">👤 Bireysel (Mert)</span>
+                        ) : k.kimeAit === "havsa" ? (
+                          <span className="text-pink-400 font-bold">👤 Bireysel (Havsa)</span>
+                        ) : (
+                          <span>Ortak: <strong className="text-purple-400">{para(h.ortakTaban / 2)}</strong></span>
+                        )}
                       </div>
                     </div>
                   );

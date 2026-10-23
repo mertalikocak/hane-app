@@ -185,6 +185,9 @@ export function taksitleriAyaAktar(
         }
       })
 
+    const kartKimeAit: 'ortak' | 'mert' | 'havsa' = kart.kartSahibi || 'ortak'
+    const kartOdeyen: 'mert' | 'havsa' | 'ortak' = kart.kartSahibi === 'havsa' ? 'havsa' : 'mert'
+
     if (mod === 'ayri_kart') {
       // Ayrı kart olarak ekle (örn: "Garanti Bonus (Taksitler)")
       const kartAdi = `${kart.ad} (Taksitler)`
@@ -193,7 +196,9 @@ export function taksitleriAyaAktar(
         id: mevcutIndex !== -1 ? yeniKrediKartlari[mevcutIndex].id : `kart-sync-${kart.id}`,
         ad: kartAdi,
         toplamEkstre: kartAylikToplam,
-        bireyselKalemler,
+        kimeAit: kartKimeAit,
+        odenenKisi: kartOdeyen,
+        bireyselKalemler: kartKimeAit === 'ortak' ? bireyselKalemler : [],
       }
 
       if (mevcutIndex !== -1) {
@@ -220,14 +225,20 @@ export function taksitleriAyaAktar(
         yeniKrediKartlari[mevcutIndex] = {
           ...eskiKart,
           toplamEkstre: yeniToplamEkstre,
-          bireyselKalemler: [...taksitHariciBireyseller, ...bireyselKalemler],
+          kimeAit: eskiKart.kimeAit ?? kartKimeAit,
+          odenenKisi: eskiKart.odenenKisi ?? kartOdeyen,
+          bireyselKalemler: (eskiKart.kimeAit ?? kartKimeAit) === 'ortak'
+            ? [...taksitHariciBireyseller, ...bireyselKalemler]
+            : [],
         }
       } else {
         yeniKrediKartlari.push({
           id: `kart-sync-${kart.id}`,
           ad: kart.ad,
           toplamEkstre: kartAylikToplam,
-          bireyselKalemler,
+          kimeAit: kartKimeAit,
+          odenenKisi: kartOdeyen,
+          bireyselKalemler: kartKimeAit === 'ortak' ? bireyselKalemler : [],
         })
       }
     }
