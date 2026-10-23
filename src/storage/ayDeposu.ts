@@ -146,11 +146,12 @@ export function taksitleriAyaAktar(
   anahtar: string,
   kartlar: import('../domain/taksitTypes').TaksitKarti[],
   taksitler: import('../domain/taksitTypes').TaksitKalemi[],
-  mod: 'birlestir' | 'ayri_kart' = 'birlestir'
+  mod: 'birlestir' | 'arti_bir' | 'ayri_kart' = 'birlestir'
 ): { aktarilanKartSayisi: number; toplamTutar: number } {
   // 1. Önce güvenlik için mevcut durumun yedeğini al
   ayVerisiTaksitYedegiKaydet(anahtar)
 
+  const isArtiBir = mod === 'arti_bir'
   const mevcutAy = ayVerisiOku(anahtar)
   const aktifKartlar = kartlar.filter((k) => k.aktif !== false)
   const yeniKrediKartlari = [...mevcutAy.krediKartlari]
@@ -158,9 +159,13 @@ export function taksitleriAyaAktar(
   let aktarilanKartSayisi = 0
 
   for (const kart of aktifKartlar) {
-    const buKartaAitTaksitler = taksitler.filter(
-      (t) => t.kartId === kart.id && t.odenenTaksit < t.toplamTaksit
-    )
+    const buKartaAitTaksitler = taksitler.filter((t) => {
+      if (t.kartId !== kart.id) return false
+      if (isArtiBir) {
+        return t.toplamTaksit - t.odenenTaksit > 1
+      }
+      return t.odenenTaksit < t.toplamTaksit
+    })
     if (buKartaAitTaksitler.length === 0) continue
 
     const kartAylikToplam = buKartaAitTaksitler.reduce((s, t) => s + t.aylikTutar, 0)
@@ -170,12 +175,15 @@ export function taksitleriAyaAktar(
     // Bireysel kalemler (Mert ve Havsa taksitleri)
     const bireyselKalemler = buKartaAitTaksitler
       .filter((t) => t.sahip === 'mert' || t.sahip === 'havsa')
-      .map((t) => ({
-        id: `taksit-sync-${t.id}`,
-        kullaniciId: t.sahip as import('../domain/haneGiderTypes').KullaniciId,
-        aciklama: `[Taksit] ${t.urunAdi} (${t.odenenTaksit + 1}/${t.toplamTaksit})`,
-        tutar: t.aylikTutar,
-      }))
+      .map((t) => {
+        const kacinci = isArtiBir ? t.odenenTaksit + 2 : t.odenenTaksit + 1
+        return {
+          id: `taksit-sync-${t.id}`,
+          kullaniciId: t.sahip as import('../domain/haneGiderTypes').KullaniciId,
+          aciklama: `[Taksit] ${t.urunAdi} (${kacinci}/${t.toplamTaksit})`,
+          tutar: t.aylikTutar,
+        }
+      })
 
     if (mod === 'ayri_kart') {
       // Ayrı kart olarak ekle (örn: "Garanti Bonus (Taksitler)")

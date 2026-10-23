@@ -254,6 +254,15 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
           const isSelected = seciliAyIndex === ay.ayIndex;
           const isCurrentMonth = ay.ayIndex === 0;
 
+          const ayTaksitleri =
+            gorunum === "mert"
+              ? ay.odenecekTaksitler.filter((t) => t.sahip === "mert" || t.sahip === "ortak")
+              : gorunum === "havsa"
+              ? ay.odenecekTaksitler.filter((t) => t.sahip === "havsa" || t.sahip === "ortak")
+              : ay.odenecekTaksitler;
+
+          const bitenSayisi = ayTaksitleri.filter((t) => t.buAyBitiyor).length;
+
           return (
             <button
               key={`${ay.ayAdi}-${ay.yil}`}
@@ -292,7 +301,7 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
                     {paraFormat(deger)}
                   </span>
                   <span className="text-[10px] text-muted block">
-                    {ay.odenecekTaksitler.length} taksit
+                    {ayTaksitleri.length} taksit
                   </span>
                 </div>
 
@@ -311,10 +320,10 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
                 </div>
 
                 {/* Bu Ay Biten Varsa Rozet */}
-                {ay.bitenUrunler.length > 0 ? (
+                {bitenSayisi > 0 ? (
                   <span className="text-[10px] font-bold text-emerald-400 block truncate flex items-center gap-1">
                     <span>🎉</span>
-                    <span>{ay.bitenUrunler.length} taksit bitiyor</span>
+                    <span>{bitenSayisi} taksit bitiyor</span>
                   </span>
                 ) : (
                   <span className="text-[10px] text-muted/60 block truncate">
@@ -328,55 +337,93 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
       </div>
 
       {/* Seçili Ayın Detay Kartı (Tıklanınca Açılır) */}
-      {seciliAy && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-surface-raised border border-border animate-in fade-in duration-150 space-y-3">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-black text-foreground flex items-center gap-2">
-              <span>📅</span>
-              <span>{seciliAy.ayAdi} {seciliAy.yil} Ödeme Detayları</span>
-            </h4>
-            <button
-              type="button"
-              onClick={() => setSeciliAyIndex(null)}
-              className="text-xs text-muted hover:text-foreground font-semibold cursor-pointer"
-            >
-              Kapat ✕
-            </button>
-          </div>
+      {seciliAy && (() => {
+        const seciliTaksitler =
+          gorunum === "mert"
+            ? seciliAy.odenecekTaksitler.filter((t) => t.sahip === "mert" || t.sahip === "ortak")
+            : gorunum === "havsa"
+            ? seciliAy.odenecekTaksitler.filter((t) => t.sahip === "havsa" || t.sahip === "ortak")
+            : seciliAy.odenecekTaksitler;
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
-            {seciliAy.odenecekTaksitler.map((item, idx) => (
-              <div
-                key={`${item.urunAdi}-${idx}`}
-                className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
-                  item.buAyBitiyor
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
-                    : "bg-surface border-border/70"
-                }`}
+        return (
+          <div className="p-4 sm:p-5 rounded-2xl bg-surface-raised border border-border animate-in fade-in duration-150 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-black text-foreground flex items-center gap-2">
+                <span>📅</span>
+                <span>
+                  {seciliAy.ayAdi} {seciliAy.yil} Ödeme Detayları
+                  {gorunum === "mert" && (
+                    <span className="text-xs font-normal text-muted ml-2">
+                      (Mert & Ortak)
+                    </span>
+                  )}
+                  {gorunum === "havsa" && (
+                    <span className="text-xs font-normal text-muted ml-2">
+                      (Havsa & Ortak)
+                    </span>
+                  )}
+                </span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => setSeciliAyIndex(null)}
+                className="text-xs text-muted hover:text-foreground font-semibold cursor-pointer"
               >
-                <div>
-                  <div className="font-bold text-foreground flex items-center gap-1.5">
-                    <span>{item.urunAdi}</span>
-                    {item.buAyBitiyor && (
-                      <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 font-black">
-                        SON TAKSİT 🎉
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-muted mt-0.5">
-                    {item.kacinciTaksit}/{item.toplamTaksit}. taksit •{" "}
-                    {item.sahip === "mert" ? "Mert" : item.sahip === "havsa" ? "Havsa" : "Ortak"}
-                  </div>
-                </div>
+                Kapat ✕
+              </button>
+            </div>
 
-                <div className="text-right font-black text-foreground">
-                  {paraFormat(item.aylikTutar)}
-                </div>
+            {seciliTaksitler.length === 0 ? (
+              <div className="py-6 text-center text-xs text-muted">
+                Bu dönemde ödenecek taksit bulunmuyor.
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
+                {seciliTaksitler.map((item, idx) => (
+                  <div
+                    key={`${item.urunAdi}-${idx}`}
+                    className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
+                      item.buAyBitiyor
+                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
+                        : "bg-surface border-border/70"
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-foreground flex items-center gap-1.5">
+                        <span>{item.urunAdi}</span>
+                        {item.buAyBitiyor && (
+                          <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 font-black">
+                            SON TAKSİT 🎉
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-muted mt-0.5">
+                        {item.kacinciTaksit}/{item.toplamTaksit}. taksit •{" "}
+                        <span className={item.sahip === "ortak" ? "font-semibold text-primary" : ""}>
+                          {item.sahip === "mert" ? "Mert" : item.sahip === "havsa" ? "Havsa" : "Ortak (%50)"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="font-black text-foreground">
+                        {gorunum !== "toplam" && item.sahip === "ortak"
+                          ? paraFormat(item.aylikTutar / 2)
+                          : paraFormat(item.aylikTutar)}
+                      </div>
+                      {gorunum !== "toplam" && item.sahip === "ortak" && (
+                        <div className="text-[10px] text-muted font-normal">
+                          (Tamamı: {paraFormat(item.aylikTutar)})
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

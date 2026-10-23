@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { EvGiderleriSayfasi } from "@/components/gider/EvGiderleriSayfasi";
+import { EvGiderleriSayfasiV2 } from "@/components/gider/v2/EvGiderleriSayfasiV2";
 import { TaksitSayfasi } from "@/components/gider/taksit/TaksitSayfasi";
 
 type GiderTab = "butce" | "taksit";
@@ -82,7 +82,7 @@ function GiderContent() {
       </div>
 
       {/* Tab Contents */}
-      {activeTab === "butce" ? <EvGiderleriSayfasi /> : <TaksitSayfasi />}
+      {activeTab === "butce" ? <EvGiderleriSayfasiV2 /> : <TaksitSayfasi />}
     </div>
   );
 }

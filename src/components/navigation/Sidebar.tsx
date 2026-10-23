@@ -98,6 +98,7 @@ export function Sidebar() {
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
+    if (href === "/gider") return pathname === "/gider";
     return pathname.startsWith(href);
   };
 
@@ -206,9 +207,16 @@ export function Sidebar() {
                     {item.icon}
                   </span>
                   <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-sm font-semibold truncate leading-tight">
-                      {item.name}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm font-semibold truncate leading-tight">
+                        {item.name}
+                      </span>
+                      {item.badge && (
+                        <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-muted truncate mt-0.5">
                       {item.description}
                     </span>

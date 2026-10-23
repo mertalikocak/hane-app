@@ -48,7 +48,7 @@ export function TaksitAktarimModal({
   const gelecekAy = ayAnahtariOlustur(d.getMonth() === 11 ? d.getFullYear() + 1 : d.getFullYear(), (d.getMonth() + 1) % 12);
 
   const [hedefAy, setHedefAy] = useState(simdikiAy);
-  const [aktarimModu, setAktarimModu] = useState<"birlestir" | "ayri_kart">("birlestir");
+  const [aktarimModu, setAktarimModu] = useState<"birlestir" | "arti_bir">("birlestir");
   const [isDone, setIsDone] = useState(false);
   const [hasBackup, setHasBackup] = useState(false);
 
@@ -80,30 +80,39 @@ export function TaksitAktarimModal({
   // Aktarılacak aktif kartlar ve taksit detayları
   const previewData = useMemo(() => {
     const aktifKartlar = kartlar.filter((k) => k.aktif !== false);
-    const kartDetaylari = aktifKartlar.map((k) => {
-      const buKartTaksitleri = taksitler.filter(
-        (t) => t.kartId === k.id && t.odenenTaksit < t.toplamTaksit
-      );
-      const toplam = buKartTaksitleri.reduce((s, t) => s + t.aylikTutar, 0);
-      const mertBireysel = buKartTaksitleri
-        .filter((t) => t.sahip === "mert")
-        .reduce((s, t) => s + t.aylikTutar, 0);
-      const havsaBireysel = buKartTaksitleri
-        .filter((t) => t.sahip === "havsa")
-        .reduce((s, t) => s + t.aylikTutar, 0);
-      const ortak = buKartTaksitleri
-        .filter((t) => t.sahip === "ortak")
-        .reduce((s, t) => s + t.aylikTutar, 0);
+    const isArtiBir = aktarimModu === "arti_bir";
 
-      return {
-        kart: k,
-        taksitler: buKartTaksitleri,
-        toplam,
-        mertBireysel,
-        havsaBireysel,
-        ortak,
-      };
-    }).filter((item) => item.taksitler.length > 0);
+    const kartDetaylari = aktifKartlar
+      .map((k) => {
+        const buKartTaksitleri = taksitler.filter((t) => {
+          if (t.kartId !== k.id) return false;
+          if (isArtiBir) {
+            return t.toplamTaksit - t.odenenTaksit > 1;
+          }
+          return t.odenenTaksit < t.toplamTaksit;
+        });
+
+        const toplam = buKartTaksitleri.reduce((s, t) => s + t.aylikTutar, 0);
+        const mertBireysel = buKartTaksitleri
+          .filter((t) => t.sahip === "mert")
+          .reduce((s, t) => s + t.aylikTutar, 0);
+        const havsaBireysel = buKartTaksitleri
+          .filter((t) => t.sahip === "havsa")
+          .reduce((s, t) => s + t.aylikTutar, 0);
+        const ortak = buKartTaksitleri
+          .filter((t) => t.sahip === "ortak")
+          .reduce((s, t) => s + t.aylikTutar, 0);
+
+        return {
+          kart: k,
+          taksitler: buKartTaksitleri,
+          toplam,
+          mertBireysel,
+          havsaBireysel,
+          ortak,
+        };
+      })
+      .filter((item) => item.taksitler.length > 0);
 
     const toplamAylik = kartDetaylari.reduce((s, k) => s + k.toplam, 0);
     const toplamMertBireysel = kartDetaylari.reduce((s, k) => s + k.mertBireysel, 0);
@@ -121,7 +130,7 @@ export function TaksitAktarimModal({
       mertToplamPay,
       havsaToplamPay,
     };
-  }, [kartlar, taksitler]);
+  }, [kartlar, taksitler, aktarimModu]);
 
   if (!mounted || !isOpen) return null;
 
@@ -135,8 +144,9 @@ export function TaksitAktarimModal({
     setIsDone(true);
     setHasBackup(true);
     if (onSuccess) {
+      const ekMesaj = aktarimModu === "arti_bir" ? " (+1 artırılmış olarak)" : "";
       onSuccess(
-        `Taksitler ${formatAyLabel(hedefAy)} bütçesine başarıyla aktarıldı (${res.aktarilanKartSayisi} kart, toplam ${paraFormat(res.toplamTutar)})`
+        `Taksitler ${formatAyLabel(hedefAy)} bütçesine başarıyla aktarıldı${ekMesaj} (${res.aktarilanKartSayisi} kart, toplam ${paraFormat(res.toplamTutar)})`
       );
     }
   };
@@ -295,9 +305,12 @@ export function TaksitAktarimModal({
               </label>
 
               <label
-                onClick={() => setAktarimModu("ayri_kart")}
+                onClick={() => {
+                  setAktarimModu("arti_bir");
+                  setHedefAy(gelecekAy);
+                }}
                 className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
-                  aktarimModu === "ayri_kart"
+                  aktarimModu === "arti_bir"
                     ? "bg-surface border-primary/60 ring-1 ring-primary/40"
                     : "bg-surface/50 border-border hover:bg-surface"
                 }`}
@@ -305,16 +318,22 @@ export function TaksitAktarimModal({
                 <input
                   type="radio"
                   name="aktarimModu"
-                  checked={aktarimModu === "ayri_kart"}
-                  onChange={() => setAktarimModu("ayri_kart")}
+                  checked={aktarimModu === "arti_bir"}
+                  onChange={() => {
+                    setAktarimModu("arti_bir");
+                    setHedefAy(gelecekAy);
+                  }}
                   className="mt-0.5 accent-primary cursor-pointer"
                 />
                 <div className="text-xs">
-                  <span className="font-bold text-foreground block">
-                    Ayrı Kart Ekstreleri Olarak Ekle (Örn: "Garanti Bonus (Taksitler)")
+                  <span className="font-bold text-foreground block flex items-center gap-1.5">
+                    <span>Taksitleri +1 Arttırarak Ekle</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-primary/20 text-primary font-extrabold uppercase">
+                      Gelecek Ay İçin
+                    </span>
                   </span>
                   <span className="text-muted block mt-0.5 text-[11px]">
-                    Mevcut hiçbir kartınıza ve harcamanıza dokunmaz; bağımsız taksit kartları açar. Sıfır çakışma riski.
+                    Taksit sayaçlarını ana sayfada değiştirmeden, hedef aya taksitlerin sonraki ayki değerini (örn: 2/6 yerine 3/6) aktarır. Bu ay biten taksitler dahil edilmez.
                   </span>
                 </div>
               </label>
@@ -382,7 +401,9 @@ export function TaksitAktarimModal({
             className="primary-button px-5 py-2.5 text-xs font-bold shadow-sm"
           >
             <span>📥</span>
-            <span>{formatAyLabel(hedefAy)} Bütçesine Aktar</span>
+            <span>
+              {formatAyLabel(hedefAy)} Bütçesine {aktarimModu === "arti_bir" ? "+1 Artırarak " : ""}Aktar
+            </span>
           </button>
         </div>
       </div>
