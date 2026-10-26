@@ -31,12 +31,15 @@ Kurallar:
 interface ModelCandidate {
   apiVersion: "v1beta" | "v1";
   modelName: string;
+  timeoutMs: number;
 }
 
 const CANDIDATE_MODELS: ModelCandidate[] = [
-  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite" },
-  { apiVersion: "v1beta", modelName: "gemini-3.6-flash" },
-  { apiVersion: "v1beta", modelName: "gemini-flash-latest" },
+  { apiVersion: "v1beta", modelName: "gemini-2.5-flash-lite", timeoutMs: 6000 },
+  { apiVersion: "v1beta", modelName: "gemini-2.5-flash", timeoutMs: 8000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite", timeoutMs: 7000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.6-flash", timeoutMs: 9000 },
+  { apiVersion: "v1beta", modelName: "gemini-flash-latest", timeoutMs: 10000 },
 ];
 
 export async function POST(req: NextRequest) {
@@ -68,7 +71,7 @@ export async function POST(req: NextRequest) {
     let successfulResult: AIFoodAnalysisResult | null = null;
     let usedModel = "";
 
-    const requestPayload = {
+    const buildPayload = (includeThinkingBudget: boolean) => ({
       contents: [
         {
           role: "user",
@@ -82,21 +85,38 @@ export async function POST(req: NextRequest) {
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.2,
+        ...(includeThinkingBudget ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
       },
-    };
+    });
 
     for (const candidate of CANDIDATE_MODELS) {
       const endpoint = `https://generativelanguage.googleapis.com/${candidate.apiVersion}/models/${candidate.modelName}:generateContent?key=${apiKey}`;
 
       try {
-        const response = await fetch(endpoint, {
+        let response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(requestPayload),
-          signal: AbortSignal.timeout(28000),
+          body: JSON.stringify(buildPayload(true)),
+          signal: AbortSignal.timeout(candidate.timeoutMs),
         });
+
+        // Eğer model thinkingConfig parametresini desteklemiyorsa, thinking olmadan hemen tekrar dene
+        if (response.status === 400) {
+          const errClone = await response.clone().json().catch(() => ({}));
+          const errMsg = errClone?.error?.message || "";
+          if (errMsg.toLowerCase().includes("thinking")) {
+            response = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(buildPayload(false)),
+              signal: AbortSignal.timeout(candidate.timeoutMs),
+            });
+          }
+        }
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));

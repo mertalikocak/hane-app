@@ -4,12 +4,15 @@ import { AICalendarResponse, CalendarCategory, CalendarScope } from "@/domain/ca
 interface ModelCandidate {
   apiVersion: "v1beta" | "v1";
   modelName: string;
+  timeoutMs: number;
 }
 
 const CANDIDATE_MODELS: ModelCandidate[] = [
-  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite" },
-  { apiVersion: "v1beta", modelName: "gemini-3.6-flash" },
-  { apiVersion: "v1beta", modelName: "gemini-flash-latest" },
+  { apiVersion: "v1beta", modelName: "gemini-2.5-flash-lite", timeoutMs: 7000 },
+  { apiVersion: "v1beta", modelName: "gemini-2.5-flash", timeoutMs: 8000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite", timeoutMs: 7000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.6-flash", timeoutMs: 9000 },
+  { apiVersion: "v1beta", modelName: "gemini-flash-latest", timeoutMs: 10000 },
 ];
 
 export async function POST(req: NextRequest) {
@@ -135,7 +138,7 @@ ANALİZ VE DÖNÜŞTÜRME KURALLARI:
       });
     }
 
-    const requestPayload = {
+    const buildPayload = (includeThinkingBudget: boolean) => ({
       contents: [
         {
           role: "user",
@@ -145,27 +148,45 @@ ANALİZ VE DÖNÜŞTÜRME KURALLARI:
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.1,
+        ...(includeThinkingBudget ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
       },
-    };
+    });
 
     const attemptErrors: string[] = [];
     let successfulResult: AICalendarResponse | null = null;
     let usedModel = "";
 
-    const fetchTimeout = hasAudio ? 35000 : 25000;
-
     for (const candidate of CANDIDATE_MODELS) {
       const endpoint = `https://generativelanguage.googleapis.com/${candidate.apiVersion}/models/${candidate.modelName}:generateContent?key=${apiKey}`;
+      const candidateTimeout = hasAudio
+        ? 25000
+        : candidate.timeoutMs;
 
       try {
-        const response = await fetch(endpoint, {
+        let response = await fetch(endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(requestPayload),
-          signal: AbortSignal.timeout(fetchTimeout),
+          body: JSON.stringify(buildPayload(true)),
+          signal: AbortSignal.timeout(candidateTimeout),
         });
+
+        // Eğer model thinkingConfig parametresini desteklemiyorsa, thinking olmadan hemen tekrar dene
+        if (response.status === 400) {
+          const errClone = await response.clone().json().catch(() => ({}));
+          const errMsg = errClone?.error?.message || "";
+          if (errMsg.toLowerCase().includes("thinking")) {
+            response = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(buildPayload(false)),
+              signal: AbortSignal.timeout(candidateTimeout),
+            });
+          }
+        }
 
         if (!response.ok) {
           const errData = await response.json().catch(() => ({}));
