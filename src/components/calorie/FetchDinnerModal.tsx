@@ -70,11 +70,34 @@ export function FetchDinnerModal({
 
   const currentMeal = allMeals.find((m) => m.id === selectedMealId);
 
-  const ingredientsText = currentMeal?.ingredients && currentMeal.ingredients.length > 0
-    ? currentMeal.ingredients
-        .map((ing) => `${ing.quantity} ${ing.unit} ${ing.name}`.trim())
-        .join(", ")
-    : "Standart ev yapımı tarif";
+  const ratio = (consumedPortions || 1) / (totalPortions || 1);
+
+  const rawIngredientsText =
+    currentMeal?.ingredients && currentMeal.ingredients.length > 0
+      ? currentMeal.ingredients
+          .map((ing) => `${ing.quantity} ${ing.unit} ${ing.name}`.trim())
+          .join(", ")
+      : "";
+
+  const portionedIngredients =
+    currentMeal?.ingredients && currentMeal.ingredients.length > 0
+      ? currentMeal.ingredients.map((ing) => {
+          const qty = Number(ing.quantity);
+          if (!isNaN(qty) && qty > 0) {
+            const scaled = Math.round(qty * ratio * 100) / 100;
+            const formattedQty = Number.isInteger(scaled)
+              ? String(scaled)
+              : scaled.toFixed(2).replace(/\.?0+$/, "");
+            return `${formattedQty} ${ing.unit || ""} ${ing.name}`.replace(/\s+/g, " ").trim();
+          }
+          return `${ing.quantity || ""} ${ing.unit || ""} ${ing.name}`.replace(/\s+/g, " ").trim();
+        })
+      : [];
+
+  const portionedIngredientsText =
+    portionedIngredients.length > 0
+      ? portionedIngredients.join(", ")
+      : "";
 
   const handleAnalyzeDinner = async () => {
     if (!currentMeal) return;
@@ -83,7 +106,10 @@ export function FetchDinnerModal({
     setAiError(null);
     setAnalysisResult(null);
 
-    const prompt = `Akşam Yemeği: "${currentMeal.name}". Malzemeler ve tarif ölçüleri: ${ingredientsText}. Bu yemek tüm aile için toplam ${totalPortions} kişilik/porsiyonluk pişirildi. Lütfen benim yediğim ${consumedPortions} porsiyonluk miktarın (yani tüm tencerenin ${consumedPortions}/${totalPortions} oranının) kalori, protein, karbonhidrat ve yağ değerlerini hesapla.`;
+    // Yemek ismi yerine porsiyona bölünmüş malzemeleri doğrudan yapay zekaya gönderiyoruz
+    const prompt = portionedIngredientsText
+      ? portionedIngredientsText
+      : `${consumedPortions} porsiyon ${currentMeal.name}`;
 
     try {
       const storedKey = getStoredGeminiApiKey();
@@ -230,13 +256,43 @@ export function FetchDinnerModal({
 
             {/* Ingredients Preview */}
             {currentMeal && (
-              <div className="rounded-2xl border border-border/80 bg-surface-raised/50 p-3 space-y-1 text-xs">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
-                  📝 Pişirilen Malzemeler:
-                </span>
-                <p className="text-foreground/90 leading-relaxed text-[11px]">
-                  {ingredientsText}
-                </p>
+              <div className="space-y-2">
+                {/* Portioned Ingredients Card - This is what goes to AI */}
+                {portionedIngredientsText ? (
+                  <div className="rounded-2xl border border-purple-500/30 bg-purple-500/10 p-3.5 space-y-1.5 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                        <span>🥣</span>
+                        <span>Yapay Zekaya Gönderilecek Malzemeler ({consumedPortions} Porsiyon / %{ratioPercent}):</span>
+                      </span>
+                    </div>
+                    <p className="text-foreground font-semibold leading-relaxed text-[11px]">
+                      {portionedIngredientsText}
+                    </p>
+                    <span className="text-[10px] text-muted block pt-0.5">
+                      💡 Yemek ismi yerine tam bu porsiyonlanmış gramajlar analiz edilecektir.
+                    </span>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-border/80 bg-surface-raised/50 p-3 space-y-1 text-xs">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
+                      📝 Pişirilen Malzemeler:
+                    </span>
+                    <p className="text-foreground/90 leading-relaxed text-[11px]">
+                      Standart ev yapımı tarif
+                    </p>
+                  </div>
+                )}
+
+                {/* Total Pot Recipe Reference */}
+                {rawIngredientsText && (
+                  <div className="rounded-xl border border-border/60 bg-surface-raised/30 px-3 py-2 text-[10px] text-muted flex items-center justify-between">
+                    <span className="font-medium">Tenceredeki toplam tarif ({totalPortions} kişilik):</span>
+                    <span className="text-foreground/75 truncate max-w-[240px]" title={rawIngredientsText}>
+                      {rawIngredientsText}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
 
