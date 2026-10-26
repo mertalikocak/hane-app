@@ -25,20 +25,19 @@ Kurallar:
   "totalProtein": 22,
   "totalCarbs": 5,
   "totalFat": 12,
-  "note": "İsteğe bağlı kısa beslenme tavsiyesi veya açıklama"
+  "note": "İsteğe bağlı tek cümlelik kısa not (en fazla 12 kelime)"
 }`;
 
 interface ModelCandidate {
   apiVersion: "v1beta" | "v1";
   modelName: string;
-  timeoutMs: number;
 }
 
 const CANDIDATE_MODELS: ModelCandidate[] = [
-  { apiVersion: "v1beta", modelName: "gemini-3.6-flash", timeoutMs: 10000 },
-  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite", timeoutMs: 10000 },
-  { apiVersion: "v1beta", modelName: "gemini-3.8-flash", timeoutMs: 12000 },
-  { apiVersion: "v1beta", modelName: "gemini-flash-latest", timeoutMs: 12000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.6-flash" },
+  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite" },
+  { apiVersion: "v1beta", modelName: "gemini-3.8-flash" },
+  { apiVersion: "v1beta", modelName: "gemini-flash-latest" },
 ];
 
 export async function POST(req: NextRequest) {
@@ -83,87 +82,121 @@ export async function POST(req: NextRequest) {
       ],
       generationConfig: {
         responseMimeType: "application/json",
-        temperature: 0.2,
-        ...(includeThinking ? { thinkingConfig: { thinkingLevel: "MINIMAL" } } : {}),
+        maxOutputTokens: 1000,
+        ...(includeThinking ? { thinkingConfig: { thinkingLevel: "minimal" } } : {}),
       },
     });
 
-    for (const candidate of CANDIDATE_MODELS) {
+    const callCandidate = async (
+      candidate: ModelCandidate,
+      parentSignal?: AbortSignal
+    ): Promise<{ result: AIFoodAnalysisResult; modelUsed: string }> => {
       const endpoint = `https://generativelanguage.googleapis.com/${candidate.apiVersion}/models/${candidate.modelName}:generateContent?key=${apiKey}`;
+      const timeoutSignal = AbortSignal.timeout(18000);
+      const signal = parentSignal ? AbortSignal.any([parentSignal, timeoutSignal]) : timeoutSignal;
 
-      try {
-        let response = await fetch(endpoint, {
+      let response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildPayload(true)),
+        signal,
+      });
+
+      if (response.status === 400) {
+        const errClone = await response.clone().json().catch(() => ({}));
+        const errMsg = errClone?.error?.message || "";
+        if (
+          errMsg.toLowerCase().includes("api_key") ||
+          errMsg.toLowerCase().includes("api key")
+        ) {
+          throw new Error(`[${candidate.modelName}]: ${errMsg}`);
+        }
+
+        response = await fetch(endpoint, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(buildPayload(true)),
-          signal: AbortSignal.timeout(candidate.timeoutMs),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildPayload(false)),
+          signal,
         });
+      }
 
-        // Eğer 400 Bad Request dönerse (örneğin parametre veya thinkingConfig reddedildiyse),
-        // thinkingConfig olmadan sade payload ile hemen tekrar dene
-        if (response.status === 400) {
-          const errClone = await response.clone().json().catch(() => ({}));
-          const errMsg = errClone?.error?.message || "";
-          if (
-            errMsg.toLowerCase().includes("api_key") ||
-            errMsg.toLowerCase().includes("api key")
-          ) {
-            attemptErrors.push(`[${candidate.modelName}]: ${errMsg}`);
-            break;
-          }
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg =
+          errData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(`[${candidate.modelName}]: ${errMsg}`);
+      }
 
-          response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(buildPayload(false)),
-            signal: AbortSignal.timeout(candidate.timeoutMs),
-          });
-        }
+      const data = await response.json();
+      const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!candidateText) {
+        throw new Error(`[${candidate.modelName}]: Yanıt metni boş döndü.`);
+      }
 
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          const errMsg =
-            errData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-          attemptErrors.push(`[${candidate.modelName}]: ${errMsg}`);
+      let cleanedJson = candidateText.trim();
+      if (cleanedJson.startsWith("```json")) {
+        cleanedJson = cleanedJson.replace(/^```json/, "").replace(/```$/, "").trim();
+      } else if (cleanedJson.startsWith("```")) {
+        cleanedJson = cleanedJson.replace(/^```/, "").replace(/```$/, "").trim();
+      }
 
-          // Eğer API anahtarı geçersizse döngüyü hemen kır
-          if (
-            response.status === 401 ||
-            (response.status === 403 && errMsg.toLowerCase().includes("api_key"))
-          ) {
-            break;
-          }
+      const parsed = JSON.parse(cleanedJson) as AIFoodAnalysisResult;
+      return { result: parsed, modelUsed: candidate.modelName };
+    };
 
-          // Model desteklenmiyorsa sıradaki modele geç
-          continue;
-        }
+    const controller = new AbortController();
+    const overallTimeout = setTimeout(() => controller.abort(), 35000);
 
-        const data = await response.json();
-        const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!candidateText) {
-          attemptErrors.push(`[${candidate.modelName}]: Yanıt metni boş döndü.`);
-          continue;
-        }
-
-        let cleanedJson = candidateText.trim();
-        if (cleanedJson.startsWith("```json")) {
-          cleanedJson = cleanedJson.replace(/^```json/, "").replace(/```$/, "").trim();
-        } else if (cleanedJson.startsWith("```")) {
-          cleanedJson = cleanedJson.replace(/^```/, "").replace(/```$/, "").trim();
-        }
-
-        successfulResult = JSON.parse(cleanedJson) as AIFoodAnalysisResult;
-        usedModel = candidate.modelName;
-        break;
+    const safeRun = async (candidate: ModelCandidate) => {
+      try {
+        return await callCandidate(candidate, controller.signal);
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        attemptErrors.push(`[${candidate.modelName}]: ${msg}`);
+        attemptErrors.push(msg);
+        throw err;
       }
+    };
+
+    let raceResult: { result: AIFoodAnalysisResult; modelUsed: string } | null = null;
+
+    try {
+      // 1. Birincil modeli başlat (gemini-3.6-flash)
+      const p1 = safeRun(CANDIDATE_MODELS[0]);
+
+      // 2. Eğer birincil model 2.5 saniyede dönmezse ikincil modeli (gemini-3.5-flash-lite) paralel başlat
+      let timer: NodeJS.Timeout | null = null;
+      const p2 = new Promise<{ result: AIFoodAnalysisResult; modelUsed: string }>((resolve, reject) => {
+        timer = setTimeout(() => {
+          safeRun(CANDIDATE_MODELS[1]).then(resolve).catch(reject);
+        }, 2500);
+      });
+
+      p1.then(() => {
+        if (timer) clearTimeout(timer);
+      }).catch(() => {});
+
+      // İlk başarıyla dönen model kazanır
+      raceResult = await Promise.any([p1, p2]);
+    } catch {
+      // İlk iki model de başarısız olduysa sırayla 3. ve 4. yedekleri dene
+      for (let i = 2; i < CANDIDATE_MODELS.length; i++) {
+        try {
+          raceResult = await safeRun(CANDIDATE_MODELS[i]);
+          break;
+        } catch {
+          // sonraki modele geç
+        }
+      }
+    } finally {
+      clearTimeout(overallTimeout);
+      if (raceResult) {
+        controller.abort();
+      }
+    }
+
+    if (raceResult) {
+      successfulResult = raceResult.result;
+      usedModel = raceResult.modelUsed;
     }
 
     if (!successfulResult) {

@@ -348,7 +348,7 @@ export function CalendarAiModal({
           profiles: profiles.map((p) => ({ id: p.id, name: `${p.firstName} ${p.lastName}`.trim() })),
           apiKey: storedKey || undefined,
         }),
-        signal: AbortSignal.timeout(audioPayload ? 60000 : 35000),
+        signal: AbortSignal.timeout(audioPayload ? 60000 : 50000),
       });
 
       const data = await res.json();
