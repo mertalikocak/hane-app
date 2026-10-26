@@ -2,99 +2,58 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { YedekModal } from "./YedekModal";
 import { CloudSyncIndicator } from "./CloudSyncIndicator";
 import { ProfileHeaderMenu } from "@/components/profile/ProfileHeaderMenu";
 import { NotificationBellButton } from "@/components/notifications/NotificationBellButton";
-
-interface NavItem {
-  name: string;
-  href: string;
-  icon: string;
-  description: string;
-  badge?: string;
-  subItems?: { name: string; href: string }[];
-}
-
-const navItems: NavItem[] = [
-  {
-    name: "Ana Sayfa",
-    href: "/",
-    icon: "🏠",
-    description: "Hane genel kontrol paneli",
-  },
-  {
-    name: "Hane Dinner",
-    href: "/dinner",
-    icon: "🍽️",
-    description: "Akşam yemeği & market listesi",
-    subItems: [
-      { name: "Haftalık Plan", href: "/dinner" },
-      { name: "Yemek Kataloğu", href: "/dinner/meals" },
-    ],
-  },
-  {
-    name: "Hane Shopping",
-    href: "/shopping",
-    icon: "🛒",
-    description: "Haftalık alışveriş & gıda listesi",
-  },
-  {
-    name: "Hane Calendar",
-    href: "/calendar",
-    icon: "📅",
-    description: "Ortak & bireysel aile takvimi",
-  },
-  {
-    name: "Hane Gider",
-    href: "/gider",
-    icon: "💰",
-    description: "Ev bütçesi & ekstre takibi",
-  },
-  {
-    name: "Hane Fit",
-    href: "/fit/dashboard",
-    icon: "📐",
-    description: "Vücut ölçüleri & yağ takibi",
-    subItems: [
-      { name: "Genel Bakış", href: "/fit/dashboard" },
-      { name: "Ölçüm Geçmişi", href: "/fit/measurements" },
-      { name: "Yeni Ölçüm", href: "/fit/measurements/new" },
-      { name: "Profiller", href: "/fit/profiles" },
-    ],
-  },
-  {
-    name: "Hane Wish List",
-    href: "/wishlist",
-    icon: "🎁",
-    description: "Ortak & bireysel istek listesi",
-  },
-  {
-    name: "Hane Cleaning",
-    href: "/cleaning",
-    icon: "🧹",
-    description: "Ev temizlik & oda bakım takibi",
-  },
-  {
-    name: "Hane Wedding",
-    href: "/wedding",
-    icon: "💍",
-    description: "Düğün bütçesi & ortak kumbara",
-  },
-  {
-    name: "Hane Car",
-    href: "/cardolist",
-    icon: "🚗",
-    description: "Araç masraf & bakım takibi",
-  },
-];
+import { SidebarOrderModal } from "./SidebarOrderModal";
+import {
+  DEFAULT_NAV_ITEMS,
+  getCustomSidebarOrder,
+  getHiddenSidebarItems,
+  getSortedNavItems,
+  type NavItem,
+} from "@/storage/sidebarStorage";
 
 export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+
+  const [navItems, setNavItems] = useState<NavItem[]>(() => {
+    if (typeof window === "undefined") return DEFAULT_NAV_ITEMS;
+    return getSortedNavItems(
+      DEFAULT_NAV_ITEMS,
+      getCustomSidebarOrder(),
+      getHiddenSidebarItems()
+    );
+  });
+
+  const refreshNavItems = () => {
+    setNavItems(
+      getSortedNavItems(
+        DEFAULT_NAV_ITEMS,
+        getCustomSidebarOrder(),
+        getHiddenSidebarItems()
+      )
+    );
+  };
+
+  useEffect(() => {
+    refreshNavItems();
+    const handleOrderChange = () => {
+      refreshNavItems();
+    };
+    window.addEventListener("hane_sidebar_order_changed", handleOrderChange);
+    window.addEventListener("storage", handleOrderChange);
+    return () => {
+      window.removeEventListener("hane_sidebar_order_changed", handleOrderChange);
+      window.removeEventListener("storage", handleOrderChange);
+    };
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -187,8 +146,19 @@ export function Sidebar() {
 
         {/* Navigation Items */}
         <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5" aria-label="Ana Menü">
-          <div className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-muted/80">
-            Uygulamalar
+          <div className="flex items-center justify-between px-3 pb-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-muted/80">
+              Uygulamalar
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsOrderModalOpen(true)}
+              className="text-[10px] font-bold text-muted hover:text-primary transition flex items-center gap-1 cursor-pointer hover:bg-surface-raised px-2 py-0.5 rounded-lg border border-transparent hover:border-border/60"
+              title="Menü sıralamasını düzenle"
+            >
+              <span>⇅</span>
+              <span>Sırala</span>
+            </button>
           </div>
           {navItems.map((item) => {
             const active = isActive(item.href);
@@ -282,6 +252,13 @@ export function Sidebar() {
 
       {/* Universal Backup Modal */}
       <YedekModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
+
+      {/* Sidebar Customization Modal */}
+      <SidebarOrderModal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
+        onOrderChanged={refreshNavItems}
+      />
     </>
   );
 }

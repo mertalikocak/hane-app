@@ -16,6 +16,7 @@ interface TaksitKartGrubuProps {
   onDeleteKart: (kartId: string) => void;
   onPayAllForKart: (kartId: string) => void;
   onToggleAktif?: (kartId: string, aktif: boolean) => void;
+  onAktarKart?: (kartId: string) => void;
   isTopCard?: boolean;
   isCollapsed?: boolean;
   onToggleCollapse?: (kartId: string) => void;
@@ -99,6 +100,7 @@ export function TaksitKartGrubu({
   onDeleteKart,
   onPayAllForKart,
   onToggleAktif,
+  onAktarKart,
   isTopCard,
   isCollapsed: propIsCollapsed,
   onToggleCollapse,
@@ -304,6 +306,17 @@ export function TaksitKartGrubu({
                     {aktifTaksitler.length}
                   </span>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onAktarKart?.(kart.id)}
+                disabled={taksitler.length === 0}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary hover:opacity-90 text-white font-bold text-xs transition shadow-sm cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                title={`"${kart.ad}" kartının taksitlerini Ev Giderleri bütçesine aktar`}
+              >
+                <span>📥</span>
+                <span className="hidden sm:inline">Bütçeye Aktar</span>
               </button>
 
               <button

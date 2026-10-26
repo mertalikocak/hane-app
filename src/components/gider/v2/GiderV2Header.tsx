@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { AYLAR } from "./constants";
 import type { GiderV2ViewMode } from "./types";
 import { ayAnahtariParcala, ayAnahtariOlustur } from "@/storage/ayDeposu";
@@ -226,15 +225,6 @@ export function GiderV2Header({
             )}
           </div>
 
-          {/* Eski Hane Gider'e Dönüş Linki */}
-          <Link
-            href="/gider"
-            className="secondary-button h-10 px-3 text-xs font-bold text-muted hover:text-foreground hidden lg:inline-flex items-center gap-1.5"
-            title="Eski Hane Gider sayfasına geçiş yap"
-          >
-            <span>🔙</span>
-            <span>Eski Sürüme Git</span>
-          </Link>
 
           {/* Ana Ekle Butonu */}
           <button

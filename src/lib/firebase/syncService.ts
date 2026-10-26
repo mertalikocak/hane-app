@@ -185,14 +185,21 @@ export async function deleteCloudData(): Promise<{ success: boolean; error?: str
 /**
  * Debounced trigger for pushing local changes when user adds/edits data
  */
-export function queueLocalChangePush() {
+export function queueLocalChangePush(immediate = false) {
   if (isApplyingRemoteChange) return;
   if (!isFirebaseConfigured()) return;
 
   if (pushDebounceTimer) {
     clearTimeout(pushDebounceTimer);
+    pushDebounceTimer = null;
   }
 
+  if (immediate) {
+    pushLocalToCloud();
+    return;
+  }
+
+  // Orijinal debounce süresi: 1200ms (Fazla istek atmaması için toplu gönderir)
   pushDebounceTimer = setTimeout(() => {
     pushLocalToCloud();
   }, 1200);
@@ -285,6 +292,14 @@ export function startRealtimeCloudSync(): () => void {
     queueLocalChangePush();
   };
 
+  const handleBeforeUnload = () => {
+    if (pushDebounceTimer) {
+      clearTimeout(pushDebounceTimer);
+      pushDebounceTimer = null;
+      pushLocalToCloud();
+    }
+  };
+
   const syncEvents = [
     "storage",
     "fit_measurements_updated",
@@ -293,9 +308,15 @@ export function startRealtimeCloudSync(): () => void {
     "hane-gider:updated",
     "hane-dinner:storage",
     "tum-hane-verileri-guncellendi",
+    "hane_calorie_updated",
+    "hane_calorie_food_history_updated",
+    "hane_sidebar_order_changed",
+    "calendar_events_updated",
+    "wishlist_items_updated",
   ];
 
   syncEvents.forEach((ev) => window.addEventListener(ev, handleLocalUpdate));
+  window.addEventListener("beforeunload", handleBeforeUnload);
 
   return () => {
     if (activeFirestoreUnsubscribe) {
@@ -303,5 +324,6 @@ export function startRealtimeCloudSync(): () => void {
       activeFirestoreUnsubscribe = null;
     }
     syncEvents.forEach((ev) => window.removeEventListener(ev, handleLocalUpdate));
+    window.removeEventListener("beforeunload", handleBeforeUnload);
   };
 }

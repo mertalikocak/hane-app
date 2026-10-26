@@ -19,6 +19,7 @@ interface TaksitAktarimModalProps {
   kartlar: TaksitKarti[];
   taksitler: TaksitKalemi[];
   onSuccess?: (mesaj: string) => void;
+  initialKartId?: string | null;
 }
 
 const AYLAR = [
@@ -39,6 +40,7 @@ export function TaksitAktarimModal({
   kartlar,
   taksitler,
   onSuccess,
+  initialKartId,
 }: TaksitAktarimModalProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -49,6 +51,7 @@ export function TaksitAktarimModal({
 
   const [hedefAy, setHedefAy] = useState(simdikiAy);
   const [aktarimModu, setAktarimModu] = useState<"birlestir" | "arti_bir">("birlestir");
+  const [seciliKartId, setSeciliKartId] = useState<string>("tum");
   const [isDone, setIsDone] = useState(false);
   const [hasBackup, setHasBackup] = useState(false);
 
@@ -59,6 +62,12 @@ export function TaksitAktarimModal({
   useEffect(() => {
     if (isOpen) {
       setIsDone(false);
+      setSeciliKartId(initialKartId || "tum");
+    }
+  }, [isOpen, initialKartId]);
+
+  useEffect(() => {
+    if (isOpen) {
       setHasBackup(ayVerisiTaksitYedegiVarMi(hedefAy));
     }
   }, [isOpen, hedefAy]);
@@ -79,7 +88,9 @@ export function TaksitAktarimModal({
 
   // Aktarılacak aktif kartlar ve taksit detayları
   const previewData = useMemo(() => {
-    const aktifKartlar = kartlar.filter((k) => k.aktif !== false);
+    const aktifKartlar = kartlar
+      .filter((k) => k.aktif !== false)
+      .filter((k) => (seciliKartId === "tum" ? true : k.id === seciliKartId));
     const isArtiBir = aktarimModu === "arti_bir";
 
     const kartDetaylari = aktifKartlar
@@ -130,7 +141,7 @@ export function TaksitAktarimModal({
       mertToplamPay,
       havsaToplamPay,
     };
-  }, [kartlar, taksitler, aktarimModu]);
+  }, [kartlar, taksitler, aktarimModu, seciliKartId]);
 
   if (!mounted || !isOpen) return null;
 
@@ -140,13 +151,22 @@ export function TaksitAktarimModal({
   };
 
   const handleAktar = () => {
-    const res = taksitleriAyaAktar(hedefAy, kartlar, taksitler, aktarimModu);
+    const aktarilacakKartlar =
+      seciliKartId === "tum"
+        ? kartlar
+        : kartlar.filter((k) => k.id === seciliKartId);
+
+    const res = taksitleriAyaAktar(hedefAy, aktarilacakKartlar, taksitler, aktarimModu);
     setIsDone(true);
     setHasBackup(true);
     if (onSuccess) {
       const ekMesaj = aktarimModu === "arti_bir" ? " (+1 artırılmış olarak)" : "";
+      const kartBilgisi =
+        seciliKartId === "tum"
+          ? `${res.aktarilanKartSayisi} kart`
+          : `"${aktarilacakKartlar[0]?.ad}" kartı`;
       onSuccess(
-        `Taksitler ${formatAyLabel(hedefAy)} bütçesine başarıyla aktarıldı${ekMesaj} (${res.aktarilanKartSayisi} kart, toplam ${paraFormat(res.toplamTutar)})`
+        `Taksitler ${formatAyLabel(hedefAy)} bütçesine başarıyla aktarıldı${ekMesaj} (${kartBilgisi}, toplam ${paraFormat(res.toplamTutar)})`
       );
     }
   };
@@ -177,10 +197,14 @@ export function TaksitAktarimModal({
             </div>
             <div>
               <h2 className="text-base font-bold text-foreground">
-                Ev Giderlerine Taksit Aktarımı
+                {seciliKartId !== "tum"
+                  ? `"${kartlar.find((k) => k.id === seciliKartId)?.ad || "Kart"}" Taksit Aktarımı`
+                  : "Ev Giderlerine Taksit Aktarımı"}
               </h2>
               <p className="text-xs text-muted">
-                Taksitlerinizi Aylık Bütçe & Ekstre tablosuna tek tıkla yansıtın
+                {seciliKartId !== "tum"
+                  ? "Yalnızca bu kartın taksitlerini seçili ayın gider tablosuna yansıtın"
+                  : "Tüm aktif kartlardaki taksitleri Aylık Bütçe tablosuna yansıtın"}
               </p>
             </div>
           </div>
@@ -239,10 +263,71 @@ export function TaksitAktarimModal({
             </div>
           )}
 
-          {/* Hedef Ay Seçimi */}
+          {/* 1. Aktarılacak Kart Kapsamı (Toplu mu, Tek Kart mı?) */}
+          <div className="p-4 rounded-2xl bg-surface-raised/60 border border-border/70 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-foreground block">
+                1. Hangi Kartlar Aktarılsın?
+              </label>
+              {seciliKartId !== "tum" && (
+                <button
+                  type="button"
+                  onClick={() => setSeciliKartId("tum")}
+                  className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                >
+                  Tüm Kartlara Geç (Toplu)
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setSeciliKartId("tum")}
+                className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer flex items-center justify-between ${
+                  seciliKartId === "tum"
+                    ? "bg-primary text-white border-primary shadow-xs"
+                    : "bg-surface border-border text-foreground hover:bg-border/30"
+                }`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span>💳</span>
+                  <span>Tüm Aktif Kartlar (Toplu)</span>
+                </span>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/20 font-mono">
+                  {kartlar.filter((k) => k.aktif !== false).length} Kart
+                </span>
+              </button>
+
+              {kartlar
+                .filter((k) => k.aktif !== false)
+                .map((k) => (
+                  <button
+                    key={k.id}
+                    type="button"
+                    onClick={() => setSeciliKartId(k.id)}
+                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer flex items-center justify-between truncate ${
+                      seciliKartId === k.id
+                        ? "bg-primary text-white border-primary shadow-xs"
+                        : "bg-surface border-border text-foreground hover:bg-border/30"
+                    }`}
+                  >
+                    <span className="flex items-center gap-1.5 truncate">
+                      <span>💳</span>
+                      <span className="truncate">{k.ad}</span>
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/20 shrink-0 font-mono">
+                      {k.kartSahibi.toUpperCase()}
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </div>
+
+          {/* 2. Hedef Ay Seçimi */}
           <div className="p-4 rounded-2xl bg-surface-raised/60 border border-border/70 space-y-2.5">
             <label className="text-xs font-bold text-foreground block">
-              1. Hangi Ayın Gider Tablosuna Aktarılsın?
+              2. Hangi Ayın Gider Tablosuna Aktarılsın?
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -270,10 +355,10 @@ export function TaksitAktarimModal({
             </div>
           </div>
 
-          {/* Aktarım Modu Seçimi */}
+          {/* 3. Aktarım Modu Seçimi */}
           <div className="p-4 rounded-2xl bg-surface-raised/60 border border-border/70 space-y-2.5">
             <label className="text-xs font-bold text-foreground block">
-              2. Aktarım Şekli
+              3. Aktarım Şekli
             </label>
             <div className="space-y-2">
               <label
@@ -340,48 +425,56 @@ export function TaksitAktarimModal({
             </div>
           </div>
 
-          {/* Aktarılacak Kartlar ve Tutar Önizlemesi */}
+          {/* 4. Aktarılacak Kartlar ve Tutar Önizlemesi */}
           <div className="space-y-2">
             <span className="text-xs font-bold text-foreground block">
-              3. Aktarılacak Taksitler ve Kişi Payları
+              4. Aktarılacak Taksitler ve Kişi Payları
             </span>
 
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {previewData.kartDetaylari.map(({ kart, toplam, mertBireysel, havsaBireysel, ortak }) => (
-                <div
-                  key={kart.id}
-                  className="p-3 rounded-xl bg-surface border border-border/80 flex items-center justify-between text-xs"
-                >
-                  <div>
-                    <span className="font-bold text-foreground block">
-                      💳 {kart.ad}
-                    </span>
-                    <span className="text-[11px] text-muted block mt-0.5">
-                      Mert: {paraFormat(mertBireysel)} • Havsa: {paraFormat(havsaBireysel)} • Ortak: {paraFormat(ortak)}
+            {previewData.kartDetaylari.length === 0 ? (
+              <div className="p-4 text-center rounded-xl bg-surface border border-dashed border-border/80 text-muted text-xs">
+                Seçilen kriterlere uygun aktarılacak taksit bulunamadı.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                {previewData.kartDetaylari.map(({ kart, toplam, mertBireysel, havsaBireysel, ortak }) => (
+                  <div
+                    key={kart.id}
+                    className="p-3 rounded-xl bg-surface border border-border/80 flex items-center justify-between text-xs"
+                  >
+                    <div>
+                      <span className="font-bold text-foreground block">
+                        💳 {kart.ad}
+                      </span>
+                      <span className="text-[11px] text-muted block mt-0.5">
+                        Mert: {paraFormat(mertBireysel)} • Havsa: {paraFormat(havsaBireysel)} • Ortak: {paraFormat(ortak)}
+                      </span>
+                    </div>
+                    <span className="font-black text-foreground text-sm">
+                      {paraFormat(toplam)}
                     </span>
                   </div>
-                  <span className="font-black text-foreground text-sm">
-                    {paraFormat(toplam)}
-                  </span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Toplam Bütçe Yansıması */}
-            <div className="p-3.5 rounded-xl bg-surface-raised border border-border/80 text-xs space-y-1.5">
-              <div className="flex items-center justify-between text-muted">
-                <span>Toplam Ev Gideri:</span>
-                <span className="font-bold text-foreground">{paraFormat(previewData.toplamAylik)}</span>
+            {previewData.kartDetaylari.length > 0 && (
+              <div className="p-3.5 rounded-xl bg-surface-raised border border-border/80 text-xs space-y-1.5">
+                <div className="flex items-center justify-between text-muted">
+                  <span>Toplam Ev Gideri:</span>
+                  <span className="font-bold text-foreground">{paraFormat(previewData.toplamAylik)}</span>
+                </div>
+                <div className="flex items-center justify-between text-muted">
+                  <span>Mert'in Bütçesine Yansıyacak Borç:</span>
+                  <span className="font-bold text-primary">{paraFormat(previewData.mertToplamPay)}</span>
+                </div>
+                <div className="flex items-center justify-between text-muted">
+                  <span>Havsa'nın Bütçesine Yansıyacak Borç:</span>
+                  <span className="font-bold text-primary">{paraFormat(previewData.havsaToplamPay)}</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between text-muted">
-                <span>Mert'in Bütçesine Yansıyacak Borç:</span>
-                <span className="font-bold text-primary">{paraFormat(previewData.mertToplamPay)}</span>
-              </div>
-              <div className="flex items-center justify-between text-muted">
-                <span>Havsa'nın Bütçesine Yansıyacak Borç:</span>
-                <span className="font-bold text-primary">{paraFormat(previewData.havsaToplamPay)}</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -390,7 +483,7 @@ export function TaksitAktarimModal({
           <button
             type="button"
             onClick={onClose}
-            className="secondary-button px-4 text-xs font-bold"
+            className="secondary-button px-4 text-xs font-bold cursor-pointer"
           >
             Vazgeç
           </button>
@@ -398,11 +491,14 @@ export function TaksitAktarimModal({
           <button
             type="button"
             onClick={handleAktar}
-            className="primary-button px-5 py-2.5 text-xs font-bold shadow-sm"
+            disabled={previewData.kartDetaylari.length === 0}
+            className="primary-button px-5 py-2.5 text-xs font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
             <span>📥</span>
             <span>
-              {formatAyLabel(hedefAy)} Bütçesine {aktarimModu === "arti_bir" ? "+1 Artırarak " : ""}Aktar
+              {seciliKartId === "tum"
+                ? `${formatAyLabel(hedefAy)} Bütçesine ${aktarimModu === "arti_bir" ? "+1 Artırarak " : ""}Toplu Aktar`
+                : `"${previewData.kartDetaylari[0]?.kart.ad || "Kartı"}" ${formatAyLabel(hedefAy)} Bütçesine Aktar`}
             </span>
           </button>
         </div>

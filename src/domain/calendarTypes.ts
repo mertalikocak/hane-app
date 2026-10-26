@@ -113,3 +113,23 @@ export interface CalendarEvent {
   createdAt: string;          // ISO string
   updatedAt?: string;         // ISO string
 }
+
+export interface AICalendarParsedEvent {
+  title: string;
+  description?: string;
+  date: string;               // YYYY-MM-DD
+  endDate?: string;           // YYYY-MM-DD
+  time?: string;              // HH:mm
+  endTime?: string;           // HH:mm
+  isAllDay: boolean;
+  category: CalendarCategory;
+  scope: CalendarScope;
+  targetProfileId?: string;
+  targetProfileName?: string;
+}
+
+export interface AICalendarResponse {
+  summary: string;
+  transcribedText?: string;
+  events: AICalendarParsedEvent[];
+}

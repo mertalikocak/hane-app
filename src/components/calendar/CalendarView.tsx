@@ -8,6 +8,7 @@ import {
 } from "@/domain/calendarTypes";
 import { getCalendarEvents } from "@/storage/calendarStorage";
 import { CalendarEventModal } from "./CalendarEventModal";
+import { CalendarAiModal } from "./CalendarAiModal";
 import { TodayEventBanner } from "./TodayEventBanner";
 import { NotificationBellButton } from "@/components/notifications/NotificationBellButton";
 import { useProfile } from "@/context/ProfileContext";
@@ -34,6 +35,7 @@ export function CalendarView() {
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [modalDate, setModalDate] = useState<string>("");
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
 
@@ -341,6 +343,17 @@ export function CalendarView() {
 
           {/* Notification Settings & Test */}
           <NotificationBellButton />
+
+          {/* AI Voice & Text Event Assistant */}
+          <button
+            type="button"
+            onClick={() => setIsAiModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-purple-600/20 transition cursor-pointer group"
+            title="Sesli veya Yazılı Yapay Zeka ile Ekle"
+          >
+            <span className="group-hover:scale-110 transition-transform">✨🎙️</span>
+            <span>Yapay Zeka ile Ekle</span>
+          </button>
 
           {/* New Event Button */}
           <button
@@ -717,6 +730,13 @@ export function CalendarView() {
         initialDate={modalDate}
         initialEvent={editingEvent}
         onSaved={loadEvents}
+      />
+
+      {/* AI Voice & Text Event Modal */}
+      <CalendarAiModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onEventsAdded={loadEvents}
       />
     </div>
   );

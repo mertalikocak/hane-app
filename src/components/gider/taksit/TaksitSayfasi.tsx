@@ -48,6 +48,7 @@ export function TaksitSayfasi() {
   const [editingKart, setEditingKart] = useState<TaksitKarti | null>(null);
 
   const [isAktarimModalOpen, setIsAktarimModalOpen] = useState(false);
+  const [aktarimKartId, setAktarimKartId] = useState<string | null>(null);
   const [aktarimMesaj, setAktarimMesaj] = useState<string | null>(null);
 
   // Akordiyon: Açık olan Kart ID'leri (Varsayılan olarak tüm taksit listeleri KAPALI)
@@ -589,7 +590,10 @@ export function TaksitSayfasi() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={() => setIsAktarimModalOpen(true)}
+            onClick={() => {
+              setAktarimKartId(null);
+              setIsAktarimModalOpen(true);
+            }}
             className="secondary-button h-10 px-3.5 text-xs font-bold border-primary/40 text-primary hover:bg-primary/10 transition"
             title="Taksitleri Aylık Bütçe & Ev Giderleri sekmesine aktar"
           >
@@ -674,6 +678,10 @@ export function TaksitSayfasi() {
                 onDeleteKart={handleDeleteKart}
                 onPayAllForKart={handlePayAllForKart}
                 onToggleAktif={handleToggleKartAktif}
+                onAktarKart={(kartId) => {
+                  setAktarimKartId(kartId);
+                  setIsAktarimModalOpen(true);
+                }}
                 isCollapsed={!openKartIds.includes(kart.id)}
                 onToggleCollapse={toggleKartCollapse}
               />
@@ -708,9 +716,13 @@ export function TaksitSayfasi() {
       {/* Taksit Aktarım Modalı */}
       <TaksitAktarimModal
         isOpen={isAktarimModalOpen}
-        onClose={() => setIsAktarimModalOpen(false)}
+        onClose={() => {
+          setIsAktarimModalOpen(false);
+          setAktarimKartId(null);
+        }}
         kartlar={kartlar}
         taksitler={taksitler}
+        initialKartId={aktarimKartId}
         onSuccess={(msg) => setAktarimMesaj(msg)}
       />
     </div>
