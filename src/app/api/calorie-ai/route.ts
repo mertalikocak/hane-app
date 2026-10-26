@@ -36,8 +36,8 @@ interface ModelCandidate {
 
 const CANDIDATE_MODELS: ModelCandidate[] = [
   { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite", timeoutMs: 10000 },
-  { apiVersion: "v1beta", modelName: "gemini-3.8-flash", timeoutMs: 12000 },
   { apiVersion: "v1beta", modelName: "gemini-3.6-flash", timeoutMs: 12000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.8-flash", timeoutMs: 12000 },
   { apiVersion: "v1beta", modelName: "gemini-flash-latest", timeoutMs: 12000 },
 ];
 
