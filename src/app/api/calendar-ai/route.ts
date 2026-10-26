@@ -8,11 +8,10 @@ interface ModelCandidate {
 }
 
 const CANDIDATE_MODELS: ModelCandidate[] = [
-  { apiVersion: "v1beta", modelName: "gemini-2.5-flash-lite", timeoutMs: 7000 },
-  { apiVersion: "v1beta", modelName: "gemini-2.5-flash", timeoutMs: 8000 },
-  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite", timeoutMs: 7000 },
-  { apiVersion: "v1beta", modelName: "gemini-3.6-flash", timeoutMs: 9000 },
-  { apiVersion: "v1beta", modelName: "gemini-flash-latest", timeoutMs: 10000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite", timeoutMs: 10000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.8-flash", timeoutMs: 12000 },
+  { apiVersion: "v1beta", modelName: "gemini-3.6-flash", timeoutMs: 12000 },
+  { apiVersion: "v1beta", modelName: "gemini-flash-latest", timeoutMs: 12000 },
 ];
 
 export async function POST(req: NextRequest) {
@@ -138,7 +137,7 @@ ANALİZ VE DÖNÜŞTÜRME KURALLARI:
       });
     }
 
-    const buildPayload = (includeThinkingBudget: boolean) => ({
+    const buildPayload = (includeThinking: boolean) => ({
       contents: [
         {
           role: "user",
@@ -148,7 +147,7 @@ ANALİZ VE DÖNÜŞTÜRME KURALLARI:
       generationConfig: {
         responseMimeType: "application/json",
         temperature: 0.1,
-        ...(includeThinkingBudget ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+        ...(includeThinking ? { thinkingConfig: { thinkingLevel: "MINIMAL" } } : {}),
       },
     });
 
@@ -159,7 +158,7 @@ ANALİZ VE DÖNÜŞTÜRME KURALLARI:
     for (const candidate of CANDIDATE_MODELS) {
       const endpoint = `https://generativelanguage.googleapis.com/${candidate.apiVersion}/models/${candidate.modelName}:generateContent?key=${apiKey}`;
       const candidateTimeout = hasAudio
-        ? 25000
+        ? 28000
         : candidate.timeoutMs;
 
       try {
@@ -172,20 +171,27 @@ ANALİZ VE DÖNÜŞTÜRME KURALLARI:
           signal: AbortSignal.timeout(candidateTimeout),
         });
 
-        // Eğer model thinkingConfig parametresini desteklemiyorsa, thinking olmadan hemen tekrar dene
+        // Eğer 400 Bad Request dönerse (örneğin parametre veya thinkingConfig reddedildiyse),
+        // thinkingConfig olmadan sade payload ile hemen tekrar dene
         if (response.status === 400) {
           const errClone = await response.clone().json().catch(() => ({}));
           const errMsg = errClone?.error?.message || "";
-          if (errMsg.toLowerCase().includes("thinking")) {
-            response = await fetch(endpoint, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(buildPayload(false)),
-              signal: AbortSignal.timeout(candidateTimeout),
-            });
+          if (
+            errMsg.toLowerCase().includes("api_key") ||
+            errMsg.toLowerCase().includes("api key")
+          ) {
+            attemptErrors.push(`[${candidate.modelName}]: ${errMsg}`);
+            break;
           }
+
+          response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(buildPayload(false)),
+            signal: AbortSignal.timeout(candidateTimeout),
+          });
         }
 
         if (!response.ok) {
