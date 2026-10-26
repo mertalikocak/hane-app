@@ -17,6 +17,30 @@ interface FetchDinnerModalProps {
   onOpenApiKeyModal: () => void;
 }
 
+function getPortionedIngredientsList(
+  meal: LocalMeal | undefined,
+  consumed: number,
+  total: number
+): string {
+  if (!meal) return "";
+  const ratio = (consumed || 1) / (total || 1);
+  if (meal.ingredients && meal.ingredients.length > 0) {
+    const list = meal.ingredients.map((ing) => {
+      const qty = Number(ing.quantity);
+      if (!isNaN(qty) && qty > 0) {
+        const scaled = Math.round(qty * ratio * 100) / 100;
+        const formattedQty = Number.isInteger(scaled)
+          ? String(scaled)
+          : scaled.toFixed(2).replace(/\.?0+$/, "");
+        return `${formattedQty} ${ing.unit || ""} ${ing.name}`.replace(/\s+/g, " ").trim();
+      }
+      return `${ing.quantity || ""} ${ing.unit || ""} ${ing.name}`.replace(/\s+/g, " ").trim();
+    });
+    return list.join(", ");
+  }
+  return `${consumed} porsiyon ${meal.name}`;
+}
+
 export function FetchDinnerModal({
   isOpen,
   selectedDate,
@@ -28,6 +52,7 @@ export function FetchDinnerModal({
   const [selectedMealId, setSelectedMealId] = useState<string>("");
   const [totalPortions, setTotalPortions] = useState<number>(3);
   const [consumedPortions, setConsumedPortions] = useState<number>(1);
+  const [customIngredients, setCustomIngredients] = useState<string>("");
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -50,27 +75,30 @@ export function FetchDinnerModal({
       setAllMeals(meals);
 
       const planned = getPlannedDinnerForDate(selectedDate);
+      let initialId = "";
       if (planned) {
-        setSelectedMealId(planned.id);
+        initialId = planned.id;
       } else if (meals.length > 0) {
-        setSelectedMealId(meals[0].id);
-      } else {
-        setSelectedMealId("");
+        initialId = meals[0].id;
       }
+      setSelectedMealId(initialId);
 
-      setTotalPortions(3);
-      setConsumedPortions(1);
+      const initialTotal = 3;
+      const initialConsumed = 1;
+      setTotalPortions(initialTotal);
+      setConsumedPortions(initialConsumed);
       setAnalysisResult(null);
       setAiError(null);
       setEditableItems([]);
+
+      const initialMeal = meals.find((m) => m.id === initialId);
+      setCustomIngredients(getPortionedIngredientsList(initialMeal, initialConsumed, initialTotal));
     }
   }, [isOpen, selectedDate]);
 
   if (!isOpen) return null;
 
   const currentMeal = allMeals.find((m) => m.id === selectedMealId);
-
-  const ratio = (consumedPortions || 1) / (totalPortions || 1);
 
   const rawIngredientsText =
     currentMeal?.ingredients && currentMeal.ingredients.length > 0
@@ -79,25 +107,10 @@ export function FetchDinnerModal({
           .join(", ")
       : "";
 
-  const portionedIngredients =
-    currentMeal?.ingredients && currentMeal.ingredients.length > 0
-      ? currentMeal.ingredients.map((ing) => {
-          const qty = Number(ing.quantity);
-          if (!isNaN(qty) && qty > 0) {
-            const scaled = Math.round(qty * ratio * 100) / 100;
-            const formattedQty = Number.isInteger(scaled)
-              ? String(scaled)
-              : scaled.toFixed(2).replace(/\.?0+$/, "");
-            return `${formattedQty} ${ing.unit || ""} ${ing.name}`.replace(/\s+/g, " ").trim();
-          }
-          return `${ing.quantity || ""} ${ing.unit || ""} ${ing.name}`.replace(/\s+/g, " ").trim();
-        })
-      : [];
-
-  const portionedIngredientsText =
-    portionedIngredients.length > 0
-      ? portionedIngredients.join(", ")
-      : "";
+  const syncIngredients = (mealId: string, consumed: number, total: number) => {
+    const meal = allMeals.find((m) => m.id === mealId);
+    setCustomIngredients(getPortionedIngredientsList(meal, consumed, total));
+  };
 
   const handleAnalyzeDinner = async () => {
     if (!currentMeal) return;
@@ -106,9 +119,9 @@ export function FetchDinnerModal({
     setAiError(null);
     setAnalysisResult(null);
 
-    // Yemek ismi yerine porsiyona bölünmüş malzemeleri doğrudan yapay zekaya gönderiyoruz
-    const prompt = portionedIngredientsText
-      ? portionedIngredientsText
+    // Kullanıcının düzenlediği veya eklemeler yaptığı malzeme listesini doğrudan gönderiyoruz
+    const prompt = customIngredients.trim()
+      ? customIngredients.trim()
       : `${consumedPortions} porsiyon ${currentMeal.name}`;
 
     try {
@@ -241,8 +254,10 @@ export function FetchDinnerModal({
               <select
                 value={selectedMealId}
                 onChange={(e) => {
-                  setSelectedMealId(e.target.value);
+                  const newId = e.target.value;
+                  setSelectedMealId(newId);
                   setAnalysisResult(null);
+                  syncIngredients(newId, consumedPortions, totalPortions);
                 }}
                 className="w-full rounded-2xl border border-border bg-surface-raised p-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none cursor-pointer"
               >
@@ -253,48 +268,6 @@ export function FetchDinnerModal({
                 ))}
               </select>
             </div>
-
-            {/* Ingredients Preview */}
-            {currentMeal && (
-              <div className="space-y-2">
-                {/* Portioned Ingredients Card - This is what goes to AI */}
-                {portionedIngredientsText ? (
-                  <div className="rounded-2xl border border-purple-500/30 bg-purple-500/10 p-3.5 space-y-1.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
-                        <span>🥣</span>
-                        <span>Yapay Zekaya Gönderilecek Malzemeler ({consumedPortions} Porsiyon / %{ratioPercent}):</span>
-                      </span>
-                    </div>
-                    <p className="text-foreground font-semibold leading-relaxed text-[11px]">
-                      {portionedIngredientsText}
-                    </p>
-                    <span className="text-[10px] text-muted block pt-0.5">
-                      💡 Yemek ismi yerine tam bu porsiyonlanmış gramajlar analiz edilecektir.
-                    </span>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-border/80 bg-surface-raised/50 p-3 space-y-1 text-xs">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
-                      📝 Pişirilen Malzemeler:
-                    </span>
-                    <p className="text-foreground/90 leading-relaxed text-[11px]">
-                      Standart ev yapımı tarif
-                    </p>
-                  </div>
-                )}
-
-                {/* Total Pot Recipe Reference */}
-                {rawIngredientsText && (
-                  <div className="rounded-xl border border-border/60 bg-surface-raised/30 px-3 py-2 text-[10px] text-muted flex items-center justify-between">
-                    <span className="font-medium">Tenceredeki toplam tarif ({totalPortions} kişilik):</span>
-                    <span className="text-foreground/75 truncate max-w-[240px]" title={rawIngredientsText}>
-                      {rawIngredientsText}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Portion Controls */}
             <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl border border-border bg-surface-raised/40">
@@ -310,8 +283,10 @@ export function FetchDinnerModal({
                     step="0.5"
                     value={totalPortions}
                     onChange={(e) => {
-                      setTotalPortions(Math.max(0.5, parseFloat(e.target.value) || 1));
+                      const newTotal = Math.max(0.5, parseFloat(e.target.value) || 1);
+                      setTotalPortions(newTotal);
                       setAnalysisResult(null);
+                      syncIngredients(selectedMealId, consumedPortions, newTotal);
                     }}
                     className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-foreground focus:outline-none"
                   />
@@ -332,8 +307,10 @@ export function FetchDinnerModal({
                     step="0.25"
                     value={consumedPortions}
                     onChange={(e) => {
-                      setConsumedPortions(Math.max(0.25, parseFloat(e.target.value) || 1));
+                      const newConsumed = Math.max(0.25, parseFloat(e.target.value) || 1);
+                      setConsumedPortions(newConsumed);
                       setAnalysisResult(null);
+                      syncIngredients(selectedMealId, newConsumed, totalPortions);
                     }}
                     className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-foreground focus:outline-none"
                   />
@@ -343,6 +320,54 @@ export function FetchDinnerModal({
                   Tüm yemeğin %{ratioPercent}&apos;i
                 </span>
               </div>
+            </div>
+
+            {/* Editable Portioned Ingredients Input */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <span>🥣</span>
+                  <span>Yapay Zekaya Gönderilecek Malzemeler:</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => syncIngredients(selectedMealId, consumedPortions, totalPortions)}
+                  className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer flex items-center gap-1"
+                  title="Porsiyona göre yeniden doldur"
+                >
+                  <span>↺</span>
+                  <span>Porsiyona Göre Sıfırla</span>
+                </button>
+              </div>
+
+              <div className="relative">
+                <textarea
+                  rows={3}
+                  value={customIngredients}
+                  onChange={(e) => {
+                    setCustomIngredients(e.target.value);
+                    setAnalysisResult(null);
+                  }}
+                  placeholder="Yapay zekaya gidecek porsiyonlanmış malzemeler..."
+                  className="w-full rounded-2xl border border-purple-500/30 bg-surface-raised p-3 text-xs font-medium text-foreground focus:border-purple-500 focus:outline-none resize-none shadow-xs transition leading-relaxed"
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-muted px-1">
+                <span>
+                  💡 Düzenleyebilir veya yanına ekstra ekleyebilirsiniz (Örn: <i>+ 1 dilim ekmek, 1 kase yoğurt</i>).
+                </span>
+              </div>
+
+              {/* Total Pot Recipe Reference */}
+              {rawIngredientsText && (
+                <div className="rounded-xl border border-border/60 bg-surface-raised/30 px-3 py-2 text-[10px] text-muted flex items-center justify-between gap-2">
+                  <span className="font-medium shrink-0">Tencere toplam tarif ({totalPortions} kişilik):</span>
+                  <span className="text-foreground/75 truncate" title={rawIngredientsText}>
+                    {rawIngredientsText}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Error Message */}
