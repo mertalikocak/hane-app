@@ -46,6 +46,7 @@ import {
   ParaTransferiModalV2,
   OnayModal,
   OzetRaporModalV2,
+  BireyselKayitModal,
 } from "./GiderV2Modals";
 
 function simdikiAyAnahtari(): string {
@@ -81,6 +82,15 @@ export function EvGiderleriSayfasiV2() {
   const [copyConfirmType, setCopyConfirmType] = useState<"gider" | "gelir" | null>(null);
   const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
   const [isOzetModalOpen, setIsOzetModalOpen] = useState(false);
+
+  // Bireysel Kayıt Düzenleme State'leri
+  const [editingBireyselKalem, setEditingBireyselKalem] = useState<{
+    kartId: string;
+    kartAdi: string;
+    kalem: BireyselEkstreKalemi;
+  } | null>(null);
+  const [editingAyriHarcama, setEditingAyriHarcama] = useState<BireyselAyriHarcama | null>(null);
+  const [editingGelir, setEditingGelir] = useState<BireyselGelirKalemi | null>(null);
 
   const iceAktarInputRef = useRef<HTMLInputElement>(null);
 
@@ -295,6 +305,26 @@ export function EvGiderleriSayfasiV2() {
     showToast("Bireysel kalem silindi.");
   };
 
+  const handleBireyselGuncelle = (
+    kartId: string,
+    kalem: BireyselEkstreKalemi
+  ) => {
+    setVeri((v) => ({
+      ...v,
+      krediKartlari: v.krediKartlari.map((k) =>
+        k.id === kartId
+          ? {
+              ...k,
+              bireyselKalemler: k.bireyselKalemler.map((x) =>
+                x.id === kalem.id ? kalem : x
+              ),
+            }
+          : k
+      ),
+    }));
+    showToast("Bireysel kalem güncellendi.");
+  };
+
   // ------------------------------------------------------------------
   // AYRI BİREYSEL HARCAMA EYLEMLERİ
   // ------------------------------------------------------------------
@@ -306,6 +336,16 @@ export function EvGiderleriSayfasiV2() {
       bireyselAyriHarcamalar: [...v.bireyselAyriHarcamalar, { ...h, id }],
     }));
     showToast("Bireysel harcama eklendi.");
+  };
+
+  const handleAyriHarcamaGuncelle = (h: BireyselAyriHarcama) => {
+    setVeri((v) => ({
+      ...v,
+      bireyselAyriHarcamalar: v.bireyselAyriHarcamalar.map((x) =>
+        x.id === h.id ? h : x
+      ),
+    }));
+    showToast("Bireysel harcama güncellendi.");
   };
 
   const handleAyriHarcamaSil = (id: string) => {
@@ -327,6 +367,16 @@ export function EvGiderleriSayfasiV2() {
       bireyselGelirKalemleri: [...v.bireyselGelirKalemleri, { ...g, id }],
     }));
     showToast("Gelir kalemi eklendi.");
+  };
+
+  const handleGelirGuncelle = (g: BireyselGelirKalemi) => {
+    setVeri((v) => ({
+      ...v,
+      bireyselGelirKalemleri: v.bireyselGelirKalemleri.map((x) =>
+        x.id === g.id ? g : x
+      ),
+    }));
+    showToast("Gelir kalemi güncellendi.");
   };
 
   const handleGelirSil = (id: string) => {
@@ -618,6 +668,9 @@ export function EvGiderleriSayfasiV2() {
           }}
           onKartSil={handleKartSil}
           onBireyselEkle={handleBireyselEkle}
+          onBireyselDuzenle={(kartId, kartAdi, bk) => {
+            setEditingBireyselKalem({ kartId, kartAdi, kalem: bk });
+          }}
           onBireyselSil={handleBireyselSil}
           onYeniKartEkle={() => {
             setEditingKart(null);
@@ -637,10 +690,12 @@ export function EvGiderleriSayfasiV2() {
             setIsKartModalOpen(true);
           }}
           onKartSil={handleKartSil}
+          onBireyselKalemDuzenle={(kartId, kartAdi, bk) => {
+            setEditingBireyselKalem({ kartId, kartAdi, kalem: bk });
+          }}
+          onBireyselKalemSil={handleBireyselSil}
           onAyriHarcamaDuzenle={(h) => {
-            // Düzenleme için bireysel sekmesine yönlendir
-            setActiveView("bireysel_gelir");
-            showToast("Bireysel harcamayı sol panelden düzenleyebilirsiniz.");
+            setEditingAyriHarcama(h);
           }}
           onAyriHarcamaSil={handleAyriHarcamaSil}
           onTransferSil={handleTransferSil}
@@ -656,14 +711,12 @@ export function EvGiderleriSayfasiV2() {
           gelirler={veri.bireyselGelirKalemleri}
           onHarcamaEkle={handleAyriHarcamaEkle}
           onHarcamaDuzenle={(h) => {
-            handleAyriHarcamaSil(h.id);
-            handleAyriHarcamaEkle(h);
+            setEditingAyriHarcama(h);
           }}
           onHarcamaSil={handleAyriHarcamaSil}
           onGelirEkle={handleGelirEkle}
           onGelirDuzenle={(g) => {
-            handleGelirSil(g.id);
-            handleGelirEkle(g);
+            setEditingGelir(g);
           }}
           onGelirSil={handleGelirSil}
         />
@@ -729,6 +782,64 @@ export function EvGiderleriSayfasiV2() {
         veri={veri}
         calc={calc}
         onCopySuccess={() => showToast("📋 Rapor panoya kopyalandı!")}
+      />
+
+      {/* Kart Altı Bireysel Kalem Düzenleme Modalı */}
+      <BireyselKayitModal
+        isOpen={Boolean(editingBireyselKalem)}
+        onClose={() => setEditingBireyselKalem(null)}
+        title="Bireysel Kalemi Düzenle"
+        subtitle={
+          editingBireyselKalem
+            ? `${editingBireyselKalem.kartAdi} kartına ait bireysel kalem`
+            : undefined
+        }
+        icon="🏷️"
+        initialData={editingBireyselKalem?.kalem}
+        onSave={(data) => {
+          if (editingBireyselKalem) {
+            handleBireyselGuncelle(editingBireyselKalem.kartId, {
+              id: editingBireyselKalem.kalem.id,
+              ...data,
+            });
+          }
+        }}
+      />
+
+      {/* Ayrı Bireysel Harcama Düzenleme Modalı */}
+      <BireyselKayitModal
+        isOpen={Boolean(editingAyriHarcama)}
+        onClose={() => setEditingAyriHarcama(null)}
+        title="Bireysel Harcamayı Düzenle"
+        subtitle="Ortak paylaşıma girmeyen şahsi harcama"
+        icon="🛍️"
+        initialData={editingAyriHarcama}
+        onSave={(data) => {
+          if (editingAyriHarcama) {
+            handleAyriHarcamaGuncelle({
+              id: editingAyriHarcama.id,
+              ...data,
+            });
+          }
+        }}
+      />
+
+      {/* Bireysel Gelir Kalemi Düzenleme Modalı */}
+      <BireyselKayitModal
+        isOpen={Boolean(editingGelir)}
+        onClose={() => setEditingGelir(null)}
+        title="Bireysel Gelir Kalemini Düzenle"
+        subtitle="Maaş, prim veya şahsi gelir kalemi"
+        icon="💼"
+        initialData={editingGelir}
+        onSave={(data) => {
+          if (editingGelir) {
+            handleGelirGuncelle({
+              id: editingGelir.id,
+              ...data,
+            });
+          }
+        }}
       />
     </div>
   );

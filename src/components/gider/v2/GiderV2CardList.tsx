@@ -14,6 +14,7 @@ interface GiderV2CardListProps {
   onKartDuzenle: (kart: KrediKartiEkstresi) => void;
   onKartSil: (id: string) => void;
   onBireyselEkle: (kartId: string, kalem: Omit<BireyselEkstreKalemi, "id">) => void;
+  onBireyselDuzenle: (kartId: string, kartAdi: string, kalem: BireyselEkstreKalemi) => void;
   onBireyselSil: (kartId: string, kalemId: string) => void;
   onYeniKartEkle: () => void;
 }
@@ -23,6 +24,7 @@ export function GiderV2CardList({
   onKartDuzenle,
   onKartSil,
   onBireyselEkle,
+  onBireyselDuzenle,
   onBireyselSil,
   onYeniKartEkle,
 }: GiderV2CardListProps) {
@@ -349,14 +351,22 @@ export function GiderV2CardList({
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono font-bold text-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-mono font-bold text-foreground mr-1">
                                   {para(bk.tutar)}
                                 </span>
                                 <button
                                   type="button"
+                                  onClick={() => onBireyselDuzenle(kart.id, kart.ad, bk)}
+                                  className="w-6 h-6 rounded-lg bg-surface border border-border/60 flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-raised transition cursor-pointer text-xs"
+                                  title="Kalemi düzenle"
+                                >
+                                  ✎
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => onBireyselSil(kart.id, bk.id)}
-                                  className="w-5 h-5 rounded flex items-center justify-center text-muted hover:text-rose-500 transition cursor-pointer"
+                                  className="w-6 h-6 rounded-lg bg-surface border border-border/60 flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer text-xs"
                                   title="Kalemi sil"
                                 >
                                   ✕

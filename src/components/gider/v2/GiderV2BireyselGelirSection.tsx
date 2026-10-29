@@ -180,14 +180,14 @@ export function GiderV2BireyselGelirSection({
                     <span className="font-bold text-foreground">{h.aciklama}</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-black text-foreground mr-1">
                       {para(h.tutar)}
                     </span>
                     <button
                       type="button"
                       onClick={() => onHarcamaDuzenle(h)}
-                      className="p-1 rounded text-muted hover:text-foreground cursor-pointer"
+                      className="w-6 h-6 rounded-lg bg-surface border border-border/60 flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-raised transition cursor-pointer text-xs"
                       title="Düzenle"
                     >
                       ✎
@@ -195,7 +195,7 @@ export function GiderV2BireyselGelirSection({
                     <button
                       type="button"
                       onClick={() => onHarcamaSil(h.id)}
-                      className="p-1 rounded text-muted hover:text-rose-500 cursor-pointer"
+                      className="w-6 h-6 rounded-lg bg-surface border border-border/60 flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer text-xs"
                       title="Sil"
                     >
                       ✕
@@ -340,14 +340,14 @@ export function GiderV2BireyselGelirSection({
                     <span className="font-bold text-foreground">{g.aciklama}</span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-emerald-400">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-black text-emerald-400 mr-1">
                       {para(g.tutar)}
                     </span>
                     <button
                       type="button"
                       onClick={() => onGelirDuzenle(g)}
-                      className="p-1 rounded text-muted hover:text-foreground cursor-pointer"
+                      className="w-6 h-6 rounded-lg bg-surface border border-border/60 flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-raised transition cursor-pointer text-xs"
                       title="Düzenle"
                     >
                       ✎
@@ -355,7 +355,7 @@ export function GiderV2BireyselGelirSection({
                     <button
                       type="button"
                       onClick={() => onGelirSil(g.id)}
-                      className="p-1 rounded text-muted hover:text-rose-500 cursor-pointer"
+                      className="w-6 h-6 rounded-lg bg-surface border border-border/60 flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer text-xs"
                       title="Sil"
                     >
                       ✕

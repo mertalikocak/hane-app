@@ -712,3 +712,190 @@ ${veri.krediKartlari
     document.body
   );
 }
+
+// ------------------------------------------------------------------
+// 5. BİREYSEL KAYIT DÜZENLEME MODALI (GİDER, GELİR VEYA KART KALEMİ)
+// ------------------------------------------------------------------
+
+interface BireyselKayitModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  subtitle?: string;
+  icon?: string;
+  initialData?: {
+    kullaniciId: KullaniciId;
+    aciklama: string;
+    tutar: number;
+  } | null;
+  onSave: (data: {
+    kullaniciId: KullaniciId;
+    aciklama: string;
+    tutar: number;
+  }) => void;
+}
+
+export function BireyselKayitModal({
+  isOpen,
+  onClose,
+  title,
+  subtitle,
+  icon = "✏️",
+  initialData,
+  onSave,
+}: BireyselKayitModalProps) {
+  const [kullaniciId, setKullaniciId] = useState<KullaniciId>("mert");
+  const [aciklama, setAciklama] = useState("");
+  const [tutarStr, setTutarStr] = useState("");
+
+  useEffect(() => {
+    if (initialData) {
+      setKullaniciId(initialData.kullaniciId);
+      setAciklama(initialData.aciklama);
+      setTutarStr(tutarMetniInputIcin(initialData.tutar));
+    } else {
+      setKullaniciId("mert");
+      setAciklama("");
+      setTutarStr("");
+    }
+  }, [initialData, isOpen]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) onClose();
+    };
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || typeof document === "undefined") return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const tutar = Number(tutarStr.replace(",", "."));
+    if (!aciklama.trim() || !Number.isFinite(tutar) || tutar <= 0) return;
+
+    onSave({
+      kullaniciId,
+      aciklama: aciklama.trim(),
+      tutar,
+    });
+    onClose();
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+      <div className="w-full max-w-md p-6 rounded-3xl bg-surface border border-border shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 text-xs">
+        <div className="flex items-center justify-between border-b border-border/70 pb-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">{icon}</span>
+            <div>
+              <h3 className="text-base font-black text-foreground">{title}</h3>
+              {subtitle && (
+                <p className="text-[11px] text-muted">{subtitle}</p>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Kişi Seçimi */}
+          <div>
+            <label className="text-[11px] font-extrabold uppercase tracking-wider text-muted block mb-1.5">
+              Kişi Seçin
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setKullaniciId("mert")}
+                className={`py-2 px-3 rounded-xl border text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  kullaniciId === "mert"
+                    ? "bg-sky-500/20 text-sky-400 border-sky-500 shadow-xs ring-1 ring-sky-500/30"
+                    : "bg-surface-raised border-border text-muted hover:text-foreground"
+                }`}
+              >
+                <span>👤</span>
+                <span>Mert</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setKullaniciId("havsa")}
+                className={`py-2 px-3 rounded-xl border text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                  kullaniciId === "havsa"
+                    ? "bg-pink-500/20 text-pink-400 border-pink-500 shadow-xs ring-1 ring-pink-500/30"
+                    : "bg-surface-raised border-border text-muted hover:text-foreground"
+                }`}
+              >
+                <span>👤</span>
+                <span>Havsa</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Açıklama */}
+          <div>
+            <label className="text-[11px] font-extrabold uppercase tracking-wider text-muted block mb-1">
+              Açıklama
+            </label>
+            <input
+              type="text"
+              required
+              value={aciklama}
+              onChange={(e) => setAciklama(e.target.value)}
+              placeholder="Açıklama giriniz"
+              className="w-full h-10 px-3 rounded-xl bg-surface-raised border border-border text-xs font-bold text-foreground focus:border-primary transition"
+            />
+          </div>
+
+          {/* Tutar */}
+          <div>
+            <label className="text-[11px] font-extrabold uppercase tracking-wider text-muted block mb-1">
+              Tutar (₺)
+            </label>
+            <input
+              type="text"
+              inputMode="decimal"
+              required
+              value={tutarStr}
+              onChange={(e) => setTutarStr(e.target.value)}
+              placeholder="0,00"
+              className="w-full h-10 px-3 rounded-xl bg-surface-raised border border-border text-sm font-black text-foreground font-mono focus:border-primary transition"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-border/70">
+            <button
+              type="button"
+              onClick={onClose}
+              className="secondary-button h-10 px-4 text-xs font-bold"
+            >
+              Vazgeç
+            </button>
+            <button
+              type="submit"
+              className="primary-button h-10 px-5 text-xs font-black shadow-xs cursor-pointer"
+            >
+              Değişiklikleri Kaydet
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
+}
+

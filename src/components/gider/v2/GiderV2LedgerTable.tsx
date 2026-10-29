@@ -7,6 +7,7 @@ import type {
   AyHaneGiderVerisi,
   KrediKartiEkstresi,
   BireyselAyriHarcama,
+  BireyselEkstreKalemi,
   HaneTransferi,
 } from "@/domain/haneGiderTypes";
 import { tekKartHesabi, toplumaDahilKartlar } from "@/domain/ekstreHesapla";
@@ -15,6 +16,8 @@ interface GiderV2LedgerTableProps {
   veri: AyHaneGiderVerisi;
   onKartDuzenle: (kart: KrediKartiEkstresi) => void;
   onKartSil: (id: string) => void;
+  onBireyselKalemDuzenle?: (kartId: string, kartAdi: string, kalem: BireyselEkstreKalemi) => void;
+  onBireyselKalemSil?: (kartId: string, kalemId: string) => void;
   onAyriHarcamaDuzenle: (h: BireyselAyriHarcama) => void;
   onAyriHarcamaSil: (id: string) => void;
   onTransferSil: (id: string) => void;
@@ -24,6 +27,8 @@ export function GiderV2LedgerTable({
   veri,
   onKartDuzenle,
   onKartSil,
+  onBireyselKalemDuzenle,
+  onBireyselKalemSil,
   onAyriHarcamaDuzenle,
   onAyriHarcamaSil,
   onTransferSil,
@@ -527,6 +532,36 @@ export function GiderV2LedgerTable({
                           >
                             ✕
                           </button>
+                        ) : item.tur === "bireysel_kalem" && orijinalKart ? (
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const bk = orijinalKart.bireyselKalemler.find(
+                                  (x) => x.id === item.orijinalKalemId
+                                );
+                                if (bk) {
+                                  onBireyselKalemDuzenle?.(orijinalKart.id, orijinalKart.ad, bk);
+                                }
+                              }}
+                              className="p-1 rounded-lg text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer"
+                              title="Kalemi düzenle"
+                            >
+                              ✎
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (item.orijinalKalemId) {
+                                  onBireyselKalemSil?.(orijinalKart.id, item.orijinalKalemId);
+                                }
+                              }}
+                              className="p-1 rounded-lg text-muted hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                              title="Kalemi sil"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-[10px] text-muted">Kart Alt Kalemi</span>
                         )}

@@ -19,6 +19,7 @@ export interface HaneModulOzet {
   fitProfilSayisi: number;
   fitOlcumSayisi: number;
   kaloriKayitSayisi?: number;
+  bulguSayisi?: number;
   toplamAnahtarSayisi: number;
 }
 
@@ -101,6 +102,7 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
   let fitProfilSayisi = 0;
   let fitOlcumSayisi = 0;
   let kaloriKayitSayisi = 0;
+  let bulguSayisi = 0;
 
   for (const [key, raw] of Object.entries(veriler)) {
     try {
@@ -144,6 +146,9 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
             0
           );
         }
+      } else if (key === "hane_bulgu_bildirimleri") {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) bulguSayisi += parsed.length;
       }
     } catch {
       // ignore parse failures for summary count
@@ -162,6 +167,7 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
     fitProfilSayisi,
     fitOlcumSayisi,
     kaloriKayitSayisi,
+    bulguSayisi,
     toplamAnahtarSayisi: Object.keys(veriler).length,
   };
 }
@@ -258,6 +264,7 @@ export function tumHaneVerileriniIceAktar(
     window.dispatchEvent(new Event("calendar_events_updated"));
     window.dispatchEvent(new Event("wishlist_items_updated"));
     window.dispatchEvent(new Event("hane_calorie_updated"));
+    window.dispatchEvent(new CustomEvent("hane:bulgular-changed"));
 
     return { basarili: true, eklenenSayisi: Object.keys(hamVeriler).length };
   } catch (err) {

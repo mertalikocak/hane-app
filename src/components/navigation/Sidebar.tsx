@@ -4,10 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 
-import { YedekModal } from "./YedekModal";
-import { CloudSyncIndicator } from "./CloudSyncIndicator";
+import { AyarlarModal } from "./AyarlarModal";
+import { getBulgular, BULGU_EVENT } from "@/storage/bulguStorage";
 import { ProfileHeaderMenu } from "@/components/profile/ProfileHeaderMenu";
-import { NotificationBellButton } from "@/components/notifications/NotificationBellButton";
 import { SidebarOrderModal } from "./SidebarOrderModal";
 import {
   DEFAULT_NAV_ITEMS,
@@ -20,7 +19,9 @@ import {
 export function Sidebar() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
-  const [isBackupOpen, setIsBackupOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"bulut" | "yedek" | "bildirim" | "bulgu">("bulgu");
+  const [unresolvedBulguCount, setUnresolvedBulguCount] = useState(0);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
   const [navItems, setNavItems] = useState<NavItem[]>(() => {
@@ -42,16 +43,47 @@ export function Sidebar() {
     );
   };
 
+  const refreshBulgular = () => {
+    const list = getBulgular();
+    setUnresolvedBulguCount(list.filter((b) => !b.cozuldu).length);
+  };
+
   useEffect(() => {
     refreshNavItems();
+    refreshBulgular();
+
     const handleOrderChange = () => {
       refreshNavItems();
     };
+
+    const handleBulguChange = () => {
+      refreshBulgular();
+    };
+
+    const handleOpenSettings = () => {
+      setSettingsTab("bulgu");
+      setIsSettingsOpen(true);
+    };
+
+    const handleOpenBulgu = () => {
+      setSettingsTab("bulgu");
+      setIsSettingsOpen(true);
+    };
+
     window.addEventListener("hane_sidebar_order_changed", handleOrderChange);
+    window.addEventListener(BULGU_EVENT, handleBulguChange);
     window.addEventListener("storage", handleOrderChange);
+    window.addEventListener("storage", handleBulguChange);
+    window.addEventListener("hane:open-ayarlar-modal", handleOpenSettings);
+    window.addEventListener("hane:open-bulgu-modal", handleOpenBulgu);
+
     return () => {
       window.removeEventListener("hane_sidebar_order_changed", handleOrderChange);
+      window.removeEventListener(BULGU_EVENT, handleBulguChange);
       window.removeEventListener("storage", handleOrderChange);
+      window.removeEventListener("storage", handleBulguChange);
+      window.removeEventListener("hane:open-ayarlar-modal", handleOpenSettings);
+      window.removeEventListener("hane:open-bulgu-modal", handleOpenBulgu);
     };
   }, []);
 
@@ -220,38 +252,48 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Footer info & Backup button in Sidebar */}
-        <div className="border-t border-border/70 p-4 space-y-2.5">
-          {/* Notification Settings in Sidebar */}
-          <NotificationBellButton variant="sidebar" />
-
-          {/* Cloud Sync Status Pill */}
-          <CloudSyncIndicator variant="sidebar" />
-
-          {/* Backup / Export button */}
+        {/* Footer actions: Tek ve Sade Ayarlar Butonu */}
+        <div className="border-t border-border/70 p-4">
           <button
             type="button"
             onClick={() => {
               setIsOpen(false);
-              setIsBackupOpen(true);
+              setSettingsTab("bulgu");
+              setIsSettingsOpen(true);
             }}
             className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-surface-raised/50 hover:bg-surface border border-border/60 text-foreground transition cursor-pointer shadow-xs group"
           >
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-xs font-bold">
-                🔄
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary text-sm font-bold">
+                ⚙️
               </span>
-              <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors">
-                Manuel Yedek İndir / Yükle
-              </span>
+              <div className="flex flex-col text-left min-w-0">
+                <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                  Ayarlar
+                </span>
+                <span className="text-[10px] text-muted truncate">
+                  Bulgular, Bulut, Yedek, Bildirim
+                </span>
+              </div>
             </div>
-            <span className="text-xs text-muted group-hover:text-foreground">→</span>
+            <div className="flex items-center gap-1.5">
+              {unresolvedBulguCount > 0 && (
+                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
+                  📝 {unresolvedBulguCount}
+                </span>
+              )}
+              <span className="text-xs text-muted group-hover:text-foreground">→</span>
+            </div>
           </button>
         </div>
       </aside>
 
-      {/* Universal Backup Modal */}
-      <YedekModal isOpen={isBackupOpen} onClose={() => setIsBackupOpen(false)} />
+      {/* Universal Ayarlar Modal (Bulut, Yedek, Bildirim, Bulgular) */}
+      <AyarlarModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        initialTab={settingsTab}
+      />
 
       {/* Sidebar Customization Modal */}
       <SidebarOrderModal

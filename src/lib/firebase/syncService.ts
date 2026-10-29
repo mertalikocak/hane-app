@@ -313,6 +313,7 @@ export function startRealtimeCloudSync(): () => void {
     "hane_sidebar_order_changed",
     "calendar_events_updated",
     "wishlist_items_updated",
+    "hane:bulgular-changed",
   ];
 
   syncEvents.forEach((ev) => window.addEventListener(ev, handleLocalUpdate));
