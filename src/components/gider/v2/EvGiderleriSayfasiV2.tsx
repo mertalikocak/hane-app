@@ -73,6 +73,7 @@ export function EvGiderleriSayfasiV2() {
     bireyselGelirKalemleri: [],
     transferler: [],
   });
+  const [isLoaded, setIsLoaded] = useState(false);
   const [activeView, setActiveView] = useState<GiderV2ViewMode>("ozet");
 
   // Bildirim Toast State
@@ -98,6 +99,7 @@ export function EvGiderleriSayfasiV2() {
   const [editingGelir, setEditingGelir] = useState<BireyselGelirKalemi | null>(null);
 
   const iceAktarInputRef = useRef<HTMLInputElement>(null);
+  const sonKaydedilenRef = useRef<string>("");
 
   const showToast = useCallback((mesaj: string) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -107,33 +109,49 @@ export function EvGiderleriSayfasiV2() {
     }, 3500);
   }, []);
 
-  // Ay değiştiğinde veriyi oku
+  // Sayfa ilk yüklendiğinde o ayın gerçek verisini localStorage'dan oku
   useEffect(() => {
-    const yeniAy = ayVerisiOku(anahtar);
-    setVeri(yeniAy);
-  }, [anahtar]);
+    const baslangicVerisi = ayVerisiOku(anahtar);
+    sonKaydedilenRef.current = JSON.stringify(baslangicVerisi);
+    setVeri(baslangicVerisi);
+    setIsLoaded(true);
+  }, []);
 
-  // Farklı tarayıcı sekmesinde veri değişirse senkronize et
+  // Ay değiştiğinde atomik olarak yeni ayın verisini oku
+  const handleAnahtarDegis = useCallback((yeniAnahtar: string) => {
+    const yeniAyVerisi = ayVerisiOku(yeniAnahtar);
+    sonKaydedilenRef.current = JSON.stringify(yeniAyVerisi);
+    setAnahtar(yeniAnahtar);
+    setVeri(yeniAyVerisi);
+  }, []);
+
+  // Farklı sekmede veya taksit senkronizasyonunda veri değişirse senkronize et
   useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key?.startsWith("hane-gider-ay:")) {
-        setVeri(ayVerisiOku(anahtar));
+    if (!isLoaded) return;
+    const handleStorage = () => {
+      const guncel = ayVerisiOku(anahtar);
+      const guncelStr = JSON.stringify(guncel);
+      if (sonKaydedilenRef.current !== guncelStr) {
+        sonKaydedilenRef.current = guncelStr;
+        setVeri(guncel);
       }
     };
     window.addEventListener("storage", handleStorage);
+    window.addEventListener("hane-gider:updated", handleStorage);
     return () => {
       window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("hane-gider:updated", handleStorage);
     };
-  }, [anahtar]);
+  }, [anahtar, isLoaded]);
 
-  // Veri değiştiğinde localStorage'a kaydet (döngüyü önleyen ref kontrolüyle)
-  const sonKaydedilenRef = useRef<string>("");
+  // Sadece kullanıcı bir şey değiştirdiğinde ve yükleme tamamlandıktan sonra localStorage'a kaydet
   useEffect(() => {
+    if (!isLoaded) return;
     const jsonStr = JSON.stringify(veri);
     if (sonKaydedilenRef.current === jsonStr) return;
     sonKaydedilenRef.current = jsonStr;
     ayVerisiYaz(anahtar, veri);
-  }, [anahtar, veri]);
+  }, [anahtar, veri, isLoaded]);
 
   // Dinamik Hesaplamalar (Şeffaf Bütçe Motoru)
   const calc = useMemo<GiderV2Calculations>(() => {
@@ -552,7 +570,7 @@ export function EvGiderleriSayfasiV2() {
       {/* Başlık, Dönem Seçici ve Görünüm Sekmeleri */}
       <GiderV2Header
         anahtar={anahtar}
-        onAnahtarDegis={setAnahtar}
+        onAnahtarDegis={handleAnahtarDegis}
         activeView={activeView}
         onViewChange={setActiveView}
         onYeniKayitClick={() => {
