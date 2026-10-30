@@ -8,6 +8,7 @@ import {
   CleaningRoom,
 } from "@/domain/cleaningTypes";
 import { deleteCleaningRecord } from "@/storage/cleaningStorage";
+import { TrashIcon } from "@/components/ui/Icons";
 
 interface CleaningHistoryListProps {
   records: CleaningRecord[];
@@ -21,6 +22,7 @@ export function CleaningHistoryList({
   const [selectedRoomFilter, setSelectedRoomFilter] = useState<string>("all");
   const [selectedMethodFilter, setSelectedMethodFilter] =
     useState<string>("all");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const todayStr = new Date().toISOString().split("T")[0];
   const yesterday = new Date();
@@ -40,14 +42,9 @@ export function CleaningHistoryList({
     return true;
   });
 
-  const handleDelete = (id: string, roomName: string, date: string) => {
-    if (
-      window.confirm(
-        `${date} tarihindeki "${roomName}" temizlik kaydını silmek istediğinize emin misiniz?`
-      )
-    ) {
-      deleteCleaningRecord(id);
-    }
+  const handleConfirmDelete = (id: string) => {
+    deleteCleaningRecord(id);
+    setConfirmDeleteId(null);
   };
 
   const getMethodBadge = (methodId: CleaningMethodId) => {
@@ -56,7 +53,7 @@ export function CleaningHistoryList({
     return (
       <span
         key={methodId}
-        className={`inline-flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-semibold border ${found.badgeColor}`}
+        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-0.5 text-xs font-semibold border ${found.badgeColor}`}
       >
         <span>{found.icon}</span>
         <span>{found.label}</span>
@@ -96,7 +93,7 @@ export function CleaningHistoryList({
   return (
     <div className="space-y-4">
       {/* Filters bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-border/70 bg-surface/80 p-3 backdrop-blur-xs">
+      <div className="ds-card flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3">
         <div className="flex flex-wrap items-center gap-2">
           {/* Room filter */}
           <select
@@ -127,21 +124,21 @@ export function CleaningHistoryList({
           </select>
         </div>
 
-        <span className="text-xs text-muted font-medium self-end sm:self-center">
+        <span className="text-xs text-muted font-medium self-end sm:self-center tabular-nums">
           {filteredRecords.length} Kayıt Gösteriliyor
         </span>
       </div>
 
       {/* History timeline list */}
       {sortedDates.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-border/80 bg-surface/40 p-10 text-center space-y-3">
+        <div className="ds-card border-dashed p-10 text-center space-y-3">
           <div className="text-4xl">🧹✨</div>
           <h4 className="text-sm font-bold text-foreground">
             Temizlik kaydı bulunamadı
           </h4>
           <p className="text-xs text-muted max-w-sm mx-auto">
             {records.length === 0
-              ? "Henüz hiç oda temizliği kaydedilmemiş. Yukarıdaki odalardan birine tıklayarak veya '+ Hızlı Kaydet' butonundan ilk kaydınızı oluşturun."
+              ? "Henüz hiç oda temizliği kaydedilmemiş. Yukarıdaki odalardan birine tıklayarak veya '+ Temizlik Kaydet' butonundan ilk kaydınızı oluşturun."
               : "Seçili filtrelere uygun temizlik kaydı bulunmuyor."}
           </p>
         </div>
@@ -153,11 +150,11 @@ export function CleaningHistoryList({
               <div key={dateStr} className="space-y-2.5">
                 {/* Date Header Pill */}
                 <div className="flex items-center gap-2">
-                  <span className="rounded-xl bg-surface-raised border border-border/80 px-3 py-1 text-xs font-bold text-foreground shadow-2xs">
+                  <span className="rounded-lg bg-surface-raised border border-border px-3 py-1 text-xs font-bold text-foreground">
                     📅 {formatHeaderDate(dateStr)}
                   </span>
-                  <div className="h-px flex-1 bg-border/60" />
-                  <span className="text-[11px] text-muted">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-[11px] text-muted tabular-nums">
                     {dateRecords.length} Oda
                   </span>
                 </div>
@@ -171,11 +168,11 @@ export function CleaningHistoryList({
                     return (
                       <div
                         key={record.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border/70 bg-surface p-3.5 sm:p-4 shadow-xs hover:border-primary/30 transition"
+                        className="ds-card flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4"
                       >
                         {/* Left: Room & Methods */}
                         <div className="flex items-start sm:items-center gap-3">
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-raised border border-border/60 text-xl shadow-xs">
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface-raised border border-border text-xl shadow-2xs">
                             {roomIcon}
                           </span>
                           <div className="space-y-1">
@@ -184,7 +181,7 @@ export function CleaningHistoryList({
                                 {record.roomName}
                               </span>
                               {record.cleanedBy && (
-                                <span className="rounded-md bg-surface-raised px-2 py-0.5 text-[11px] font-medium text-muted border border-border/60">
+                                <span className="ds-badge ds-badge-neutral text-[11px]">
                                   👤 {record.cleanedBy}
                                 </span>
                               )}
@@ -197,28 +194,41 @@ export function CleaningHistoryList({
 
                             {record.note && (
                               <p className="text-xs text-muted italic">
-                                💬 "{record.note}"
+                                💬 &quot;{record.note}&quot;
                               </p>
                             )}
                           </div>
                         </div>
 
                         {/* Right: Date / Action */}
-                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
-                          <button
-                            type="button"
-                            title="Kaydı Sil"
-                            onClick={() =>
-                              handleDelete(
-                                record.id,
-                                record.roomName,
-                                record.date
-                              )
-                            }
-                            className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised hover:bg-rose-500/10 hover:text-rose-600 text-muted border border-border/60 transition cursor-pointer text-xs"
-                          >
-                            🗑️
-                          </button>
+                        <div className="flex items-center justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
+                          {confirmDeleteId === record.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleConfirmDelete(record.id)}
+                                className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-2.5 py-1 text-xs h-7 min-h-0"
+                              >
+                                Sil
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDeleteId(null)}
+                                className="secondary-button px-2.5 py-1 text-xs h-7 min-h-0"
+                              >
+                                İptal
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              title="Kaydı Sil"
+                              onClick={() => setConfirmDeleteId(record.id)}
+                              className="icon-button h-8 w-8 text-muted hover:text-rose-600"
+                            >
+                              <TrashIcon size={14} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     );

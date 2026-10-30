@@ -19,10 +19,14 @@ import { CleaningHistoryList } from "@/components/cleaning/CleaningHistoryList";
 import { QuickCleanModal } from "@/components/cleaning/QuickCleanModal";
 import { AddRoomModal } from "@/components/cleaning/AddRoomModal";
 import { CleaningReminderModal } from "@/components/cleaning/CleaningReminderModal";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
-  getCleaningReminderConfig,
-  CLEANING_REMINDER_EVENT,
-} from "@/lib/notifications/cleaningNotificationService";
+  CleaningIcon,
+  PlusIcon,
+  BellIcon,
+  TrashIcon,
+  SparklesIcon,
+} from "@/components/ui/Icons";
 
 export default function CleaningPage() {
   const [rooms, setRooms] = useState<CleaningRoom[]>([]);
@@ -41,6 +45,7 @@ export default function CleaningPage() {
   const [isAddRoomOpen, setIsAddRoomOpen] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
   const [selectedRoomForModal, setSelectedRoomForModal] = useState<string | undefined>(undefined);
+  const [confirmResetRooms, setConfirmResetRooms] = useState(false);
 
   const loadData = () => {
     const currentRooms = getCleaningRooms();
@@ -72,120 +77,129 @@ export default function CleaningPage() {
     setIsQuickCleanOpen(true);
   };
 
-  return (
-    <div className="space-y-6 pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-5">
-        <div className="flex items-center gap-3.5">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 text-2xl shadow-md text-white">
-            🧹
-          </span>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                Hane Cleaning
-              </h1>
-              <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                Temizlik Takibi
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-muted">
-              Hangi oda ne zaman, süpürge, paspas veya robot ile temizlendi takip edin
-            </p>
-          </div>
-        </div>
+  const handleConfirmResetRooms = () => {
+    clearAllCleaningRooms();
+    setConfirmResetRooms(false);
+  };
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
-          {rooms.length > 0 && (
+  return (
+    <div className="space-y-6 pb-8">
+      <PageHeader
+        title="Hane Cleaning"
+        subtitle="Hangi oda ne zaman, süpürge, paspas veya robot ile temizlendi takip edin."
+        icon={<CleaningIcon size={20} />}
+        badge={
+          <span className="ds-badge ds-badge-primary">
+            Temizlik Takibi
+          </span>
+        }
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            {rooms.length > 0 && (
+              confirmResetRooms ? (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleConfirmResetRooms}
+                    className="danger-button bg-rose-600 text-white hover:bg-rose-700 text-xs px-3 py-2"
+                  >
+                    Sıfırlamayı Onayla
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmResetRooms(false)}
+                    className="secondary-button text-xs px-2.5 py-2"
+                  >
+                    İptal
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  title="Kayıtlı tüm odaları silip baştan başla"
+                  onClick={() => setConfirmResetRooms(true)}
+                  className="secondary-button text-xs px-2.5 py-2 text-muted hover:text-rose-600"
+                >
+                  <TrashIcon size={14} />
+                  <span className="hidden sm:inline">Odaları Sıfırla</span>
+                </button>
+              )
+            )}
+
             <button
               type="button"
-              title="Kayıtlı tüm odaları silip baştan başla"
-              onClick={() => {
-                if (window.confirm("Kayıtlı tüm odaları sıfırlamak istediğinize emin misiniz? Odaları baştan kendiniz ekleyebileceksiniz.")) {
-                  clearAllCleaningRooms();
-                }
-              }}
-              className="secondary-button text-xs px-2.5 py-2 text-muted hover:text-rose-500 hover:border-rose-300 transition cursor-pointer"
+              onClick={() => setIsReminderOpen(true)}
+              title="Temizlik Bildirimi Ayarları (Her gün 12:00)"
+              className="secondary-button text-xs px-3 py-2"
             >
-              <span>🗑️</span>
-              <span className="hidden sm:inline">Odaları Sıfırla</span>
+              <BellIcon size={14} />
+              <span className="hidden sm:inline">12:00 Bildirimi</span>
             </button>
-          )}
 
-          <button
-            type="button"
-            onClick={() => setIsReminderOpen(true)}
-            title="Temizlik Bildirimi Ayarları (Her gün 12:00)"
-            className="secondary-button text-xs px-2.5 py-2.5 text-foreground hover:border-emerald-500/50 transition cursor-pointer"
-          >
-            <span>🔔</span>
-            <span className="hidden sm:inline">12:00 Bildirimi</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsAddRoomOpen(true)}
-            className="secondary-button text-xs px-3.5 py-2.5"
-          >
-            <span>+</span>
-            <span>Oda Ekle</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleOpenModal()}
-            className="primary-button text-xs px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
-          >
-            <span>✨</span>
-            <span>Temizlik Kaydet</span>
-          </button>
-        </div>
-      </div>
+            <button
+              type="button"
+              onClick={() => setIsAddRoomOpen(true)}
+              className="secondary-button text-xs px-3.5 py-2"
+            >
+              <PlusIcon size={14} />
+              <span>Oda Ekle</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOpenModal()}
+              className="primary-button text-xs px-4 py-2"
+            >
+              <SparklesIcon size={14} />
+              <span>Temizlik Kaydet</span>
+            </button>
+          </div>
+        }
+      />
 
       {/* Stats Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-border/70 bg-surface p-3.5 sm:p-4 shadow-2xs">
+        <div className="ds-card p-3.5 sm:p-4">
           <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
             Bugün Temizlenen
           </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
+          <div className="mt-1 flex items-baseline gap-2 tabular-nums">
+            <span className="text-xl sm:text-2xl font-bold text-emerald-700">
               {stats.cleanedTodayCount}
             </span>
             <span className="text-xs text-muted">oda</span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-surface p-3.5 sm:p-4 shadow-2xs">
+        <div className="ds-card p-3.5 sm:p-4">
           <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
             Bu Hafta Toplam
           </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-black text-cyan-600 dark:text-cyan-400">
+          <div className="mt-1 flex items-baseline gap-2 tabular-nums">
+            <span className="text-xl sm:text-2xl font-bold text-primary">
               {stats.cleanedThisWeekCount}
             </span>
             <span className="text-xs text-muted">temizlik</span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-surface p-3.5 sm:p-4 shadow-2xs">
+        <div className="ds-card p-3.5 sm:p-4">
           <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
             Tertemiz Odalar
           </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-black text-emerald-500">
+          <div className="mt-1 flex items-baseline gap-2 tabular-nums">
+            <span className="text-xl sm:text-2xl font-bold text-emerald-700">
               {stats.freshRoomsCount}
             </span>
             <span className="text-xs text-muted">/ {rooms.length}</span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-surface p-3.5 sm:p-4 shadow-2xs">
+        <div className="ds-card p-3.5 sm:p-4">
           <span className="text-[11px] font-bold text-muted uppercase tracking-wider">
             Temizlik Bekleyen
           </span>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="text-xl sm:text-2xl font-black text-amber-500">
+          <div className="mt-1 flex items-baseline gap-2 tabular-nums">
+            <span className="text-xl sm:text-2xl font-bold text-amber-700">
               {stats.dueRoomsCount}
             </span>
             <span className="text-xs text-muted">oda</span>
@@ -194,20 +208,20 @@ export default function CleaningPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center justify-between border-b border-border/80">
+      <div className="flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-1 sm:gap-2">
           <button
             type="button"
             onClick={() => setActiveTab("rooms")}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition cursor-pointer ${
               activeTab === "rooms"
-                ? "border-emerald-600 text-emerald-600 dark:text-emerald-400"
+                ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-foreground"
             }`}
           >
             <span>🏠</span>
             <span>Oda Durumları</span>
-            <span className="rounded-full bg-surface-raised px-2 py-0.5 text-xs text-muted border border-border/60">
+            <span className="ds-badge ds-badge-neutral text-xs tabular-nums">
               {rooms.length}
             </span>
           </button>
@@ -217,13 +231,13 @@ export default function CleaningPage() {
             onClick={() => setActiveTab("history")}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-bold border-b-2 transition cursor-pointer ${
               activeTab === "history"
-                ? "border-emerald-600 text-emerald-600 dark:text-emerald-400"
+                ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-foreground"
             }`}
           >
             <span>📜</span>
             <span>Temizlik Geçmişi</span>
-            <span className="rounded-full bg-surface-raised px-2 py-0.5 text-xs text-muted border border-border/60">
+            <span className="ds-badge ds-badge-neutral text-xs tabular-nums">
               {records.length}
             </span>
           </button>

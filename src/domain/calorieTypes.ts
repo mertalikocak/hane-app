@@ -99,3 +99,25 @@ export interface HistoryFoodItem {
   lastUsedAt: string;
   createdAt: string;
 }
+
+export interface SharedMeal {
+  id: string;
+  title: string;
+  mealType: MealType;
+  date: string; // YYYY-MM-DD
+  sharedByProfileId: string;
+  sharedByName: string;
+  items: Array<{
+    name: string;
+    portion: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  }>;
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  createdAt: string;
+}

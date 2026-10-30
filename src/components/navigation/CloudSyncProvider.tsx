@@ -12,6 +12,8 @@ import {
 import { isFirebaseConfigured } from "@/lib/firebase/config";
 import { CloudConnectionGate } from "./CloudConnectionGate";
 
+const LOCAL_MODE_SKIP_KEY = "hane_cloud_gate_skipped";
+
 interface CloudSyncContextType {
   syncState: SyncState;
   isConfigured: boolean;
@@ -38,13 +40,23 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
     lastSyncedAt: null,
   });
   const [isConfigured, setIsConfigured] = useState(false);
-  const [isSkipped, setIsSkipped] = useState(false);
+  const [isSkipped, setIsSkipped] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    const configured = isFirebaseConfigured();
+    let configured = false;
+    let skipped = false;
+    try {
+      configured = isFirebaseConfigured();
+      skipped = localStorage.getItem(LOCAL_MODE_SKIP_KEY) === "true";
+    } catch {
+      // If localStorage is restricted (e.g. iOS Safari Private/strict mode), default to local mode so UI never blocks
+      skipped = true;
+    }
+
     setIsConfigured(configured);
+    setIsSkipped(configured || skipped);
+    setIsMounted(true);
 
     const unsubscribeSync = subscribeSyncState((state) => {
       setSyncState(state);
@@ -70,20 +82,21 @@ export function CloudSyncProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // During SSR or before client mount, render children or simple loader
-  if (!isMounted) {
-    return null;
-  }
-
-  // If Firebase is not configured and not skipped, show the setup gatekeeper
-  if (!isConfigured && !isSkipped) {
+  if (isMounted && !isConfigured && !isSkipped) {
     return (
       <CloudConnectionGate
         onConnected={() => {
           setIsConfigured(true);
           setIsSkipped(false);
         }}
-        onSkipToLocal={() => setIsSkipped(true)}
+        onSkipToLocal={() => {
+          try {
+            localStorage.setItem(LOCAL_MODE_SKIP_KEY, "true");
+          } catch {
+            // ignore storage errors
+          }
+          setIsSkipped(true);
+        }}
       />
     );
   }

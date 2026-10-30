@@ -7,6 +7,7 @@ import {
   SavedMealTemplate,
   SavedFoodItem,
   HistoryFoodItem,
+  SharedMeal,
 } from "@/domain/calorieTypes";
 import { Profile } from "@/domain/bodyTrackingTypes";
 import {
@@ -25,6 +26,7 @@ export const CALORIE_STORAGE_KEYS = {
   savedTemplates: "hane_calorie_saved_templates",
   savedFoods: "hane_calorie_saved_foods",
   foodHistory: "hane_calorie_food_history",
+  sharedMeals: "hane_calorie_shared_meals",
 };
 
 function safeGet<T>(key: string, fallback: T): T {
@@ -293,6 +295,82 @@ export function saveMealTemplate(
 export function deleteMealTemplate(id: string): void {
   const templates = getSavedTemplates().filter((t) => t.id !== id);
   safeSet(CALORIE_STORAGE_KEYS.savedTemplates, templates);
+}
+
+// ================= SHARED MEALS (PAYLAŞILAN ÖĞÜNLER) =================
+
+const MEAL_TYPE_LABELS: Record<MealType, string> = {
+  breakfast: "Kahvaltı",
+  lunch: "Öğle Yemeği",
+  dinner: "Akşam Yemeği",
+  snack: "Ara Öğün",
+};
+
+export function getSharedMeals(): SharedMeal[] {
+  return safeGet<SharedMeal[]>(CALORIE_STORAGE_KEYS.sharedMeals, []);
+}
+
+export function shareMeal(params: {
+  mealType: MealType;
+  date: string;
+  sharedByProfileId: string;
+  sharedByName: string;
+  items: FoodItem[];
+  customTitle?: string;
+}): SharedMeal {
+  const sharedList = getSharedMeals();
+
+  // Aynı tarihte, aynı öğünde ve aynı yemek listesiyle zaten paylaşılmışsa güncelle/döndür
+  const existing = sharedList.find(
+    (s) =>
+      s.date === params.date &&
+      s.mealType === params.mealType &&
+      s.sharedByProfileId === params.sharedByProfileId &&
+      s.items.length === params.items.length &&
+      s.items.every((si) =>
+        params.items.some(
+          (mi) => mi.name.toLowerCase().trim() === si.name.toLowerCase().trim()
+        )
+      )
+  );
+  if (existing) {
+    return existing;
+  }
+
+  const summary = calculateMacroSummary(params.items);
+  const defaultTitle = `${params.sharedByName} • ${MEAL_TYPE_LABELS[params.mealType]}`;
+
+  const newShared: SharedMeal = {
+    id: `shr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+    title: params.customTitle?.trim() || defaultTitle,
+    mealType: params.mealType,
+    date: params.date,
+    sharedByProfileId: params.sharedByProfileId,
+    sharedByName: params.sharedByName,
+    items: params.items.map((i) => ({
+      name: i.name,
+      portion: i.portion,
+      calories: Number(i.calories) || 0,
+      protein: Number(i.protein) || 0,
+      carbs: Number(i.carbs) || 0,
+      fat: Number(i.fat) || 0,
+    })),
+    totalCalories: summary.calories,
+    totalProtein: summary.protein,
+    totalCarbs: summary.carbs,
+    totalFat: summary.fat,
+    createdAt: new Date().toISOString(),
+  };
+
+  sharedList.unshift(newShared);
+  // En son 30 paylaşılan öğünü tut
+  safeSet(CALORIE_STORAGE_KEYS.sharedMeals, sharedList.slice(0, 30));
+  return newShared;
+}
+
+export function deleteSharedMeal(id: string): void {
+  const filtered = getSharedMeals().filter((s) => s.id !== id);
+  safeSet(CALORIE_STORAGE_KEYS.sharedMeals, filtered);
 }
 
 export function getSavedFoods(): SavedFoodItem[] {

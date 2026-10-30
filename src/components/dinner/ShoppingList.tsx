@@ -49,30 +49,30 @@ export function ShoppingList({ items, onToggle }: ShoppingListProps) {
 
   return (
     <section
-      className="rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs"
+      className="rounded-[18px] border border-border bg-surface p-5 sm:p-6 shadow-[var(--shadow-xs)]"
       aria-labelledby="shopping-list-heading"
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border/60 pb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+          <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
             <ShoppingBagIcon className="h-5 w-5" />
           </span>
           <div>
             <h2
               id="shopping-list-heading"
-              className="text-lg font-bold tracking-tight text-foreground sm:text-xl"
+              className="text-base sm:text-lg font-semibold tracking-tight text-foreground"
             >
-              Haftalık Alışveriş Listesi
+              Haftalık Tarif Malzemeleri Listesi
             </h2>
             <p className="text-xs text-muted">
-              Planlanan yemeklere göre otomatik hesaplanır
+              Planlanan yemeklere göre otomatik hesaplanır ve Alışveriş modülüyle senkronize çalışır
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 self-end sm:self-auto">
+        <div className="flex items-center gap-2.5 self-end sm:self-auto">
           {items.length > 0 && (
-            <span className="text-xs font-semibold text-muted">
+            <span className="rounded-lg bg-background border border-border px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums">
               {completedCount} / {items.length} alındı
             </span>
           )}
@@ -80,7 +80,7 @@ export function ShoppingList({ items, onToggle }: ShoppingListProps) {
             type="button"
             onClick={copyShoppingList}
             disabled={items.length === 0}
-            className="secondary-button h-9 px-3 text-xs sm:text-sm font-semibold"
+            className="secondary-button min-h-[36px] px-3 py-1.5 text-xs"
             aria-label="Alışveriş listesini kopyala"
           >
             {isCopied ? "✓ Kopyalandı" : "Listeyi Kopyala"}
@@ -89,11 +89,11 @@ export function ShoppingList({ items, onToggle }: ShoppingListProps) {
       </div>
 
       {items.length === 0 ? (
-        <div className="mt-5 rounded-2xl border border-dashed border-border/70 bg-surface-raised/40 p-8 text-center">
-          <p className="text-sm font-medium text-muted">
+        <div className="mt-4 rounded-[12px] border border-dashed border-border-strong bg-background/50 p-7 text-center">
+          <p className="text-sm font-medium text-foreground-secondary">
             Bu haftanın planında henüz malzeme gerektiren bir yemek yok.
           </p>
-          <p className="mt-1 text-xs text-muted/70">
+          <p className="mt-1 text-xs text-muted">
             Yukarıdaki günlerden yemek ekledikçe gerekli malzemeler burada otomatik listelenecektir.
           </p>
         </div>
@@ -102,10 +102,10 @@ export function ShoppingList({ items, onToggle }: ShoppingListProps) {
           {sortedItems.map((item) => (
             <label
               key={item.key}
-              className={`flex items-center gap-3 rounded-xl border p-3 transition-all cursor-pointer select-none ${
+              className={`flex items-center gap-3 rounded-[10px] border p-3 transition-colors cursor-pointer select-none ${
                 item.isCompleted
-                  ? "border-border/40 bg-surface-raised/30 opacity-60"
-                  : "border-border/80 bg-surface-raised/60 hover:border-primary/40 hover:bg-surface-raised"
+                  ? "border-border bg-background/40 opacity-65"
+                  : "border-border bg-background/70 hover:border-primary/40 hover:bg-surface-raised"
               }`}
             >
               <ShoppingItemCheckbox
@@ -117,7 +117,7 @@ export function ShoppingList({ items, onToggle }: ShoppingListProps) {
                   item.isCompleted ? "text-muted line-through" : "text-foreground font-medium"
                 }`}
               >
-                <strong className="font-semibold text-primary">
+                <strong className="font-semibold text-primary tabular-nums">
                   {item.quantity} {item.unit}
                 </strong>{" "}
                 {item.ingredientName}

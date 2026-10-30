@@ -8,6 +8,7 @@ import {
 } from "@/domain/cleaningTypes";
 import { saveCleaningRecord } from "@/storage/cleaningStorage";
 import { useProfile } from "@/context/ProfileContext";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface QuickCleanModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ export function QuickCleanModal({
   ]);
   const [cleanedBy, setCleanedBy] = useState<string>("");
   const [note, setNote] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -50,7 +52,7 @@ export function QuickCleanModal({
         setSelectedRoomId(rooms[0].id);
       }
       setSelectedDate(getTodayStr());
-      // Default cleanedBy to current profile
+      setErrorMsg(null);
       if (activeProfile?.firstName) {
         setCleanedBy(activeProfile.firstName);
       }
@@ -60,6 +62,7 @@ export function QuickCleanModal({
   if (!isOpen) return null;
 
   const toggleMethod = (methodId: CleaningMethodId) => {
+    setErrorMsg(null);
     setSelectedMethods((prev) =>
       prev.includes(methodId)
         ? prev.filter((id) => id !== methodId)
@@ -71,7 +74,7 @@ export function QuickCleanModal({
     e.preventDefault();
     if (!selectedRoomId) return;
     if (selectedMethods.length === 0) {
-      alert("Lütfen en az bir temizlik yöntemi seçin (örn: Süpürüldü, Paspas veya Robot Süpürge).");
+      setErrorMsg("Lütfen en az bir temizlik yöntemi seçin (örn: Süpürüldü, Paspas veya Robot Süpürge).");
       return;
     }
 
@@ -90,22 +93,22 @@ export function QuickCleanModal({
     onClose();
   };
 
-  const currentRoom = rooms.find((r) => r.id === selectedRoomId);
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
-        className="w-full max-w-lg rounded-3xl border border-border bg-surface p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-lg rounded-2xl border border-border bg-surface p-6 shadow-lg space-y-5 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/80 pb-4">
+        <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-xl shadow-md text-white">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary text-xl">
               🧹
             </span>
             <div>
-              <h2 className="text-lg font-black tracking-tight text-foreground">
+              <h2 className="text-base font-bold text-foreground">
                 Temizlik Kaydı Ekle
               </h2>
               <p className="text-xs text-muted">
@@ -116,20 +119,26 @@ export function QuickCleanModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-raised hover:bg-border/60 text-muted hover:text-foreground text-sm font-bold transition cursor-pointer"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
         <form onSubmit={handleSave} className="space-y-5">
+          {errorMsg && (
+            <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 px-3.5 py-2.5 text-xs font-semibold text-rose-700">
+              {errorMsg}
+            </div>
+          )}
+
           {/* 1. Oda Seçimi */}
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-wider text-muted">
               1. Temizlenen Oda
             </label>
             {rooms.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border/80 bg-surface-raised/60 p-4 text-center space-y-2">
+              <div className="rounded-xl border border-dashed border-border bg-surface-raised p-4 text-center space-y-2">
                 <p className="text-xs text-muted">
                   Henüz kayıtlı bir oda bulunmuyor. Temizlik kaydetmek için lütfen önce oda ekleyin.
                 </p>
@@ -140,7 +149,7 @@ export function QuickCleanModal({
                       onClose();
                       onOpenAddRoom();
                     }}
-                    className="primary-button text-xs px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
+                    className="primary-button text-xs px-3.5 py-1.5"
                   >
                     + Şimdi Oda Ekle
                   </button>
@@ -155,10 +164,10 @@ export function QuickCleanModal({
                       key={r.id}
                       type="button"
                       onClick={() => setSelectedRoomId(r.id)}
-                      className={`flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all text-center cursor-pointer ${
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border transition-all text-center cursor-pointer ${
                         isSelected
-                          ? "border-primary bg-primary/10 text-primary shadow-xs font-bold ring-2 ring-primary/20"
-                          : "border-border/70 bg-surface-raised hover:bg-border/30 text-foreground/80 font-medium"
+                          ? "border-primary bg-accent/60 text-primary font-bold"
+                          : "border-border bg-surface-raised hover:bg-background-subtle text-foreground font-medium"
                       }`}
                     >
                       <span className="text-2xl mb-1">{r.icon}</span>
@@ -183,7 +192,7 @@ export function QuickCleanModal({
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
                     selectedDate === getTodayStr()
                       ? "bg-primary text-white"
-                      : "bg-surface-raised text-muted hover:text-foreground"
+                      : "bg-surface-raised border border-border text-muted hover:text-foreground"
                   }`}
                 >
                   Bugün
@@ -194,7 +203,7 @@ export function QuickCleanModal({
                   className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
                     selectedDate === getYesterdayStr()
                       ? "bg-primary text-white"
-                      : "bg-surface-raised text-muted hover:text-foreground"
+                      : "bg-surface-raised border border-border text-muted hover:text-foreground"
                   }`}
                 >
                   Dün
@@ -205,7 +214,7 @@ export function QuickCleanModal({
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="field w-full font-medium"
+              className="field font-medium tabular-nums"
               required
             />
           </div>
@@ -216,7 +225,7 @@ export function QuickCleanModal({
               <label className="text-xs font-bold uppercase tracking-wider text-muted">
                 3. Ne İle Temizlendi? (Birden Fazla Seçilebilir)
               </label>
-              <span className="text-[11px] text-muted font-medium">
+              <span className="ds-badge ds-badge-primary text-[10px]">
                 {selectedMethods.length} Seçili
               </span>
             </div>
@@ -229,13 +238,13 @@ export function QuickCleanModal({
                     key={method.id}
                     type="button"
                     onClick={() => toggleMethod(method.id)}
-                    className={`flex items-center gap-3 p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                    className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all cursor-pointer ${
                       isChecked
-                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold shadow-xs"
-                        : "border-border/60 bg-surface-raised hover:bg-border/30 text-foreground/80 font-normal"
+                        ? "border-primary bg-accent/50 text-foreground font-semibold"
+                        : "border-border bg-surface-raised hover:bg-background-subtle text-foreground font-normal"
                     }`}
                   >
-                    <span className="text-xl flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-surface border border-border/60 shadow-xs">
+                    <span className="text-xl flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface border border-border shadow-2xs">
                       {method.icon}
                     </span>
                     <div className="flex flex-col min-w-0 flex-1">
@@ -247,10 +256,10 @@ export function QuickCleanModal({
                       </span>
                     </div>
                     <span
-                      className={`h-5 w-5 rounded-full flex items-center justify-center text-xs shrink-0 font-black ${
+                      className={`h-5 w-5 rounded-full flex items-center justify-center text-xs shrink-0 font-bold ${
                         isChecked
-                          ? "bg-emerald-500 text-white"
-                          : "border border-border text-transparent"
+                          ? "bg-primary text-white"
+                          : "border border-border-strong bg-surface text-transparent"
                       }`}
                     >
                       ✓
@@ -274,10 +283,10 @@ export function QuickCleanModal({
                         key={p.id}
                         type="button"
                         onClick={() => setCleanedBy(isSelected ? "" : p.firstName)}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition cursor-pointer ${
                           isSelected
                             ? "bg-primary text-white border-primary"
-                            : "bg-surface-raised text-foreground/80 border-border hover:bg-border/30"
+                            : "bg-surface-raised text-foreground border-border hover:bg-background-subtle"
                         }`}
                       >
                         👤 {p.firstName}
@@ -309,17 +318,17 @@ export function QuickCleanModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="secondary-button text-xs px-4"
+              className="secondary-button text-xs px-4 py-2"
             >
               Vazgeç
             </button>
             <button
               type="submit"
-              className="primary-button text-xs px-6 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
+              className="primary-button text-xs px-5 py-2"
             >
               <span>✓</span>
               <span>Temizliği Kaydet</span>

@@ -8,6 +8,7 @@ import {
   getStoredGeminiApiKey,
 } from "@/storage/calorieStorage";
 import type { LocalMeal } from "@/lib/local-storage/store";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface FetchDinnerModalProps {
   isOpen: boolean;
@@ -119,7 +120,6 @@ export function FetchDinnerModal({
     setAiError(null);
     setAnalysisResult(null);
 
-    // Kullanıcının düzenlediği veya eklemeler yaptığı malzeme listesini doğrudan gönderiyoruz
     const prompt = customIngredients.trim()
       ? customIngredients.trim()
       : `${consumedPortions} porsiyon ${currentMeal.name}`;
@@ -202,16 +202,16 @@ export function FetchDinnerModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150 overflow-y-auto">
       <div
-        className="w-full max-w-lg rounded-3xl border border-border bg-surface p-5 sm:p-6 shadow-2xl space-y-4 my-8"
+        className="w-full max-w-lg rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 my-8"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/70 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500 text-lg shadow-2xs">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary text-lg">
               🍽️
             </span>
             <div>
@@ -226,9 +226,9 @@ export function FetchDinnerModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
@@ -237,7 +237,7 @@ export function FetchDinnerModal({
             <p className="text-xs text-muted">
               Hane Dinner modülünde kayıtlı yemek bulunamadı.
             </p>
-            <p className="text-[11px] text-muted/80">
+            <p className="text-[11px] text-muted">
               Yemek kataloğuna yemek ekledikten sonra buradan tek tıkla çekebilirsiniz.
             </p>
           </div>
@@ -247,7 +247,7 @@ export function FetchDinnerModal({
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-foreground flex items-center justify-between">
                 <span>Akşam Yemeği Seçin:</span>
-                <span className="text-[10px] text-purple-500 font-semibold">
+                <span className="ds-badge ds-badge-primary text-[10px]">
                   Hane Dinner Kataloğu
                 </span>
               </label>
@@ -259,7 +259,7 @@ export function FetchDinnerModal({
                   setAnalysisResult(null);
                   syncIngredients(newId, consumedPortions, totalPortions);
                 }}
-                className="w-full rounded-2xl border border-border bg-surface-raised p-3 text-xs font-bold text-foreground focus:border-primary focus:outline-none cursor-pointer"
+                className="field text-xs font-bold cursor-pointer"
               >
                 {allMeals.map((m) => (
                   <option key={m.id} value={m.id}>
@@ -270,7 +270,7 @@ export function FetchDinnerModal({
             </div>
 
             {/* Portion Controls */}
-            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl border border-border bg-surface-raised/40">
+            <div className="grid grid-cols-2 gap-3 p-3.5 rounded-xl border border-border bg-surface-raised">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-foreground block">
                   Tencere Kaç Porsiyon?
@@ -288,7 +288,7 @@ export function FetchDinnerModal({
                       setAnalysisResult(null);
                       syncIngredients(selectedMealId, consumedPortions, newTotal);
                     }}
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-foreground focus:outline-none"
+                    className="field bg-surface text-xs font-bold tabular-nums h-9"
                   />
                   <span className="text-xs text-muted font-medium">porsiyon</span>
                 </div>
@@ -312,11 +312,11 @@ export function FetchDinnerModal({
                       setAnalysisResult(null);
                       syncIngredients(selectedMealId, newConsumed, totalPortions);
                     }}
-                    className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-foreground focus:outline-none"
+                    className="field bg-surface text-xs font-bold tabular-nums h-9"
                   />
                   <span className="text-xs text-muted font-medium">porsiyon</span>
                 </div>
-                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold">
+                <span className="text-[10px] text-primary font-bold tabular-nums">
                   Tüm yemeğin %{ratioPercent}&apos;i
                 </span>
               </div>
@@ -332,7 +332,7 @@ export function FetchDinnerModal({
                 <button
                   type="button"
                   onClick={() => syncIngredients(selectedMealId, consumedPortions, totalPortions)}
-                  className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer flex items-center gap-1"
+                  className="text-[10px] font-semibold text-primary hover:underline cursor-pointer flex items-center gap-1"
                   title="Porsiyona göre yeniden doldur"
                 >
                   <span>↺</span>
@@ -349,7 +349,7 @@ export function FetchDinnerModal({
                     setAnalysisResult(null);
                   }}
                   placeholder="Yapay zekaya gidecek porsiyonlanmış malzemeler..."
-                  className="w-full rounded-2xl border border-purple-500/30 bg-surface-raised p-3 text-xs font-medium text-foreground focus:border-purple-500 focus:outline-none resize-none shadow-xs transition leading-relaxed"
+                  className="field min-h-[76px] py-2 text-xs resize-none leading-relaxed"
                 />
               </div>
 
@@ -361,9 +361,9 @@ export function FetchDinnerModal({
 
               {/* Total Pot Recipe Reference */}
               {rawIngredientsText && (
-                <div className="rounded-xl border border-border/60 bg-surface-raised/30 px-3 py-2 text-[10px] text-muted flex items-center justify-between gap-2">
+                <div className="rounded-xl border border-border bg-surface-raised px-3 py-2 text-[10px] text-muted flex items-center justify-between gap-2">
                   <span className="font-medium shrink-0">Tencere toplam tarif ({totalPortions} kişilik):</span>
-                  <span className="text-foreground/75 truncate" title={rawIngredientsText}>
+                  <span className="text-foreground-secondary truncate" title={rawIngredientsText}>
                     {rawIngredientsText}
                   </span>
                 </div>
@@ -372,7 +372,7 @@ export function FetchDinnerModal({
 
             {/* Error Message */}
             {aiError && (
-              <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-500 space-y-2">
+              <div className="rounded-xl border border-rose-500/25 bg-rose-500/10 p-3 text-xs text-rose-700 space-y-2">
                 <div className="font-semibold">{aiError}</div>
                 {aiError.includes("API") && (
                   <button
@@ -381,7 +381,7 @@ export function FetchDinnerModal({
                       onClose();
                       onOpenApiKeyModal();
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-bold text-white shadow-xs cursor-pointer"
+                    className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-3 py-1.5 text-xs"
                   >
                     API Anahtarını Gir
                   </button>
@@ -395,7 +395,7 @@ export function FetchDinnerModal({
                 type="button"
                 disabled={isAnalyzing || !currentMeal}
                 onClick={handleAnalyzeDinner}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-primary py-3 text-xs font-bold text-white shadow-md hover:opacity-95 transition disabled:opacity-50 cursor-pointer"
+                className="primary-button w-full py-2.5 text-xs"
               >
                 {isAnalyzing ? (
                   <>
@@ -413,19 +413,19 @@ export function FetchDinnerModal({
 
             {/* Analysis Result Preview */}
             {analysisResult && (
-              <div className="rounded-2xl border border-purple-500/30 bg-purple-500/5 p-4 space-y-3 animate-in fade-in">
-                <div className="flex items-center justify-between border-b border-purple-500/20 pb-2">
+              <div className="ds-card-lavender p-4 space-y-3 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between border-b border-border-lavender pb-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                    <span className="text-xs font-bold text-primary">
                       ✓ {currentMeal?.name} ({consumedPortions} Porsiyon)
                     </span>
                     {modelUsedInfo?.name && (
-                      <span className="rounded-md bg-purple-500/15 border border-purple-500/30 px-1.5 py-0.2 text-[9px] font-extrabold text-purple-600 dark:text-purple-400">
+                      <span className="ds-badge ds-badge-primary text-[9px] px-1.5 py-0">
                         ⚡ {modelUsedInfo.name}
                       </span>
                     )}
                   </div>
-                  <span className="text-xs font-black text-foreground">
+                  <span className="text-xs font-bold text-foreground tabular-nums">
                     {editableItems.reduce((sum, i) => sum + (Number(i.calories) || 0), 0)} kcal
                   </span>
                 </div>
@@ -434,15 +434,15 @@ export function FetchDinnerModal({
                   {editableItems.map((item, idx) => (
                     <div
                       key={idx}
-                      className="rounded-xl border border-border/80 bg-surface p-2 flex items-center justify-between text-xs"
+                      className="rounded-xl border border-border bg-surface p-2 flex items-center justify-between text-xs"
                     >
                       <div>
                         <span className="font-bold text-foreground block">{item.name}</span>
-                        <span className="text-[10px] text-muted">
+                        <span className="text-[10px] text-muted tabular-nums">
                           P: {item.protein}g • K: {item.carbs}g • Y: {item.fat}g
                         </span>
                       </div>
-                      <span className="font-bold text-foreground">{item.calories} kcal</span>
+                      <span className="font-bold text-foreground tabular-nums">{item.calories} kcal</span>
                     </div>
                   ))}
                 </div>
@@ -451,14 +451,14 @@ export function FetchDinnerModal({
                   <button
                     type="button"
                     onClick={() => setAnalysisResult(null)}
-                    className="text-xs text-muted hover:text-foreground font-semibold cursor-pointer"
+                    className="ghost-button px-2.5 py-1.5 text-xs"
                   >
                     ← Porsiyonu Değiştir
                   </button>
                   <button
                     type="button"
                     onClick={handleSaveToDinner}
-                    className="rounded-xl bg-purple-600 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-purple-700 transition cursor-pointer"
+                    className="primary-button px-5 py-2 text-xs"
                   >
                     Akşam Yemeğine Ekle
                   </button>

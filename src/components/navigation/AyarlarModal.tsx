@@ -33,6 +33,7 @@ import {
   BULGU_EVENT,
   type BulguItem,
 } from "@/storage/bulguStorage";
+import { CloseIcon, SettingsIcon } from "@/components/ui/Icons";
 
 interface AyarlarModalProps {
   isOpen: boolean;
@@ -82,6 +83,8 @@ export function AyarlarModal({
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [cloudMessage, setCloudMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [cloudLoading, setCloudLoading] = useState(false);
+  const [confirmRemoveFirebase, setConfirmRemoveFirebase] = useState(false);
+  const [confirmCloudClear, setConfirmCloudClear] = useState(false);
 
   // Firebase Form inputs
   const [apiKey, setApiKey] = useState("");
@@ -131,6 +134,7 @@ export function AyarlarModal({
   const [bulguMetin, setBulguMetin] = useState("");
   const [bulguKategori, setBulguKategori] = useState<"hata" | "oneri" | "not">("hata");
   const [bulguFiltre, setBulguFiltre] = useState<"hepsi" | "bekleyen" | "cozulen">("hepsi");
+  const [confirmClearResolved, setConfirmClearResolved] = useState(false);
   const bulguInputRef = useRef<HTMLInputElement>(null);
 
   const refreshBulgular = () => {
@@ -160,6 +164,9 @@ export function AyarlarModal({
       setCurrentSummary(data.ozet);
       setCloudMessage(null);
       setNotifMessage(null);
+      setConfirmRemoveFirebase(false);
+      setConfirmCloudClear(false);
+      setConfirmClearResolved(false);
       refreshBulgular();
       document.body.style.overflow = "hidden";
       if (initialTab === "bulgu") {
@@ -215,20 +222,19 @@ export function AyarlarModal({
     setIsConfigExpanded(false);
   };
 
-  const handleRemoveFirebase = () => {
-    if (confirm("Firebase bulut bağlantısını kaldırmak istediğinize emin misiniz? (Cihazınızdaki yerel veriler silinmez)")) {
-      removeFirebaseCustomConfig();
-      setApiKey("");
-      setAuthDomain("");
-      setProjectId("");
-      setStorageBucket("");
-      setMessagingSenderId("");
-      setAppId("");
-      setCloudMessage({
-        type: "success",
-        text: "Bulut bağlantısı kaldırıldı. Uygulama yerel modda çalışıyor.",
-      });
-    }
+  const handleConfirmRemoveFirebase = () => {
+    removeFirebaseCustomConfig();
+    setApiKey("");
+    setAuthDomain("");
+    setProjectId("");
+    setStorageBucket("");
+    setMessagingSenderId("");
+    setAppId("");
+    setConfirmRemoveFirebase(false);
+    setCloudMessage({
+      type: "success",
+      text: "Bulut bağlantısı kaldırıldı. Uygulama yerel modda çalışıyor.",
+    });
   };
 
   const handleCloudUpload = async () => {
@@ -273,26 +279,25 @@ export function AyarlarModal({
     }
   };
 
-  const handleCloudClear = async () => {
-    if (confirm("⚠️ DİKKAT: Firebase bulutundaki veritabanı yedeğini tamamen silmek istediğinize emin misiniz?")) {
-      setCloudLoading(true);
-      setCloudMessage(null);
-      try {
-        const res = await deleteCloudNow();
-        if (res.success) {
-          setCloudMessage({
-            type: "success",
-            text: "✓ Firebase bulutundaki veri kaydı başarıyla silindi.",
-          });
-        } else {
-          setCloudMessage({
-            type: "error",
-            text: `Buluttan veri silinemedi: ${res.error || "Hata"}`,
-          });
-        }
-      } finally {
-        setCloudLoading(false);
+  const handleConfirmCloudClear = async () => {
+    setConfirmCloudClear(false);
+    setCloudLoading(true);
+    setCloudMessage(null);
+    try {
+      const res = await deleteCloudNow();
+      if (res.success) {
+        setCloudMessage({
+          type: "success",
+          text: "✓ Firebase bulutundaki veri kaydı başarıyla silindi.",
+        });
+      } else {
+        setCloudMessage({
+          type: "error",
+          text: `Buluttan veri silinemedi: ${res.error || "Hata"}`,
+        });
       }
+    } finally {
+      setCloudLoading(false);
     }
   };
 
@@ -412,16 +417,20 @@ export function AyarlarModal({
   });
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl bg-surface border border-border shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 text-xs">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl bg-surface border border-border shadow-lg overflow-hidden animate-in zoom-in-95 duration-150 text-xs">
         {/* Üst Başlık */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border/80 bg-surface/95 shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border bg-surface shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary text-xl font-bold">
-              ⚙️
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary">
+              <SettingsIcon size={20} />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black tracking-tight text-foreground">
+              <h2 className="text-base font-bold tracking-tight text-foreground">
                 Hane App Ayarları
               </h2>
               <p className="text-[11px] text-muted">
@@ -433,30 +442,30 @@ export function AyarlarModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer transition"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
         {/* Ana Sekmeler (Tabs) */}
-        <div className="p-2 sm:px-5 border-b border-border/70 bg-surface-raised/40 flex items-center gap-1.5 shrink-0 overflow-x-auto">
+        <div className="p-2 sm:px-5 border-b border-border bg-surface-raised flex items-center gap-1.5 shrink-0 overflow-x-auto">
           <button
             type="button"
             onClick={() => {
               setActiveTab("bulgu");
               setTimeout(() => bulguInputRef.current?.focus(), 150);
             }}
-            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
               activeTab === "bulgu"
-                ? "bg-surface text-foreground shadow-xs border border-border font-black text-purple-400"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>📝</span>
             <span>Bulgular</span>
             {bekleyenBulguSayisi > 0 && (
-              <span className="text-[10px] font-black px-1.5 py-0.2 rounded-md bg-purple-500/20 text-purple-400">
+              <span className="ds-badge ds-badge-primary text-[10px] px-1.5 py-0">
                 {bekleyenBulguSayisi}
               </span>
             )}
@@ -465,10 +474,10 @@ export function AyarlarModal({
           <button
             type="button"
             onClick={() => setActiveTab("bulut")}
-            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
               activeTab === "bulut"
-                ? "bg-surface text-foreground shadow-xs border border-border font-black text-amber-500"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>☁️</span>
@@ -476,9 +485,9 @@ export function AyarlarModal({
             <span
               className={`h-2 w-2 rounded-full ${
                 syncState.status === "synced"
-                  ? "bg-emerald-500"
+                  ? "bg-emerald-600"
                   : isConfigured
-                  ? "bg-amber-500"
+                  ? "bg-amber-600"
                   : "bg-muted/40"
               }`}
             />
@@ -487,10 +496,10 @@ export function AyarlarModal({
           <button
             type="button"
             onClick={() => setActiveTab("yedek")}
-            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
               activeTab === "yedek"
-                ? "bg-surface text-foreground shadow-xs border border-border font-black text-primary"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>💾</span>
@@ -500,17 +509,17 @@ export function AyarlarModal({
           <button
             type="button"
             onClick={() => setActiveTab("bildirim")}
-            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
+            className={`py-2 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 sm:flex-1 ${
               activeTab === "bildirim"
-                ? "bg-surface text-foreground shadow-xs border border-border font-black text-sky-400"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>🔔</span>
             <span>Bildirimler</span>
             <span
               className={`h-2 w-2 rounded-full ${
-                isNotifGranted ? "bg-emerald-500" : "bg-muted/40"
+                isNotifGranted ? "bg-emerald-600" : "bg-muted/40"
               }`}
             />
           </button>
@@ -526,10 +535,10 @@ export function AyarlarModal({
               {/* Durum Bildirim Mesajı */}
               {cloudMessage && (
                 <div
-                  className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in ${
+                  className={`p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in ${
                     cloudMessage.type === "success"
-                      ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
-                      : "bg-rose-500/15 border border-rose-500/30 text-rose-400"
+                      ? "bg-emerald-500/10 border border-emerald-500/25 text-emerald-700"
+                      : "bg-rose-500/10 border border-rose-500/25 text-rose-700"
                   }`}
                 >
                   <span>{cloudMessage.text}</span>
@@ -545,13 +554,13 @@ export function AyarlarModal({
 
               {/* 1. Canlı Bağlantı Durumu Kartı */}
               <div
-                className={`rounded-2xl p-4 border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                className={`rounded-xl p-4 border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                   syncState.status === "synced"
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                    ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-800"
                     : syncState.status === "syncing"
-                    ? "bg-amber-500/10 border-amber-500/30 text-amber-300"
+                    ? "bg-amber-500/10 border-amber-500/25 text-amber-800"
                     : isConfigured
-                    ? "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                    ? "bg-rose-500/10 border-rose-500/25 text-rose-800"
                     : "bg-surface-raised border-border text-foreground"
                 }`}
               >
@@ -577,7 +586,7 @@ export function AyarlarModal({
                         ? "Bağlantı Hatası (Firebase)"
                         : "Firebase Kurulumu Bekleniyor"}
                     </span>
-                    <span className="text-[11px] opacity-80 block">
+                    <span className="text-[11px] opacity-85 block">
                       {syncState.lastSyncedAt
                         ? `Son eşitleme: ${syncState.lastSyncedAt.toLocaleTimeString("tr-TR")}`
                         : isConfigured
@@ -592,7 +601,7 @@ export function AyarlarModal({
                     type="button"
                     disabled={cloudLoading}
                     onClick={handleCloudDownload}
-                    className="secondary-button h-8 px-3 text-xs font-bold shrink-0 cursor-pointer"
+                    className="secondary-button h-8 px-3 text-xs font-bold shrink-0"
                   >
                     {cloudLoading ? "İşleniyor..." : "🔄 Şimdi Eşitle"}
                   </button>
@@ -600,8 +609,8 @@ export function AyarlarModal({
               </div>
 
               {/* 2. Hızlı Manuel Bulut Aksiyonları */}
-              <div className="rounded-2xl p-4 border border-border/70 bg-surface-raised/40 space-y-3">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted block">
+              <div className="rounded-xl p-4 border border-border bg-surface-raised space-y-3">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted block">
                   Bulut Hızlı İşlemleri
                 </span>
 
@@ -610,7 +619,7 @@ export function AyarlarModal({
                     type="button"
                     disabled={cloudLoading}
                     onClick={handleCloudUpload}
-                    className="p-3 rounded-xl border border-border/80 bg-surface hover:bg-surface-raised transition text-left cursor-pointer group shadow-2xs"
+                    className="p-3 rounded-xl border border-border bg-surface hover:bg-surface-raised transition text-left cursor-pointer group"
                   >
                     <span className="text-base block mb-1">⬆️</span>
                     <span className="font-bold text-foreground block group-hover:text-primary transition-colors">
@@ -625,7 +634,7 @@ export function AyarlarModal({
                     type="button"
                     disabled={cloudLoading}
                     onClick={handleCloudDownload}
-                    className="p-3 rounded-xl border border-border/80 bg-surface hover:bg-surface-raised transition text-left cursor-pointer group shadow-2xs"
+                    className="p-3 rounded-xl border border-border bg-surface hover:bg-surface-raised transition text-left cursor-pointer group"
                   >
                     <span className="text-base block mb-1">⬇️</span>
                     <span className="font-bold text-foreground block group-hover:text-primary transition-colors">
@@ -636,25 +645,49 @@ export function AyarlarModal({
                     </span>
                   </button>
 
-                  <button
-                    type="button"
-                    disabled={cloudLoading}
-                    onClick={handleCloudClear}
-                    className="p-3 rounded-xl border border-border/80 bg-surface hover:bg-rose-500/10 hover:border-rose-500/30 transition text-left cursor-pointer group shadow-2xs"
-                  >
-                    <span className="text-base block mb-1">🗑️</span>
-                    <span className="font-bold text-muted group-hover:text-rose-400 transition-colors">
-                      Buluttaki Veriyi Sil
-                    </span>
-                    <span className="text-[10px] text-muted block">
-                      Buluttaki veritabanını sıfırlar
-                    </span>
-                  </button>
+                  {confirmCloudClear ? (
+                    <div className="p-3 rounded-xl border border-rose-500/35 bg-rose-500/10 flex flex-col justify-between gap-2">
+                      <span className="text-[11px] font-bold text-rose-700">
+                        Bulut yedeği tamamen silinsin mi?
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={handleConfirmCloudClear}
+                          className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-2.5 py-1 text-[11px] h-7 min-h-0"
+                        >
+                          Evet, Sil
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmCloudClear(false)}
+                          className="secondary-button px-2.5 py-1 text-[11px] h-7 min-h-0"
+                        >
+                          İptal
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={cloudLoading}
+                      onClick={() => setConfirmCloudClear(true)}
+                      className="p-3 rounded-xl border border-border bg-surface hover:bg-rose-500/10 hover:border-rose-500/30 transition text-left cursor-pointer group"
+                    >
+                      <span className="text-base block mb-1">🗑️</span>
+                      <span className="font-bold text-muted group-hover:text-rose-700 transition-colors">
+                        Buluttaki Veriyi Sil
+                      </span>
+                      <span className="text-[10px] text-muted block">
+                        Buluttaki veritabanını sıfırlar
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
 
               {/* 3. Firebase Yapılandırma Akordeonu */}
-              <div className="rounded-2xl border border-border/80 bg-surface-raised/40 overflow-hidden">
+              <div className="rounded-xl border border-border bg-surface-raised overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setIsConfigExpanded(!isConfigExpanded)}
@@ -670,7 +703,7 @@ export function AyarlarModal({
                 {isConfigExpanded && (
                   <form
                     onSubmit={handleSaveFirebaseConfig}
-                    className="p-4 pt-0 border-t border-border/60 space-y-3 animate-in fade-in duration-150"
+                    className="p-4 pt-3 border-t border-border space-y-3 animate-in fade-in duration-150"
                   >
                     <p className="text-[11px] text-muted">
                       Firebase Console üzerinden oluşturduğunuz projenin Web SDK bilgilerini girin.
@@ -687,7 +720,7 @@ export function AyarlarModal({
                           value={apiKey}
                           onChange={(e) => setApiKey(e.target.value)}
                           placeholder="AIzaSy..."
-                          className="w-full h-8 px-2.5 rounded-xl bg-surface border border-border text-xs font-mono text-foreground"
+                          className="field h-8 text-xs font-mono bg-surface"
                         />
                       </div>
 
@@ -701,7 +734,7 @@ export function AyarlarModal({
                           value={projectId}
                           onChange={(e) => setProjectId(e.target.value)}
                           placeholder="hane-app-12345"
-                          className="w-full h-8 px-2.5 rounded-xl bg-surface border border-border text-xs font-mono text-foreground"
+                          className="field h-8 text-xs font-mono bg-surface"
                         />
                       </div>
 
@@ -715,7 +748,7 @@ export function AyarlarModal({
                           value={appId}
                           onChange={(e) => setAppId(e.target.value)}
                           placeholder="1:123456:web:abcd"
-                          className="w-full h-8 px-2.5 rounded-xl bg-surface border border-border text-xs font-mono text-foreground"
+                          className="field h-8 text-xs font-mono bg-surface"
                         />
                       </div>
 
@@ -728,7 +761,7 @@ export function AyarlarModal({
                           value={authDomain}
                           onChange={(e) => setAuthDomain(e.target.value)}
                           placeholder="hane-app.firebaseapp.com"
-                          className="w-full h-8 px-2.5 rounded-xl bg-surface border border-border text-xs font-mono text-foreground"
+                          className="field h-8 text-xs font-mono bg-surface"
                         />
                       </div>
 
@@ -741,7 +774,7 @@ export function AyarlarModal({
                           value={storageBucket}
                           onChange={(e) => setStorageBucket(e.target.value)}
                           placeholder="hane-app.appspot.com"
-                          className="w-full h-8 px-2.5 rounded-xl bg-surface border border-border text-xs font-mono text-foreground"
+                          className="field h-8 text-xs font-mono bg-surface"
                         />
                       </div>
 
@@ -754,32 +787,51 @@ export function AyarlarModal({
                           value={messagingSenderId}
                           onChange={(e) => setMessagingSenderId(e.target.value)}
                           placeholder="123456789"
-                          className="w-full h-8 px-2.5 rounded-xl bg-surface border border-border text-xs font-mono text-foreground"
+                          className="field h-8 text-xs font-mono bg-surface"
                         />
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
                       {isConfigured && (
-                        <button
-                          type="button"
-                          onClick={handleRemoveFirebase}
-                          className="text-rose-400 hover:underline text-[11px] font-bold cursor-pointer"
-                        >
-                          Bağlantıyı Kaldır
-                        </button>
+                        confirmRemoveFirebase ? (
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={handleConfirmRemoveFirebase}
+                              className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-2.5 py-1 text-[11px] h-7 min-h-0"
+                            >
+                              Bağlantıyı Kaldır
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmRemoveFirebase(false)}
+                              className="secondary-button px-2.5 py-1 text-[11px] h-7 min-h-0"
+                            >
+                              İptal
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmRemoveFirebase(true)}
+                            className="text-rose-700 hover:underline text-[11px] font-bold cursor-pointer"
+                          >
+                            Bağlantıyı Kaldır
+                          </button>
+                        )
                       )}
                       <div className="flex items-center gap-2 ml-auto">
                         <button
                           type="button"
                           onClick={() => setIsConfigExpanded(false)}
-                          className="secondary-button h-8 px-3 text-xs font-bold"
+                          className="secondary-button h-8 px-3 text-xs"
                         >
                           Vazgeç
                         </button>
                         <button
                           type="submit"
-                          className="primary-button h-8 px-4 text-xs font-black shadow-xs cursor-pointer"
+                          className="primary-button h-8 px-4 text-xs"
                         >
                           Ayarları Kaydet
                         </button>
@@ -803,7 +855,7 @@ export function AyarlarModal({
                   onClick={() => setYedekSubTab("export")}
                   className={`flex-1 py-1.5 rounded-lg transition cursor-pointer ${
                     yedekSubTab === "export"
-                      ? "bg-surface text-foreground font-black shadow-2xs"
+                      ? "bg-surface text-primary font-bold shadow-2xs border border-border"
                       : "text-muted hover:text-foreground"
                   }`}
                 >
@@ -814,7 +866,7 @@ export function AyarlarModal({
                   onClick={() => setYedekSubTab("import")}
                   className={`flex-1 py-1.5 rounded-lg transition cursor-pointer ${
                     yedekSubTab === "import"
-                      ? "bg-surface text-foreground font-black shadow-2xs"
+                      ? "bg-surface text-primary font-bold shadow-2xs border border-border"
                       : "text-muted hover:text-foreground"
                   }`}
                 >
@@ -824,36 +876,36 @@ export function AyarlarModal({
 
               {yedekSubTab === "export" ? (
                 <div className="space-y-4 animate-in fade-in duration-150">
-                  <div className="p-3.5 rounded-2xl bg-surface-raised/40 border border-border/70 space-y-2">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted block">
+                  <div className="p-3.5 rounded-xl bg-surface-raised border border-border space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted block">
                       Cihazdaki Tüm Modül Verileri
                     </span>
 
                     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                      <div className="p-2.5 rounded-xl border border-border/70 bg-surface text-center">
+                      <div className="p-2.5 rounded-xl border border-border bg-surface text-center">
                         <span className="text-base block">💰</span>
                         <span className="font-bold text-foreground text-xs block mt-0.5">Ev Gideri</span>
-                        <span className="text-[10px] text-muted">{currentSummary?.giderAySayisi || 0} Ay</span>
+                        <span className="text-[10px] text-muted tabular-nums">{currentSummary?.giderAySayisi || 0} Ay</span>
                       </div>
-                      <div className="p-2.5 rounded-xl border border-border/70 bg-surface text-center">
+                      <div className="p-2.5 rounded-xl border border-border bg-surface text-center">
                         <span className="text-base block">🚗</span>
                         <span className="font-bold text-foreground text-xs block mt-0.5">Hane Car</span>
-                        <span className="text-[10px] text-muted">{currentSummary?.carDoGiderSayisi || 0} Masraf</span>
+                        <span className="text-[10px] text-muted tabular-nums">{currentSummary?.carDoGiderSayisi || 0} Masraf</span>
                       </div>
-                      <div className="p-2.5 rounded-xl border border-border/70 bg-surface text-center">
+                      <div className="p-2.5 rounded-xl border border-border bg-surface text-center">
                         <span className="text-base block">🍽️</span>
                         <span className="font-bold text-foreground text-xs block mt-0.5">Yemek</span>
-                        <span className="text-[10px] text-muted">{currentSummary?.dinnerYemekSayisi || 0} Tarif</span>
+                        <span className="text-[10px] text-muted tabular-nums">{currentSummary?.dinnerYemekSayisi || 0} Tarif</span>
                       </div>
-                      <div className="p-2.5 rounded-xl border border-border/70 bg-surface text-center">
+                      <div className="p-2.5 rounded-xl border border-border bg-surface text-center">
                         <span className="text-base block">📅</span>
                         <span className="font-bold text-foreground text-xs block mt-0.5">Takvim</span>
-                        <span className="text-[10px] text-muted">{currentSummary?.calendarEtkinlikSayisi || 0} Etkinlik</span>
+                        <span className="text-[10px] text-muted tabular-nums">{currentSummary?.calendarEtkinlikSayisi || 0} Etkinlik</span>
                       </div>
-                      <div className="p-2.5 rounded-xl border border-border/70 bg-surface text-center col-span-2 sm:col-span-1">
+                      <div className="p-2.5 rounded-xl border border-border bg-surface text-center col-span-2 sm:col-span-1">
                         <span className="text-base block">📝</span>
                         <span className="font-bold text-foreground text-xs block mt-0.5">Bulgular</span>
-                        <span className="text-[10px] text-muted">{currentSummary?.bulguSayisi || 0} Madde</span>
+                        <span className="text-[10px] text-muted tabular-nums">{currentSummary?.bulguSayisi || 0} Madde</span>
                       </div>
                     </div>
                   </div>
@@ -862,7 +914,7 @@ export function AyarlarModal({
                     <button
                       type="button"
                       onClick={handleDownloadBackup}
-                      className="w-full sm:flex-1 primary-button h-10 text-xs font-black shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full sm:flex-1 primary-button h-10 text-xs"
                     >
                       <span>💾</span>
                       <span>JSON Yedek Dosyasını İndir</span>
@@ -871,7 +923,7 @@ export function AyarlarModal({
                     <button
                       type="button"
                       onClick={handleCopyBackupJson}
-                      className="w-full sm:w-auto secondary-button h-10 px-4 text-xs font-bold cursor-pointer"
+                      className="w-full sm:w-auto secondary-button h-10 px-4 text-xs"
                     >
                       {isCopied ? "✓ Panoya Kopyalandı" : "📋 JSON Kopyala"}
                     </button>
@@ -891,7 +943,7 @@ export function AyarlarModal({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="primary-button h-9 px-4 text-xs font-black shadow-xs cursor-pointer flex items-center gap-1.5"
+                      className="primary-button h-9 px-4 text-xs"
                     >
                       <span>📂</span>
                       <span>Dosyadan JSON Seç</span>
@@ -907,7 +959,7 @@ export function AyarlarModal({
                       setImportPreview(null);
                     }}
                     placeholder='{"uygulama": "hane-app", "veriler": {...}}'
-                    className="w-full p-3 rounded-2xl bg-surface border border-border text-xs font-mono text-foreground focus:border-primary transition"
+                    className="field min-h-[96px] py-2 text-xs font-mono resize-none"
                   />
 
                   {importStatus && (
@@ -918,10 +970,10 @@ export function AyarlarModal({
 
                   {importPreview && (
                     <div
-                      className={`p-3.5 rounded-2xl border text-xs space-y-2 ${
+                      className={`p-3.5 rounded-xl border text-xs space-y-2 ${
                         importPreview.gecerli
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                          : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                          ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-700"
+                          : "bg-rose-500/10 border-rose-500/25 text-rose-700"
                       }`}
                     >
                       <div className="font-bold flex items-center gap-1.5">
@@ -933,7 +985,7 @@ export function AyarlarModal({
                         <button
                           type="button"
                           onClick={handleExecuteImport}
-                          className="h-8 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs transition cursor-pointer shadow-xs mt-2"
+                          className="primary-button h-8 px-4 text-xs mt-2"
                         >
                           Verileri Şimdi İçe Aktar ve Yenile
                         </button>
@@ -945,7 +997,7 @@ export function AyarlarModal({
                     <button
                       type="button"
                       onClick={handleImportPreview}
-                      className="secondary-button h-9 px-4 text-xs font-bold cursor-pointer"
+                      className="secondary-button h-9 px-4 text-xs"
                     >
                       Yedeği Doğrula & İncele
                     </button>
@@ -962,10 +1014,10 @@ export function AyarlarModal({
             <div className="space-y-4 animate-in fade-in duration-150">
               {notifMessage && (
                 <div
-                  className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in ${
+                  className={`p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in ${
                     notifMessage.type === "success"
-                      ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-400"
-                      : "bg-rose-500/15 border border-rose-500/30 text-rose-400"
+                      ? "bg-emerald-500/10 border border-emerald-500/25 text-emerald-700"
+                      : "bg-rose-500/10 border border-rose-500/25 text-rose-700"
                   }`}
                 >
                   <span>{notifMessage.text}</span>
@@ -980,13 +1032,13 @@ export function AyarlarModal({
               )}
 
               {/* İzin Durumu Kartı */}
-              <div className="p-4 rounded-2xl bg-surface-raised border border-border/80 flex items-center justify-between gap-3">
+              <div className="p-4 rounded-xl bg-surface-raised border border-border flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary text-xl">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary text-xl">
                     🔔
                   </div>
                   <div>
-                    <span className="font-extrabold text-sm text-foreground block">
+                    <span className="font-bold text-sm text-foreground block">
                       Cihaz Bildirim İzni
                     </span>
                     <span className="text-[11px] text-muted block">
@@ -1000,12 +1052,12 @@ export function AyarlarModal({
                 </div>
 
                 <span
-                  className={`font-black px-2.5 py-1 rounded-full text-[11px] ${
+                  className={`ds-badge ${
                     isNotifGranted
-                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                      ? "ds-badge-success"
                       : notifPermission === "denied"
-                      ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                      : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                      ? "ds-badge-danger"
+                      : "ds-badge-warning"
                   }`}
                 >
                   {isNotifGranted
@@ -1023,7 +1075,7 @@ export function AyarlarModal({
                     type="button"
                     disabled={notifLoading || !notifSupported}
                     onClick={handleRequestNotifPermission}
-                    className="primary-button h-10 px-4 text-xs font-black shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                    className="primary-button h-10 px-4 text-xs"
                   >
                     <span>🔔</span>
                     <span>Bildirim İznini Aç</span>
@@ -1033,7 +1085,7 @@ export function AyarlarModal({
                     type="button"
                     disabled={notifLoading}
                     onClick={handleTestNotification}
-                    className="primary-button h-10 px-4 text-xs font-black shadow-xs cursor-pointer flex items-center justify-center gap-2"
+                    className="primary-button h-10 px-4 text-xs"
                   >
                     <span>🧪</span>
                     <span>Test Bildirimi Gönder</span>
@@ -1044,7 +1096,7 @@ export function AyarlarModal({
                   type="button"
                   disabled={notifLoading}
                   onClick={handleTestNotification}
-                  className="secondary-button h-10 px-4 text-xs font-bold cursor-pointer flex items-center justify-center gap-1.5"
+                  className="secondary-button h-10 px-4 text-xs"
                 >
                   <span>⚡</span>
                   <span>Örnek Bildirim Sına</span>
@@ -1052,11 +1104,11 @@ export function AyarlarModal({
               </div>
 
               {/* Bilgilendirici Notlar */}
-              <div className="p-3.5 rounded-2xl bg-surface-raised/50 border border-border/60 text-[11px] text-muted space-y-2">
-                <span className="font-bold text-foreground block">📱 Mobil Cihaz İpuçları:</span>
+              <div className="ds-card-lavender p-3.5 text-[11px] text-foreground-secondary space-y-2">
+                <span className="font-bold text-primary block">📱 Mobil Cihaz İpuçları:</span>
                 <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Android:</strong> Chrome üzerinden "Uygulamayı Yükle" diyerek sistem bildirimlerini sorunsuz alabilirsiniz.</li>
-                  <li><strong>iOS (iPhone):</strong> Safari menüsünden <em>"Ana Ekrana Ekle"</em> yaptıktan sonra bildirim izinlerini aktifleştirebilirsiniz.</li>
+                  <li><strong>Android:</strong> Chrome üzerinden &quot;Uygulamayı Yükle&quot; diyerek sistem bildirimlerini sorunsuz alabilirsiniz.</li>
+                  <li><strong>iOS (iPhone):</strong> Safari menüsünden <em>&quot;Ana Ekrana Ekle&quot;</em> yaptıktan sonra bildirim izinlerini aktifleştirebilirsiniz.</li>
                 </ul>
               </div>
             </div>
@@ -1070,10 +1122,10 @@ export function AyarlarModal({
               {/* Yeni Bulgu Ekleme Formu */}
               <form
                 onSubmit={handleBulguEkle}
-                className="p-3.5 rounded-2xl bg-surface-raised border border-border/80 space-y-3"
+                className="p-3.5 rounded-xl bg-surface-raised border border-border space-y-3"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted">
                     Yeni Bulgu / Not Ekle
                   </span>
 
@@ -1084,7 +1136,7 @@ export function AyarlarModal({
                       onClick={() => setBulguKategori("hata")}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
                         bulguKategori === "hata"
-                          ? "bg-rose-500/20 text-rose-400 border border-rose-500/40 font-black shadow-2xs"
+                          ? "bg-rose-500/15 text-rose-700 border border-rose-500/35"
                           : "text-muted hover:text-foreground"
                       }`}
                     >
@@ -1095,7 +1147,7 @@ export function AyarlarModal({
                       onClick={() => setBulguKategori("oneri")}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
                         bulguKategori === "oneri"
-                          ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 font-black shadow-2xs"
+                          ? "bg-amber-500/15 text-amber-700 border border-amber-500/35"
                           : "text-muted hover:text-foreground"
                       }`}
                     >
@@ -1106,7 +1158,7 @@ export function AyarlarModal({
                       onClick={() => setBulguKategori("not")}
                       className={`px-2 py-1 rounded-lg text-[10px] font-bold transition cursor-pointer ${
                         bulguKategori === "not"
-                          ? "bg-sky-500/20 text-sky-400 border border-sky-500/40 font-black shadow-2xs"
+                          ? "bg-sky-500/15 text-sky-700 border border-sky-500/35"
                           : "text-muted hover:text-foreground"
                       }`}
                     >
@@ -1122,12 +1174,12 @@ export function AyarlarModal({
                     value={bulguMetin}
                     onChange={(e) => setBulguMetin(e.target.value)}
                     placeholder="Gördüğünüz bulgu veya geliştirme notunu yazın..."
-                    className="flex-1 h-9 px-3 rounded-xl bg-surface border border-border text-xs font-semibold text-foreground focus:border-purple-400 transition"
+                    className="field flex-1 h-9 bg-surface text-xs"
                   />
                   <button
                     type="submit"
                     disabled={!bulguMetin.trim()}
-                    className="primary-button h-9 px-3.5 text-xs font-black shrink-0 disabled:opacity-40 cursor-pointer shadow-xs"
+                    className="primary-button h-9 px-3.5 text-xs shrink-0"
                   >
                     ➕ Ekle
                   </button>
@@ -1135,14 +1187,14 @@ export function AyarlarModal({
               </form>
 
               {/* Filtre ve İstatistik Çubuğu */}
-              <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50">
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-border">
                 <div className="flex items-center gap-1 p-0.5 rounded-xl bg-surface-raised border border-border text-[11px] font-bold">
                   <button
                     type="button"
                     onClick={() => setBulguFiltre("hepsi")}
-                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer tabular-nums ${
                       bulguFiltre === "hepsi"
-                        ? "bg-surface text-foreground font-black shadow-2xs"
+                        ? "bg-surface text-foreground shadow-2xs border border-border"
                         : "text-muted hover:text-foreground"
                     }`}
                   >
@@ -1151,9 +1203,9 @@ export function AyarlarModal({
                   <button
                     type="button"
                     onClick={() => setBulguFiltre("bekleyen")}
-                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer tabular-nums ${
                       bulguFiltre === "bekleyen"
-                        ? "bg-purple-500 text-white font-black shadow-2xs"
+                        ? "bg-primary text-white shadow-2xs"
                         : "text-muted hover:text-foreground"
                     }`}
                   >
@@ -1162,9 +1214,9 @@ export function AyarlarModal({
                   <button
                     type="button"
                     onClick={() => setBulguFiltre("cozulen")}
-                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg transition cursor-pointer tabular-nums ${
                       bulguFiltre === "cozulen"
-                        ? "bg-emerald-500 text-white font-black shadow-2xs"
+                        ? "bg-emerald-600 text-white shadow-2xs"
                         : "text-muted hover:text-foreground"
                     }`}
                   >
@@ -1173,24 +1225,42 @@ export function AyarlarModal({
                 </div>
 
                 {cozulenBulguSayisi > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (confirm("Çözülen tüm bulguları silmek istediğinize emin misiniz?")) {
-                        clearResolvedBulgular();
-                      }
-                    }}
-                    className="text-[10px] text-muted hover:text-rose-400 transition cursor-pointer underline"
-                  >
-                    Çözülenleri Temizle
-                  </button>
+                  confirmClearResolved ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          clearResolvedBulgular();
+                          setConfirmClearResolved(false);
+                        }}
+                        className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-2 py-0.5 text-[10px] h-6 min-h-0"
+                      >
+                        Temizle
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmClearResolved(false)}
+                        className="secondary-button px-2 py-0.5 text-[10px] h-6 min-h-0"
+                      >
+                        İptal
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmClearResolved(true)}
+                      className="text-[11px] text-muted hover:text-rose-600 transition cursor-pointer underline"
+                    >
+                      Çözülenleri Temizle
+                    </button>
+                  )
                 )}
               </div>
 
               {/* Madde Madde Bulgu Listesi */}
               <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
                 {filtrelenmisBulgular.length === 0 ? (
-                  <div className="py-8 text-center rounded-2xl border border-dashed border-border/70 p-6 space-y-2">
+                  <div className="py-8 text-center rounded-xl border border-dashed border-border p-6 space-y-2">
                     <span className="text-3xl block">✨</span>
                     <p className="font-bold text-foreground text-xs">
                       {bulguFiltre === "cozulen"
@@ -1207,10 +1277,10 @@ export function AyarlarModal({
                   filtrelenmisBulgular.map((b) => (
                     <div
                       key={b.id}
-                      className={`group flex items-start justify-between gap-3 p-3 rounded-2xl border transition-all ${
+                      className={`group flex items-start justify-between gap-3 p-3 rounded-xl border transition-all ${
                         b.cozuldu
-                          ? "bg-surface-raised/40 border-border/50 opacity-70"
-                          : "bg-surface-raised border-border/80 hover:border-border shadow-xs"
+                          ? "bg-surface-raised/60 border-border opacity-70"
+                          : "bg-surface-raised border-border hover:border-border-strong"
                       }`}
                     >
                       {/* Sol: Checkbox & Metin */}
@@ -1218,10 +1288,10 @@ export function AyarlarModal({
                         <button
                           type="button"
                           onClick={() => handleBulguToggle(b.id)}
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border transition cursor-pointer ${
+                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition cursor-pointer ${
                             b.cozuldu
-                              ? "bg-emerald-500 border-emerald-500 text-white font-black"
-                              : "border-border bg-surface hover:border-purple-400"
+                              ? "bg-emerald-600 border-emerald-600 text-white font-bold"
+                              : "border-border-strong bg-surface hover:border-primary"
                           }`}
                           title={b.cozuldu ? "Tekrar aç" : "Çözüldü olarak işaretle"}
                         >
@@ -1233,7 +1303,7 @@ export function AyarlarModal({
                             onClick={() => handleBulguToggle(b.id)}
                             className={`text-xs font-semibold break-words cursor-pointer transition select-none ${
                               b.cozuldu
-                                ? "line-through text-muted/70 decoration-emerald-500/60"
+                                ? "line-through text-muted"
                                 : "text-foreground"
                             }`}
                           >
@@ -1242,12 +1312,12 @@ export function AyarlarModal({
 
                           <div className="flex items-center gap-2 flex-wrap text-[10px]">
                             <span
-                              className={`font-black px-1.5 py-0.2 rounded-md ${
+                              className={`font-bold px-1.5 py-0.5 rounded-md border ${
                                 b.kategori === "oneri"
-                                  ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                                  ? "bg-amber-500/15 text-amber-700 border-amber-500/30"
                                   : b.kategori === "not"
-                                  ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                                  : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                                  ? "bg-sky-500/15 text-sky-700 border-sky-500/30"
+                                  : "bg-rose-500/15 text-rose-700 border-rose-500/30"
                               }`}
                             >
                               {b.kategori === "oneri"
@@ -1257,10 +1327,10 @@ export function AyarlarModal({
                                 : "🔴 Hata"}
                             </span>
 
-                            <span className="text-muted">{formatTarih(b.tarih)}</span>
+                            <span className="text-muted tabular-nums">{formatTarih(b.tarih)}</span>
 
                             {b.cozuldu && (
-                              <span className="text-emerald-500 font-bold flex items-center gap-0.5">
+                              <span className="text-emerald-700 font-bold flex items-center gap-0.5">
                                 ✓ Çözüldü
                               </span>
                             )}
@@ -1272,7 +1342,7 @@ export function AyarlarModal({
                       <button
                         type="button"
                         onClick={() => handleBulguSil(b.id)}
-                        className="w-6 h-6 rounded-lg flex items-center justify-center text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer text-xs shrink-0"
+                        className="w-6 h-6 rounded-lg flex items-center justify-center text-muted hover:text-rose-600 hover:bg-rose-500/10 transition cursor-pointer text-xs shrink-0"
                         title="Bulguyu sil"
                       >
                         ✕
@@ -1286,7 +1356,7 @@ export function AyarlarModal({
         </div>
 
         {/* Alt Kapatma Çubuğu */}
-        <div className="flex items-center justify-between p-3.5 sm:px-5 border-t border-border/80 bg-surface/95 shrink-0 text-xs">
+        <div className="flex items-center justify-between p-3.5 sm:px-5 border-t border-border bg-surface shrink-0 text-xs">
           <span className="text-[11px] text-muted">
             Hane App • Tüm ayarlar ve bulgular yerel cihazınızda saklanır
           </span>
@@ -1294,7 +1364,7 @@ export function AyarlarModal({
           <button
             type="button"
             onClick={onClose}
-            className="secondary-button h-8 px-4 text-xs font-bold"
+            className="secondary-button h-8 px-4 text-xs"
           >
             Kapat
           </button>

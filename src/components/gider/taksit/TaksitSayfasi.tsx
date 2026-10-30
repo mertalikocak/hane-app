@@ -22,6 +22,7 @@ import { TaksitModal } from "./TaksitModal";
 import { KartModal } from "./KartModal";
 import { TaksitProjeksiyonu } from "./TaksitProjeksiyonu";
 import { TaksitAktarimModal } from "./TaksitAktarimModal";
+import { PlusIcon, CloseIcon, CheckIcon } from "@/components/ui/Icons";
 
 const paraFormat = (n: number) =>
   new Intl.NumberFormat("tr-TR", {
@@ -59,7 +60,6 @@ export function TaksitSayfasi() {
       prev.includes(kartId) ? prev.filter((id) => id !== kartId) : [...prev, kartId]
     );
   };
-
 
   const projeksiyonRef = React.useRef<HTMLDivElement>(null);
 
@@ -286,15 +286,15 @@ export function TaksitSayfasi() {
   };
 
   if (!isLoaded) {
-    return <div className="h-48 animate-pulse rounded-3xl bg-surface-raised" />;
+    return <div className="h-48 animate-pulse rounded-2xl bg-surface-raised border border-border" />;
   }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150">
       {/* Üst İstatistik Kartları (KPI Summary Cards) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Toplam Aylık Taksit Yükü */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-border/80 shadow-xs flex flex-col justify-between space-y-2">
+        <div className="ds-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
           <div>
             <div className="flex items-center justify-between text-muted">
               <span className="text-[11px] font-bold uppercase tracking-wider">
@@ -302,41 +302,43 @@ export function TaksitSayfasi() {
               </span>
               <span className="text-base">💳</span>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-foreground mt-1">
+            <div className="text-xl sm:text-2xl font-bold text-foreground mt-1 tabular-nums">
               {paraFormat(stats.toplamAylik)}
             </div>
             {stats.haricKartSayisi > 0 && (
-              <span className="text-[10px] text-amber-500 font-semibold block mt-0.5">
+              <span className="text-[11px] text-warning font-semibold block mt-0.5">
                 ({stats.haricKartSayisi} kart hesaplama dışı)
               </span>
             )}
           </div>
-          <div className="pt-2 border-t border-border/60 text-[11px] text-muted flex items-center justify-between">
+          <div className="pt-2.5 border-t border-border/60 text-[11px] text-muted flex items-center justify-between">
             <span>Ortak Taksitler Toplamı:</span>
-            <span className="font-bold text-foreground">{paraFormat(stats.ortakAylik)}</span>
+            <span className="font-bold text-foreground tabular-nums">{paraFormat(stats.ortakAylik)}</span>
           </div>
         </div>
 
         {/* Mert'in Aylık Taksit Payı */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-border/80 shadow-xs flex flex-col justify-between space-y-2">
+        <div className="ds-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
           <div>
             <div className="flex items-center justify-between text-muted">
               <span className="text-[11px] font-bold uppercase tracking-wider">
                 Mert'in Taksit Payı
               </span>
-              <span className="text-base">👤</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200">
+                Mert
+              </span>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-foreground mt-1">
+            <div className="text-xl sm:text-2xl font-bold text-foreground mt-1 tabular-nums">
               {paraFormat(stats.mertToplamPay)}
             </div>
           </div>
 
-          <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-2 text-[11px]">
+          <div className="pt-2.5 border-t border-border/60 grid grid-cols-2 gap-2 text-[11px]">
             <div>
               <span className="text-muted block text-[10px] uppercase tracking-wider font-semibold">
                 Bireysel
               </span>
-              <span className="font-bold text-foreground block truncate">
+              <span className="font-bold text-foreground block truncate tabular-nums">
                 {paraFormat(stats.mertBireyselAylik)}
               </span>
             </div>
@@ -344,7 +346,7 @@ export function TaksitSayfasi() {
               <span className="text-muted block text-[10px] uppercase tracking-wider font-semibold">
                 Ortak (%50)
               </span>
-              <span className="font-bold text-foreground block truncate">
+              <span className="font-bold text-foreground block truncate tabular-nums">
                 {paraFormat(stats.ortakPay)}
               </span>
             </div>
@@ -352,25 +354,27 @@ export function TaksitSayfasi() {
         </div>
 
         {/* Havsa'nın Aylık Taksit Payı */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-border/80 shadow-xs flex flex-col justify-between space-y-2">
+        <div className="ds-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
           <div>
             <div className="flex items-center justify-between text-muted">
               <span className="text-[11px] font-bold uppercase tracking-wider">
                 Havsa'nın Taksit Payı
               </span>
-              <span className="text-base">👤</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-md bg-pink-50 text-pink-700 border border-pink-200">
+                Havsa
+              </span>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-foreground mt-1">
+            <div className="text-xl sm:text-2xl font-bold text-foreground mt-1 tabular-nums">
               {paraFormat(stats.havsaToplamPay)}
             </div>
           </div>
 
-          <div className="pt-2 border-t border-border/60 grid grid-cols-2 gap-2 text-[11px]">
+          <div className="pt-2.5 border-t border-border/60 grid grid-cols-2 gap-2 text-[11px]">
             <div>
               <span className="text-muted block text-[10px] uppercase tracking-wider font-semibold">
                 Bireysel
               </span>
-              <span className="font-bold text-foreground block truncate">
+              <span className="font-bold text-foreground block truncate tabular-nums">
                 {paraFormat(stats.havsaBireyselAylik)}
               </span>
             </div>
@@ -378,7 +382,7 @@ export function TaksitSayfasi() {
               <span className="text-muted block text-[10px] uppercase tracking-wider font-semibold">
                 Ortak (%50)
               </span>
-              <span className="font-bold text-foreground block truncate">
+              <span className="font-bold text-foreground block truncate tabular-nums">
                 {paraFormat(stats.ortakPay)}
               </span>
             </div>
@@ -386,7 +390,7 @@ export function TaksitSayfasi() {
         </div>
 
         {/* Toplam Kalan Borç */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-surface border border-border/80 shadow-xs flex flex-col justify-between space-y-2">
+        <div className="ds-card p-4 sm:p-5 flex flex-col justify-between space-y-2">
           <div>
             <div className="flex items-center justify-between text-muted">
               <span className="text-[11px] font-bold uppercase tracking-wider">
@@ -394,17 +398,17 @@ export function TaksitSayfasi() {
               </span>
               <span className="text-base">⏳</span>
             </div>
-            <div className="text-xl sm:text-2xl font-black text-foreground mt-1">
+            <div className="text-xl sm:text-2xl font-bold text-foreground mt-1 tabular-nums">
               {paraFormat(stats.toplamKalanBorc)}
             </div>
           </div>
-          <div className="pt-2 border-t border-border/60 grid grid-cols-3 gap-1.5 text-[11px]">
+          <div className="pt-2.5 border-t border-border/60 grid grid-cols-3 gap-1.5 text-[11px]">
             <div>
               <span className="text-muted block text-[10px] uppercase tracking-wider font-semibold truncate">
                 Ortak
               </span>
               <span
-                className="font-bold text-foreground block truncate"
+                className="font-bold text-foreground block truncate tabular-nums"
                 title={paraFormat(stats.ortakKalanBorc)}
               >
                 {paraFormat(stats.ortakKalanBorc)}
@@ -415,7 +419,7 @@ export function TaksitSayfasi() {
                 Mert
               </span>
               <span
-                className="font-bold text-foreground block truncate"
+                className="font-bold text-foreground block truncate tabular-nums"
                 title={paraFormat(stats.mertKalanBorc)}
               >
                 {paraFormat(stats.mertKalanBorc)}
@@ -426,7 +430,7 @@ export function TaksitSayfasi() {
                 Havsa
               </span>
               <span
-                className="font-bold text-foreground block truncate"
+                className="font-bold text-foreground block truncate tabular-nums"
                 title={paraFormat(stats.havsaKalanBorc)}
               >
                 {paraFormat(stats.havsaKalanBorc)}
@@ -438,11 +442,11 @@ export function TaksitSayfasi() {
 
       {/* Yaklaşan Son Ödeme Uyarısı Banner */}
       {yaklasanOdemeler.length > 0 && (
-        <div className="p-4 rounded-3xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 flex-wrap animate-in fade-in duration-200">
+        <div className="p-4 rounded-2xl bg-warning-soft border border-warning/30 flex items-center justify-between gap-3 flex-wrap animate-in fade-in duration-200">
           <div className="flex items-center gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <span className="text-xs font-black text-foreground block">
+              <span className="text-xs font-bold text-foreground block">
                 Yaklaşan Kredi Kartı Son Ödemeleri:
               </span>
               <div className="flex items-center gap-2 flex-wrap mt-1">
@@ -455,8 +459,8 @@ export function TaksitSayfasi() {
                     <span
                       className={
                         durum.durum === "bugun"
-                          ? "text-rose-500 font-black animate-pulse"
-                          : "text-amber-500 font-extrabold"
+                          ? "text-danger font-bold animate-pulse"
+                          : "text-warning font-bold"
                       }
                     >
                       {durum.durum === "bugun"
@@ -464,7 +468,7 @@ export function TaksitSayfasi() {
                         : `${durum.kalanGun} gün kaldı`}{" "}
                       ({durum.tarihStr})
                     </span>
-                    <span className="text-muted text-[11px]">({paraFormat(aylikTutar)})</span>
+                    <span className="text-muted text-[11px] tabular-nums">({paraFormat(aylikTutar)})</span>
                   </span>
                 ))}
               </div>
@@ -474,15 +478,15 @@ export function TaksitSayfasi() {
       )}
 
       {/* Kontrol Çubuğu & Filtreler (Control Toolbar) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-3xl bg-surface border border-border/80 shadow-xs">
+      <div className="ds-card flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4">
         {/* Filtre Butonları */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Sahip Filtresi */}
-          <div className="flex items-center p-1 rounded-2xl bg-surface-raised border border-border/60">
+          <div className="flex items-center p-1 rounded-xl bg-surface-raised border border-border">
             <button
               type="button"
               onClick={() => setFilterSahip("tum")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 filterSahip === "tum"
                   ? "bg-surface text-foreground shadow-xs border border-border"
                   : "text-muted hover:text-foreground"
@@ -493,7 +497,7 @@ export function TaksitSayfasi() {
             <button
               type="button"
               onClick={() => setFilterSahip("mert")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 filterSahip === "mert"
                   ? "bg-surface text-foreground shadow-xs border border-border"
                   : "text-muted hover:text-foreground"
@@ -504,7 +508,7 @@ export function TaksitSayfasi() {
             <button
               type="button"
               onClick={() => setFilterSahip("havsa")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 filterSahip === "havsa"
                   ? "bg-surface text-foreground shadow-xs border border-border"
                   : "text-muted hover:text-foreground"
@@ -515,7 +519,7 @@ export function TaksitSayfasi() {
             <button
               type="button"
               onClick={() => setFilterSahip("ortak")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 filterSahip === "ortak"
                   ? "bg-surface text-foreground shadow-xs border border-border"
                   : "text-muted hover:text-foreground"
@@ -526,11 +530,11 @@ export function TaksitSayfasi() {
           </div>
 
           {/* Durum Filtresi */}
-          <div className="flex items-center p-1 rounded-2xl bg-surface-raised border border-border/60">
+          <div className="flex items-center p-1 rounded-xl bg-surface-raised border border-border">
             <button
               type="button"
               onClick={() => setFilterDurum("devam")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 filterDurum === "devam"
                   ? "bg-surface text-foreground shadow-xs border border-border"
                   : "text-muted hover:text-foreground"
@@ -541,7 +545,7 @@ export function TaksitSayfasi() {
             <button
               type="button"
               onClick={() => setFilterDurum("tum")}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 filterDurum === "tum"
                   ? "bg-surface text-foreground shadow-xs border border-border"
                   : "text-muted hover:text-foreground"
@@ -555,7 +559,7 @@ export function TaksitSayfasi() {
           <button
             type="button"
             onClick={scrollToProjeksiyon}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-surface-raised border border-border/70 text-xs font-bold text-muted hover:text-foreground hover:border-primary/50 transition cursor-pointer shadow-xs group"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-raised border border-border text-xs font-semibold text-foreground-secondary hover:text-foreground hover:border-border-strong transition cursor-pointer group"
             title="Gelecek 6 ayın taksit projeksiyonuna kaydır"
           >
             <span>🔮</span>
@@ -576,14 +580,13 @@ export function TaksitSayfasi() {
                   setOpenKartIds(kartlar.map((k) => k.id));
                 }
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-surface-raised border border-border/70 text-xs font-bold text-muted hover:text-foreground hover:border-primary/50 transition cursor-pointer shadow-xs"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-raised border border-border text-xs font-semibold text-foreground-secondary hover:text-foreground hover:border-border-strong transition cursor-pointer"
               title={openKartIds.length > 0 ? "Tüm taksit listelerini daralt/kapat" : "Tüm taksit listelerini aç"}
             >
               <span>{openKartIds.length > 0 ? "📁" : "📂"}</span>
               <span>{openKartIds.length > 0 ? "Tümünü Kapat" : "Tümünü Aç"}</span>
             </button>
           )}
-
         </div>
 
         {/* Yeni Ekle Butonları */}
@@ -594,7 +597,7 @@ export function TaksitSayfasi() {
               setAktarimKartId(null);
               setIsAktarimModalOpen(true);
             }}
-            className="secondary-button h-10 px-3.5 text-xs font-bold border-primary/40 text-primary hover:bg-primary/10 transition"
+            className="accent-button h-10 px-3.5 text-xs font-semibold"
             title="Taksitleri Aylık Bütçe & Ev Giderleri sekmesine aktar"
           >
             <span>📥</span>
@@ -604,7 +607,7 @@ export function TaksitSayfasi() {
           <button
             type="button"
             onClick={handleOpenAddKart}
-            className="secondary-button h-10 px-3.5 text-xs font-bold"
+            className="secondary-button h-10 px-3.5 text-xs font-semibold"
             title="Yeni kredi kartı ekle"
           >
             <span>💳</span>
@@ -614,9 +617,9 @@ export function TaksitSayfasi() {
           <button
             type="button"
             onClick={() => handleOpenAddTaksit()}
-            className="primary-button h-10 px-4 text-xs font-bold shadow-sm"
+            className="primary-button h-10 px-4 text-xs font-semibold"
           >
-            <span>➕</span>
+            <PlusIcon className="w-3.5 h-3.5" />
             <span>Taksit Ekle</span>
           </button>
         </div>
@@ -624,24 +627,27 @@ export function TaksitSayfasi() {
 
       {/* Aktarım Bildirimi */}
       {aktarimMesaj && (
-        <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
+        <div className="p-3.5 rounded-2xl bg-success-soft border border-success/30 flex items-center justify-between gap-3 text-xs animate-in fade-in duration-150">
           <div className="flex items-center gap-2">
-            <span>✅</span>
-            <span className="font-bold text-foreground">{aktarimMesaj}</span>
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-success text-white">
+              <CheckIcon className="w-3 h-3" />
+            </span>
+            <span className="font-semibold text-foreground">{aktarimMesaj}</span>
           </div>
           <button
             type="button"
             onClick={() => setAktarimMesaj(null)}
-            className="text-muted hover:text-foreground font-bold p-1 cursor-pointer"
+            className="icon-button h-7 w-7 text-muted hover:text-foreground"
+            aria-label="Bildirimi kapat"
           >
-            ✕
+            <CloseIcon className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* Kart Grupları Listesi (Cards Grouped List) */}
       {kartlar.length === 0 ? (
-        <div className="p-12 text-center rounded-3xl border border-dashed border-border/80 bg-surface/50 space-y-3">
+        <div className="ds-card p-10 sm:p-12 text-center border-dashed space-y-3">
           <span className="text-4xl block">💳</span>
           <h3 className="text-lg font-bold text-foreground">
             Henüz Kredi Kartı Tanımlanmamış
@@ -653,7 +659,7 @@ export function TaksitSayfasi() {
             <button
               type="button"
               onClick={handleOpenAddKart}
-              className="primary-button px-5 py-2.5 text-xs font-bold"
+              className="primary-button px-5 py-2.5 text-xs font-semibold"
             >
               <span>💳</span> İlk Kartı Tanımla
             </button>

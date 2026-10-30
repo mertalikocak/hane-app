@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   CLEANING_METHODS,
   CleaningMethodId,
@@ -8,6 +8,7 @@ import {
 } from "@/domain/cleaningTypes";
 import { saveCleaningRecord, deleteCleaningRoom } from "@/storage/cleaningStorage";
 import { useProfile } from "@/context/ProfileContext";
+import { CloseIcon, PlusIcon } from "@/components/ui/Icons";
 
 interface RoomStatusCardsProps {
   roomStatuses: RoomStatus[];
@@ -21,6 +22,7 @@ export function RoomStatusCards({
   onAddRoom,
 }: RoomStatusCardsProps) {
   const { activeProfile } = useProfile();
+  const [confirmDeleteRoomId, setConfirmDeleteRoomId] = useState<string | null>(null);
 
   const getMethodBadge = (methodId: CleaningMethodId) => {
     const found = CLEANING_METHODS.find((m) => m.id === methodId);
@@ -28,7 +30,7 @@ export function RoomStatusCards({
     return (
       <span
         key={methodId}
-        className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold border ${found.badgeColor}`}
+        className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold border ${found.badgeColor}`}
         title={found.label}
       >
         <span>{found.icon}</span>
@@ -40,34 +42,34 @@ export function RoomStatusCards({
   const getStatusBadge = (status: RoomStatus) => {
     if (status.daysAgo === null) {
       return (
-        <span className="rounded-full bg-slate-500/10 px-2.5 py-0.5 text-[11px] font-bold text-slate-500 border border-slate-500/20">
+        <span className="ds-badge ds-badge-neutral text-[11px]">
           Kayıt Yok
         </span>
       );
     }
     if (status.statusLevel === "fresh") {
       return (
-        <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        <span className="ds-badge ds-badge-success text-[11px]">
           🟢 {status.daysAgo === 0 ? "Bugün" : "Dün"}
         </span>
       );
     }
     if (status.statusLevel === "normal") {
       return (
-        <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-bold text-blue-600 dark:text-blue-400 border border-blue-500/20">
+        <span className="ds-badge ds-badge-primary text-[11px]">
           🔵 {status.daysAgo} gün önce
         </span>
       );
     }
     if (status.statusLevel === "due") {
       return (
-        <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400 border border-amber-500/20">
+        <span className="ds-badge ds-badge-warning text-[11px]">
           🟡 {status.daysAgo} gün önce (Zamanı Geldi)
         </span>
       );
     }
     return (
-      <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-[11px] font-bold text-rose-600 dark:text-rose-400 border border-rose-500/20">
+      <span className="ds-badge ds-badge-danger text-[11px]">
         🔴 {status.daysAgo} gün önce (Gecikti)
       </span>
     );
@@ -105,8 +107,8 @@ export function RoomStatusCards({
 
   if (roomStatuses.length === 0) {
     return (
-      <div className="rounded-3xl border border-dashed border-border/80 bg-surface/50 p-10 text-center space-y-4">
-        <div className="text-5xl">🏠✨</div>
+      <div className="ds-card border-dashed p-10 text-center space-y-4">
+        <div className="text-4xl">🏠✨</div>
         <div className="space-y-1.5 max-w-md mx-auto">
           <h3 className="text-base sm:text-lg font-bold text-foreground">
             Henüz Hiç Oda Eklenmedi
@@ -119,9 +121,9 @@ export function RoomStatusCards({
           <button
             type="button"
             onClick={onAddRoom}
-            className="primary-button text-xs px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
+            className="primary-button text-xs px-5 py-2.5"
           >
-            <span>+</span>
+            <PlusIcon size={15} />
             <span>İlk Odayı Ekle</span>
           </button>
         )}
@@ -133,33 +135,60 @@ export function RoomStatusCards({
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {roomStatuses.map((status) => {
         const last = status.lastRecord;
+        const isConfirmingDelete = confirmDeleteRoomId === status.room.id;
+
         return (
           <div
             key={status.room.id}
             onClick={() => onOpenModalForRoom(status.room.id)}
-            className="flex flex-col justify-between rounded-3xl border border-border/80 bg-surface p-4 sm:p-5 shadow-xs hover:shadow-md hover:border-primary/40 transition-all cursor-pointer group relative overflow-hidden"
+            className="ds-card-interactive flex flex-col justify-between p-4 sm:p-5 group relative overflow-hidden"
           >
             {/* Top row */}
             <div>
               <div className="flex items-start justify-between gap-2 mb-3">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-raised border border-border/60 text-2xl shadow-xs group-hover:scale-110 transition-transform">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface-raised border border-border text-2xl shadow-2xs">
                   {status.room.icon}
                 </span>
                 <div className="flex items-center gap-1.5">
-                  {getStatusBadge(status)}
-                  <button
-                    type="button"
-                    title="Odayı Sil"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`"${status.room.name}" odasını silmek istediğinize emin misiniz?`)) {
-                        deleteCleaningRoom(status.room.id);
-                      }
-                    }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-muted hover:text-rose-500 hover:bg-rose-500/10 cursor-pointer text-xs"
-                  >
-                    ✕
-                  </button>
+                  {isConfirmingDelete ? (
+                    <div
+                      className="flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          deleteCleaningRoom(status.room.id);
+                          setConfirmDeleteRoomId(null);
+                        }}
+                        className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-2 py-0.5 text-[10px] h-6 min-h-0"
+                      >
+                        Sil
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteRoomId(null)}
+                        className="secondary-button px-2 py-0.5 text-[10px] h-6 min-h-0"
+                      >
+                        İptal
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {getStatusBadge(status)}
+                      <button
+                        type="button"
+                        title="Odayı Sil"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteRoomId(status.room.id);
+                        }}
+                        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1 rounded-lg text-muted hover:text-rose-600 hover:bg-rose-500/10 cursor-pointer"
+                      >
+                        <CloseIcon size={13} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -171,7 +200,7 @@ export function RoomStatusCards({
               <div className="mt-2 text-xs text-muted min-h-[38px]">
                 {last ? (
                   <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 font-medium text-foreground/80">
+                    <div className="flex items-center gap-1.5 font-medium text-foreground-secondary">
                       <span>Son:</span>
                       <span className="font-semibold text-foreground">
                         {formatDateDisplay(last.date)}
@@ -188,7 +217,7 @@ export function RoomStatusCards({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-muted/70 italic text-[11px] pt-1">
+                  <p className="text-muted italic text-[11px] pt-1">
                     Henüz temizlik kaydı girilmedi.
                   </p>
                 )}
@@ -196,14 +225,14 @@ export function RoomStatusCards({
             </div>
 
             {/* Quick 1-click bottom actions */}
-            <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-between gap-1.5">
+            <div className="mt-4 pt-3 border-t border-border flex items-center justify-between gap-1.5">
               <div className="flex items-center gap-1">
                 {/* 1-tap Robot */}
                 <button
                   type="button"
                   title="Bugün Robot Süpürge çalıştırıldı olarak kaydet"
                   onClick={(e) => handle1ClickClean(e, status, ["robot"])}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised border border-border/60 hover:bg-cyan-500/20 hover:border-cyan-500/30 text-xs transition active:scale-95 cursor-pointer"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised border border-border hover:bg-accent hover:border-border-lavender text-xs transition cursor-pointer"
                 >
                   🤖
                 </button>
@@ -212,7 +241,7 @@ export function RoomStatusCards({
                   type="button"
                   title="Bugün Süpürüldü ve Paspas yapıldı olarak kaydet"
                   onClick={(e) => handle1ClickClean(e, status, ["vacuum", "mop"])}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised border border-border/60 hover:bg-emerald-500/20 hover:border-emerald-500/30 text-xs transition active:scale-95 cursor-pointer"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised border border-border hover:bg-emerald-500/15 hover:border-emerald-500/30 text-xs transition cursor-pointer"
                 >
                   🧹
                 </button>
@@ -224,7 +253,7 @@ export function RoomStatusCards({
                   e.stopPropagation();
                   onOpenModalForRoom(status.room.id);
                 }}
-                className="text-[11px] font-bold text-primary hover:text-primary-hover px-2 py-1 rounded-lg hover:bg-primary/10 transition cursor-pointer"
+                className="accent-button px-2.5 py-1 text-[11px] h-7 min-h-0"
               >
                 + Detaylı Kaydet
               </button>

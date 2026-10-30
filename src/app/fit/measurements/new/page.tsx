@@ -30,6 +30,7 @@ export default function NewMeasurementPage() {
   const [waist, setWaist] = useState<number | "">("");
   const [hip, setHip] = useState<number | "">("");
   const [manualBodyFat, setManualBodyFat] = useState<number | "">("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Muscle Measurements (Optional)
   const [showMuscle, setShowMuscle] = useState(false);
@@ -83,7 +84,7 @@ export default function NewMeasurementPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!profileId || typeof weight !== "number" || typeof neck !== "number" || typeof waist !== "number") {
-      alert("Lütfen profil, kilo, boyun ve bel alanlarını eksiksiz doldurun.");
+      setErrorMsg("Lütfen profil, kilo, boyun ve bel alanlarını eksiksiz doldurun.");
       return;
     }
 
@@ -125,14 +126,14 @@ export default function NewMeasurementPage() {
 
   if (profiles.length === 0) {
     return (
-      <div className="rounded-3xl border border-border bg-surface p-8 text-center max-w-md mx-auto">
+      <div className="ds-card p-8 text-center max-w-md mx-auto space-y-3">
         <h3 className="text-lg font-bold text-foreground">Profil Bulunamadı</h3>
-        <p className="mt-2 text-xs text-muted">
+        <p className="text-xs text-muted">
           Ölçüm kaydetmeden önce lütfen bir profil oluşturun.
         </p>
         <Link
           href="/fit/profiles"
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white hover:bg-emerald-700 transition"
+          className="primary-button px-4 py-2 text-sm font-semibold"
         >
           Profil Oluştur
         </Link>
@@ -149,7 +150,7 @@ export default function NewMeasurementPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
           Yeni Vücut Ölçümü Ekle
         </h2>
         <p className="text-xs sm:text-sm text-muted">
@@ -157,16 +158,22 @@ export default function NewMeasurementPage() {
         </p>
       </div>
 
+      {errorMsg && (
+        <div className="p-3.5 rounded-xl bg-danger-soft border border-danger/30 text-danger text-xs font-semibold">
+          {errorMsg}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Profile & Date Card */}
-        <div className="rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted">
+        <div className="ds-card p-5 sm:p-6 space-y-4">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
             1. Profil ve Tarih
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
+              <label className="block text-xs font-bold text-foreground mb-1.5">
                 Kişi / Profil *
               </label>
               <select
@@ -184,7 +191,7 @@ export default function NewMeasurementPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
+              <label className="block text-xs font-bold text-foreground mb-1.5">
                 Ölçüm Tarihi *
               </label>
               <input
@@ -199,19 +206,19 @@ export default function NewMeasurementPage() {
         </div>
 
         {/* Core Measurements Card */}
-        <div className="rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted">
+        <div className="ds-card p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-muted">
               2. Temel Vücut Ölçüleri (Zorunlu)
             </h3>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+            <span className="text-xs text-primary font-semibold">
               U.S. Navy Yağ Hesabı İçin
             </span>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
+              <label className="block text-xs font-bold text-foreground mb-1.5">
                 Kilo (kg) *
               </label>
               <input
@@ -230,7 +237,7 @@ export default function NewMeasurementPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
+              <label className="block text-xs font-bold text-foreground mb-1.5">
                 Boyun (cm) *
               </label>
               <input
@@ -249,7 +256,7 @@ export default function NewMeasurementPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
+              <label className="block text-xs font-bold text-foreground mb-1.5">
                 Bel (cm) *
               </label>
               <input
@@ -268,7 +275,7 @@ export default function NewMeasurementPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-foreground mb-1">
+              <label className="block text-xs font-bold text-foreground mb-1.5">
                 Kalça (cm) {selectedProfile?.gender === "female" ? "*" : "(Opsiyonel)"}
               </label>
               <input
@@ -288,10 +295,10 @@ export default function NewMeasurementPage() {
           </div>
 
           {/* Live Calculation Preview Banner */}
-          <div className="rounded-2xl bg-surface-raised border border-border/80 p-4 mt-4">
+          <div className="rounded-xl bg-surface-lavender border border-border-lavender p-4 mt-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-lg">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface border border-border-lavender text-lg">
                   ⚡
                 </span>
                 <div>
@@ -299,7 +306,7 @@ export default function NewMeasurementPage() {
                     Tahmini Yağ Oranı
                   </span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-black text-foreground">
+                    <span className="text-xl font-bold text-foreground tabular-nums">
                       {calculatedBodyFat !== null ? `%${calculatedBodyFat}` : "Ölçüm bekleniyor"}
                     </span>
                     {bfCat && (
@@ -311,13 +318,13 @@ export default function NewMeasurementPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 border-t sm:border-t-0 sm:border-l border-border/70 pt-2 sm:pt-0 sm:pl-4">
+              <div className="flex items-center gap-3 border-t sm:border-t-0 sm:border-l border-border-lavender pt-2 sm:pt-0 sm:pl-4">
                 <div>
                   <span className="text-xs font-bold text-muted block">
                     Vücut Kitle İndeksi (BMI)
                   </span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-black text-foreground">
+                    <span className="text-xl font-bold text-foreground tabular-nums">
                       {calculatedBMI !== null ? calculatedBMI : "—"}
                     </span>
                     {bmiCat && (
@@ -333,8 +340,8 @@ export default function NewMeasurementPage() {
         </div>
 
         {/* Optional Muscle Measurements Toggle */}
-        <div className="rounded-3xl border border-border/80 bg-surface p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="ds-card p-5 sm:p-6 space-y-4">
+          <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-foreground">
                 3. Kas & Çevre Ölçüleri
@@ -346,14 +353,14 @@ export default function NewMeasurementPage() {
             <button
               type="button"
               onClick={() => setShowMuscle(!showMuscle)}
-              className="rounded-xl border border-border bg-surface-raised px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-emerald-500/10 hover:border-emerald-500/30 transition cursor-pointer"
+              className="secondary-button h-9 px-3 text-xs font-semibold"
             >
               {showMuscle ? "Gizle ▲" : "Ölçüleri Aç ▼"}
             </button>
           </div>
 
           {showMuscle && (
-            <div className="pt-3 border-t border-border/60 space-y-4 animate-in fade-in duration-200">
+            <div className="pt-3 border-t border-border space-y-4 animate-in fade-in duration-150">
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-muted mb-1">
@@ -504,14 +511,14 @@ export default function NewMeasurementPage() {
         {/* Action Buttons */}
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link
-            href="/fit"
+            href="/fit/dashboard"
             className="secondary-button"
           >
             Vazgeç
           </Link>
           <button
             type="submit"
-            className="primary-button bg-emerald-600 hover:bg-emerald-700 px-6 py-2.5 font-bold"
+            className="primary-button px-6 py-2.5 font-semibold"
           >
             Ölçümü Kaydet
           </button>

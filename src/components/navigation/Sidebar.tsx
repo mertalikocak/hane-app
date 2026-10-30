@@ -8,6 +8,7 @@ import { AyarlarModal } from "./AyarlarModal";
 import { getBulgular, BULGU_EVENT } from "@/storage/bulguStorage";
 import { ProfileHeaderMenu } from "@/components/profile/ProfileHeaderMenu";
 import { SidebarOrderModal } from "./SidebarOrderModal";
+import { ThemeToggle } from "./ThemeToggle";
 import {
   DEFAULT_NAV_ITEMS,
   getCustomSidebarOrder,
@@ -15,6 +16,15 @@ import {
   getSortedNavItems,
   type NavItem,
 } from "@/storage/sidebarStorage";
+import {
+  ModuleLucideIcon,
+  SettingsIcon,
+  ArrowUpDownIcon,
+  MenuIcon,
+  CloseIcon,
+  PlusIcon,
+} from "@/components/ui/Icons";
+import { triggerQuickAction } from "@/components/quick-action/QuickActionLauncher";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -24,14 +34,7 @@ export function Sidebar() {
   const [unresolvedBulguCount, setUnresolvedBulguCount] = useState(0);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
-  const [navItems, setNavItems] = useState<NavItem[]>(() => {
-    if (typeof window === "undefined") return DEFAULT_NAV_ITEMS;
-    return getSortedNavItems(
-      DEFAULT_NAV_ITEMS,
-      getCustomSidebarOrder(),
-      getHiddenSidebarItems()
-    );
-  });
+  const [navItems, setNavItems] = useState<NavItem[]>(DEFAULT_NAV_ITEMS);
 
   const refreshNavItems = () => {
     setNavItems(
@@ -52,13 +55,8 @@ export function Sidebar() {
     refreshNavItems();
     refreshBulgular();
 
-    const handleOrderChange = () => {
-      refreshNavItems();
-    };
-
-    const handleBulguChange = () => {
-      refreshBulgular();
-    };
+    const handleOrderChange = () => refreshNavItems();
+    const handleBulguChange = () => refreshBulgular();
 
     const handleOpenSettings = () => {
       setSettingsTab("bulgu");
@@ -70,12 +68,17 @@ export function Sidebar() {
       setIsSettingsOpen(true);
     };
 
+    const handleOpenOrder = () => {
+      setIsOrderModalOpen(true);
+    };
+
     window.addEventListener("hane_sidebar_order_changed", handleOrderChange);
     window.addEventListener(BULGU_EVENT, handleBulguChange);
     window.addEventListener("storage", handleOrderChange);
     window.addEventListener("storage", handleBulguChange);
     window.addEventListener("hane:open-ayarlar-modal", handleOpenSettings);
     window.addEventListener("hane:open-bulgu-modal", handleOpenBulgu);
+    window.addEventListener("hane:open-sidebar-order", handleOpenOrder);
 
     return () => {
       window.removeEventListener("hane_sidebar_order_changed", handleOrderChange);
@@ -84,6 +87,7 @@ export function Sidebar() {
       window.removeEventListener("storage", handleBulguChange);
       window.removeEventListener("hane:open-ayarlar-modal", handleOpenSettings);
       window.removeEventListener("hane:open-bulgu-modal", handleOpenBulgu);
+      window.removeEventListener("hane:open-sidebar-order", handleOpenOrder);
     };
   }, []);
 
@@ -95,45 +99,64 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile Top Header */}
+      {/* Mobile & Tablet Top Header (< 1024px) */}
       <div className="lg:hidden sticky top-0 z-40 flex flex-col border-b border-border bg-surface/95 backdrop-blur-md">
-        {/* iOS Status Bar & Dynamic Island Safe Area Spacer */}
         <div style={{ height: "env(safe-area-inset-top, 0px)" }} className="w-full shrink-0" />
-        <div className="flex h-16 items-center justify-between px-4">
-          <Link href="/" className="flex items-center gap-2.5 font-bold text-base text-foreground truncate">
+        <div className="flex h-15 items-center justify-between px-4 sm:px-6 gap-2">
+          <Link href="/" className="flex items-center gap-2.5 text-foreground min-w-0">
             <img
               src="/logo.png"
               alt="Hane App Logo"
-              className="h-9 w-9 shrink-0 rounded-xl object-cover shadow-sm"
+              className="h-8 w-8 shrink-0 rounded-[10px] object-cover border border-border"
             />
             <div className="flex flex-col min-w-0">
-              <span className="leading-none text-base font-extrabold tracking-tight truncate">Hane App</span>
-              <span className="text-[11px] text-muted font-medium truncate">Ev & Yaşam</span>
+              <span className="leading-none text-sm font-semibold tracking-tight text-foreground truncate">
+                Hane App
+              </span>
+              <span className="text-[11px] text-muted font-medium truncate mt-0.5">
+                Ev & Yaşam Yönetimi
+              </span>
             </div>
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setIsOpen(!isOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-surface-raised text-foreground text-lg font-bold shadow-xs hover:bg-border/40 transition cursor-pointer"
-            aria-label="Menüyü aç/kapat"
-          >
-            {isOpen ? "✕" : "☰"}
-          </button>
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <ThemeToggle variant="mobile" />
+            <ProfileHeaderMenu variant="mobile" />
+
+            <button
+              type="button"
+              onClick={() => triggerQuickAction("shopping")}
+              className="flex h-9 items-center gap-1.5 rounded-lg border border-border-lavender bg-accent px-2.5 text-xs font-semibold text-accent-foreground hover:bg-accent-hover transition-colors duration-150 cursor-pointer"
+              title="Hızlı Ekle"
+              aria-label="Hızlı Ekle"
+            >
+              <PlusIcon className="h-3.5 w-3.5 text-primary" />
+              <span className="hidden sm:inline">Hızlı Ekle</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-foreground hover:bg-surface-raised transition-colors duration-150 cursor-pointer"
+              aria-label="Menüyü aç/kapat"
+            >
+              {isOpen ? <CloseIcon className="h-4 w-4" /> : <MenuIcon className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Mobile Backdrop */}
+      {/* Mobile Drawer Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-40 bg-[#30263A]/45 backdrop-blur-[2px] lg:hidden transition-opacity duration-200"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 flex w-72 flex-col border-r border-border bg-surface transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-surface transition-transform duration-200 lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
@@ -142,56 +165,53 @@ export function Sidebar() {
         }}
       >
         {/* App Logo & Header */}
-        <div className="flex h-20 items-center justify-between border-b border-border/70 px-6">
+        <div className="flex h-16 items-center justify-between border-b border-border px-5 shrink-0">
           <Link
             href="/"
             onClick={() => setIsOpen(false)}
-            className="flex items-center gap-3 group"
+            className="flex items-center gap-3 group min-w-0"
           >
             <img
               src="/logo.png"
               alt="Hane App Logo"
-              className="h-11 w-11 shrink-0 rounded-2xl object-cover shadow-md group-hover:scale-105 transition-transform"
+              className="h-9 w-9 shrink-0 rounded-[10px] object-cover border border-border"
             />
-            <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tight text-foreground">
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-semibold tracking-tight text-foreground leading-tight">
                 Hane App
               </span>
-              <span className="text-xs text-muted font-medium">
-                Tüm Uygulamalar Tek Çatıda
+              <span className="text-[11px] text-muted font-medium truncate">
+                Ev Yönetim Sistemi
               </span>
             </div>
           </Link>
           <button
             type="button"
             onClick={() => setIsOpen(false)}
-            className="lg:hidden text-muted hover:text-foreground text-lg cursor-pointer"
+            className="lg:hidden icon-button h-8 w-8"
+            aria-label="Menüyü kapat"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Mobile Profile Switcher inside Sidebar */}
-        <div className="px-4 pt-3 pb-1 lg:hidden">
-          <ProfileHeaderMenu variant="mobile" />
-        </div>
-
         {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto px-4 py-4 space-y-1.5" aria-label="Ana Menü">
-          <div className="flex items-center justify-between px-3 pb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted/80">
-              Uygulamalar
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Ana Menü">
+          <div className="flex items-center justify-between px-2.5 pb-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+              Modüller
             </span>
             <button
               type="button"
               onClick={() => setIsOrderModalOpen(true)}
-              className="text-[10px] font-bold text-muted hover:text-primary transition flex items-center gap-1 cursor-pointer hover:bg-surface-raised px-2 py-0.5 rounded-lg border border-transparent hover:border-border/60"
+              className="inline-flex min-h-[32px] items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-medium text-muted hover:bg-background hover:text-foreground transition-colors duration-150 cursor-pointer"
               title="Menü sıralamasını düzenle"
             >
-              <span>⇅</span>
+              <ArrowUpDownIcon className="h-3 w-3" />
               <span>Sırala</span>
             </button>
           </div>
+
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -199,47 +219,55 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`group flex items-center gap-3.5 rounded-2xl px-3.5 py-3 transition-all ${
+                  className={`group flex items-center gap-3 rounded-[10px] px-3 py-2.5 transition-colors duration-150 ${
                     active
-                      ? "bg-gradient-to-r from-orange-500/15 via-primary/10 to-transparent border border-primary/30 text-primary font-semibold shadow-xs"
-                      : "text-foreground/80 hover:bg-surface-raised hover:text-foreground border border-transparent"
+                      ? "bg-accent text-foreground font-semibold border border-border-lavender"
+                      : "text-foreground-secondary hover:bg-background hover:text-foreground border border-transparent"
                   }`}
                 >
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-raised border border-border/60 text-lg group-hover:scale-110 transition-transform">
-                    {item.icon}
+                  <span
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150 ${
+                      active
+                        ? "bg-primary text-white"
+                        : "bg-background text-foreground-secondary group-hover:bg-surface group-hover:text-primary border border-border"
+                    }`}
+                  >
+                    <ModuleLucideIcon href={item.href} className="h-4 w-4" />
                   </span>
+
                   <div className="flex flex-col min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold truncate leading-tight">
+                      <span className="text-sm truncate leading-tight">
                         {item.name}
                       </span>
                       {item.badge && (
-                        <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-md bg-surface text-primary border border-border-lavender">
                           {item.badge}
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted truncate mt-0.5">
+                    <span className="text-[11px] text-muted truncate mt-0.5 font-normal">
                       {item.description}
                     </span>
                   </div>
+
                   {active && (
-                    <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                   )}
                 </Link>
 
                 {/* Sub items if active */}
                 {item.subItems && active && (
-                  <div className="ml-12 pl-2 border-l-2 border-primary/20 space-y-1 py-1">
+                  <div className="ml-7 pl-3 border-l border-border-lavender space-y-1 py-1">
                     {item.subItems.map((sub) => (
                       <Link
                         key={sub.name}
                         href={sub.href}
                         onClick={() => setIsOpen(false)}
-                        className={`block rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                        className={`flex min-h-[34px] items-center rounded-lg px-2.5 py-1.5 text-xs transition-colors duration-150 ${
                           pathname === sub.href
-                            ? "text-primary font-semibold bg-primary/10"
-                            : "text-muted hover:text-foreground hover:bg-surface-raised"
+                            ? "text-primary font-semibold bg-surface-lavender"
+                            : "text-muted hover:text-foreground hover:bg-background"
                         }`}
                       >
                         {sub.name}
@@ -252,8 +280,10 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* Footer actions: Tek ve Sade Ayarlar Butonu */}
-        <div className="border-t border-border/70 p-4">
+        {/* Footer actions */}
+        <div className="border-t border-border p-3 space-y-2">
+          <ThemeToggle variant="sidebar" />
+
           <button
             type="button"
             onClick={() => {
@@ -261,34 +291,33 @@ export function Sidebar() {
               setSettingsTab("bulgu");
               setIsSettingsOpen(true);
             }}
-            className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-surface-raised/50 hover:bg-surface border border-border/60 text-foreground transition cursor-pointer shadow-xs group"
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] bg-background hover:bg-accent/60 border border-border text-foreground transition-colors duration-150 cursor-pointer group"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary text-sm font-bold">
-                ⚙️
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface border border-border text-primary">
+                <SettingsIcon className="h-4 w-4" />
               </span>
               <div className="flex flex-col text-left min-w-0">
-                <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors truncate">
-                  Ayarlar
+                <span className="text-xs font-semibold text-foreground truncate">
+                  Uygulama Ayarları
                 </span>
-                <span className="text-[10px] text-muted truncate">
-                  Bulgular, Bulut, Yedek, Bildirim
+                <span className="text-[11px] text-muted truncate">
+                  Bulut, Yedek, Bildirim, Notlar
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               {unresolvedBulguCount > 0 && (
-                <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-                  📝 {unresolvedBulguCount}
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-accent text-foreground border border-border-lavender">
+                  {unresolvedBulguCount}
                 </span>
               )}
-              <span className="text-xs text-muted group-hover:text-foreground">→</span>
             </div>
           </button>
         </div>
       </aside>
 
-      {/* Universal Ayarlar Modal (Bulut, Yedek, Bildirim, Bulgular) */}
+      {/* Universal Ayarlar Modal */}
       <AyarlarModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

@@ -45,31 +45,31 @@ export function WeekPlan({
   return (
     <div className="space-y-4">
       {assignments.length === 0 && (
-        <div className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-gradient-to-r from-accent/60 via-surface to-accent/40 p-4.5 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div className="flex flex-col gap-3 rounded-[14px] border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 shadow-[var(--shadow-xs)]">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
               <SparklesIcon className="h-5 w-5" />
             </span>
             <div>
-              <p className="font-semibold text-foreground">
-                Bu hafta henüz yemek planlamadın
+              <p className="text-sm font-semibold text-foreground">
+                Bu hafta henüz yemek planlanmadı
               </p>
-              <p className="text-xs text-muted sm:text-sm">
-                Aşağıdaki günlerden dilediğinize yemek atayabilir veya üstteki &ldquo;Haftayı doldur&rdquo; ile tüm haftayı tek tıkla planlayabilirsiniz.
+              <p className="text-xs text-foreground-secondary">
+                Aşağıdaki günlerden dilediğinize yemek atayabilir veya üstteki &ldquo;Haftayı Doldur&rdquo; ile tüm haftayı tek tıkla planlayabilirsiniz.
               </p>
             </div>
           </div>
           {meals.length === 0 ? (
             <Link
               href="/dinner/meals/new"
-              className="primary-button shrink-0 text-xs sm:text-sm"
+              className="primary-button shrink-0 text-xs whitespace-nowrap"
             >
-              + İlk yemeğini ekle
+              + İlk Yemeği Ekle
             </Link>
           ) : (
             <Link
               href="/dinner/meals"
-              className="secondary-button shrink-0 text-xs sm:text-sm"
+              className="secondary-button shrink-0 text-xs whitespace-nowrap"
             >
               Yemek Kataloğu
             </Link>
@@ -77,8 +77,8 @@ export function WeekPlan({
         </div>
       )}
 
-      {/* 7 Columns on PC */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7">
+      {/* Responsive Day Grid: Spacious cards across Mobile, Tablet & Desktop */}
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {DAYS_OF_WEEK.map((day) => {
           const date = getDateForDay(weekStart, day);
           return (
@@ -138,47 +138,46 @@ function DayCard({
   return (
     <article
       id={isToday ? "day-card-today" : `day-card-${day}`}
-      className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-200 ${
+      className={`group relative flex flex-col justify-between rounded-[14px] border transition-colors duration-150 p-4 ${
         isToday
-          ? "border-primary/60 bg-surface shadow-md shadow-primary/5 ring-1 ring-primary/30"
-          : "border-border/80 bg-surface shadow-xs hover:border-border hover:shadow-md"
-      } p-3.5 sm:p-4`}
+          ? "border-primary bg-surface-lavender/60 shadow-[var(--shadow-sm)] ring-1 ring-primary/20"
+          : "border-border bg-surface shadow-[var(--shadow-xs)] hover:border-border-strong"
+      }`}
     >
-      {/* Top Header */}
       <div>
-        <div className="flex items-start justify-between gap-2 border-b border-border/50 pb-2.5">
+        {/* Day Header */}
+        <div className="flex items-start justify-between gap-2 border-b border-border pb-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <h3 className="truncate font-semibold tracking-tight text-foreground text-sm sm:text-base">
                 {DAY_LABELS[day]}
               </h3>
               {isToday && (
-                <span className="inline-flex items-center rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                <span className="inline-flex items-center rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">
                   Bugün
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-xs font-medium text-muted">
+            <p className="mt-0.5 text-xs font-medium text-muted tabular-nums">
               {dayOfMonth} {monthName}
             </p>
           </div>
 
-          {/* Assigned dish count & Info tooltip */}
           <div className="flex items-center gap-1">
             {assignedMeals.length > 0 && (
               <div className="group/tooltip relative">
                 <button
                   type="button"
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-accent-foreground transition hover:bg-accent/80"
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent border border-border-lavender text-primary transition-colors hover:bg-accent-hover cursor-pointer"
                   aria-label="Yemek malzemelerini göster"
                 >
                   <InfoIcon className="h-3.5 w-3.5" />
                 </button>
                 <div
                   role="tooltip"
-                  className="invisible absolute right-0 top-7 z-30 w-60 rounded-xl border border-border bg-surface-raised p-3 text-left opacity-0 shadow-xl transition-all group-hover/tooltip:visible group-hover/tooltip:opacity-100 group-focus-within/tooltip:visible group-focus-within/tooltip:opacity-100"
+                  className="invisible absolute right-0 top-8 z-30 w-60 rounded-[14px] border border-border-strong bg-surface p-3 text-left opacity-0 shadow-[var(--shadow-md)] transition-all group-hover/tooltip:visible group-hover/tooltip:opacity-100 group-focus-within/tooltip:visible group-focus-within/tooltip:opacity-100"
                 >
-                  <p className="border-b border-border/60 pb-1.5 text-xs font-bold text-foreground">
+                  <p className="border-b border-border pb-1.5 text-xs font-semibold text-foreground">
                     Günün Malzemeleri
                   </p>
                   <div className="mt-2 space-y-2.5 max-h-48 overflow-y-auto">
@@ -188,11 +187,11 @@ function DayCard({
                         {meal.ingredients.length === 0 ? (
                           <p className="text-[11px] text-muted italic">Malzeme eklenmemiş</p>
                         ) : (
-                          <ul className="space-y-0.5 text-[11px] text-muted">
+                          <ul className="space-y-0.5 text-[11px] text-foreground-secondary">
                             {meal.ingredients.map((ing) => (
-                              <li key={ing.id} className="flex justify-between">
+                              <li key={ing.id} className="flex justify-between gap-2">
                                 <span>{ing.name}</span>
-                                <span className="font-medium text-foreground/75">
+                                <span className="font-semibold text-foreground tabular-nums">
                                   {ing.quantity} {ing.unit}
                                 </span>
                               </li>
@@ -208,26 +207,24 @@ function DayCard({
           </div>
         </div>
 
-        {/* Content Area */}
+        {/* Day Body */}
         <div className="mt-3 space-y-2">
           {meals.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border/80 bg-surface-raised/40 p-3 text-center">
+            <div className="rounded-[10px] border border-dashed border-border-strong bg-background/60 p-3.5 text-center">
               <p className="text-xs text-muted">Henüz kayıtlı yemek yok</p>
               <Link
                 href="/dinner/meals/new"
-                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                className="mt-2 inline-flex min-h-[34px] items-center gap-1 px-2 py-1 text-xs font-semibold text-primary hover:underline"
               >
                 <PlusIcon className="h-3.5 w-3.5" /> Yemek ekle
               </Link>
             </div>
           ) : assignments.length === 0 ? (
-            /* EMPTY DAY STATE */
             isSelectingMeal ? (
-              /* Inline meal select when 'Yemek seç' is clicked */
-              <div className="space-y-2 rounded-xl border border-primary/30 bg-accent/30 p-2.5 transition-all">
+              <div className="space-y-2 rounded-[10px] border border-border-lavender bg-surface-lavender p-3">
                 <label
                   htmlFor={`select-meal-${day}`}
-                  className="block text-[11px] font-semibold text-foreground/90"
+                  className="block text-xs font-semibold text-foreground"
                 >
                   Yemek Seçin:
                 </label>
@@ -241,7 +238,7 @@ function DayCard({
                       setIsSelectingMeal(false);
                     }
                   }}
-                  className="field text-xs py-1.5"
+                  className="field min-h-[38px] text-xs py-1.5"
                 >
                   <option value="" disabled>
                     Bir yemek seçin...
@@ -255,47 +252,44 @@ function DayCard({
                 <button
                   type="button"
                   onClick={() => setIsSelectingMeal(false)}
-                  className="flex w-full items-center justify-center gap-1 rounded-lg py-1 text-xs font-medium text-muted hover:bg-surface hover:text-foreground transition"
+                  className="flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-xs font-medium text-muted hover:bg-surface hover:text-foreground transition-colors cursor-pointer"
                 >
                   <CloseIcon className="h-3 w-3" /> Vazgeç
                 </button>
               </div>
             ) : (
-              <div className="space-y-1.5 pt-1">
-                <div className="flex flex-col gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setIsSelectingMeal(true)}
-                    className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-accent px-2 py-1.5 text-xs font-semibold text-accent-foreground border border-primary/20 transition-all hover:bg-primary hover:text-primary-foreground active:scale-[0.98]"
-                    title="Menüden istediğin yemeği seç"
-                  >
-                    <UtensilsIcon className="h-3.5 w-3.5" />
-                    <span>Yemek seç</span>
-                  </button>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsSelectingMeal(true)}
+                  className="accent-button min-h-[38px] px-2.5 py-1.5 text-xs"
+                  title="Menüden istediğin yemeği seç"
+                >
+                  <UtensilsIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <span>Yemek Seç</span>
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => onFillDay(day)}
-                    className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-border/80 bg-surface-raised/60 px-2 py-1.5 text-xs font-medium text-foreground transition-all hover:border-primary/40 hover:bg-surface-raised active:scale-[0.98]"
-                    title="Rastgele bir yemek ata"
-                  >
-                    <DiceIcon className="h-3.5 w-3.5 text-muted" />
-                    <span>Günü doldur</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => onFillDay(day)}
+                  className="secondary-button min-h-[38px] px-2.5 py-1.5 text-xs"
+                  title="Rastgele bir yemek ata"
+                >
+                  <DiceIcon className="h-3.5 w-3.5 text-muted shrink-0" />
+                  <span>Rastgele</span>
+                </button>
               </div>
             )
           ) : (
-            /* FILLED DAY STATE - Assignments list */
             <div className="space-y-2">
               {assignments.map((assignment, index) => {
                 const currentMeal = meals.find((m) => m.id === assignment.mealId);
                 return (
                   <div
                     key={`${assignment.mealId}-${index}`}
-                    className="group/item relative rounded-xl border border-border/70 bg-surface-raised/70 p-2 transition-colors hover:border-primary/30"
+                    className="rounded-[10px] border border-border bg-background/70 p-2.5 transition-colors hover:border-border-strong"
                   >
-                    <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <select
                           id={`meal-${day}-${index}`}
@@ -311,7 +305,7 @@ function DayCard({
                           ))}
                         </select>
                         {currentMeal?.ingredients && currentMeal.ingredients.length > 0 && (
-                          <p className="truncate text-[10px] text-muted">
+                          <p className="truncate text-[11px] text-muted mt-0.5">
                             {currentMeal.ingredients.length} malzeme
                           </p>
                         )}
@@ -319,7 +313,7 @@ function DayCard({
                       <button
                         type="button"
                         onClick={() => onRemove(day, index)}
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-muted/70 hover:bg-red-500/10 hover:text-red-500 transition"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-danger-bg hover:text-danger transition-colors cursor-pointer"
                         aria-label="Yemeği kaldır"
                         title="Yemeği kaldır"
                       >
@@ -330,9 +324,8 @@ function DayCard({
                 );
               })}
 
-              {/* Extra meal selector */}
               {isAddingExtraMeal ? (
-                <div className="space-y-1.5 rounded-xl border border-primary/30 bg-accent/30 p-2">
+                <div className="space-y-1.5 rounded-[10px] border border-border-lavender bg-surface-lavender p-2.5">
                   <select
                     id={`meal-${day}-new`}
                     defaultValue=""
@@ -343,7 +336,7 @@ function DayCard({
                         setIsAddingExtraMeal(false);
                       }
                     }}
-                    className="field text-xs py-1"
+                    className="field min-h-[36px] text-xs py-1"
                   >
                     <option value="" disabled>
                       İkinci yemeği seçin...
@@ -357,7 +350,7 @@ function DayCard({
                   <button
                     type="button"
                     onClick={() => setIsAddingExtraMeal(false)}
-                    className="flex w-full items-center justify-center gap-1 rounded py-0.5 text-[11px] font-medium text-muted hover:text-foreground"
+                    className="flex w-full items-center justify-center gap-1 rounded py-1 text-xs font-medium text-muted hover:text-foreground cursor-pointer"
                   >
                     <CloseIcon className="h-3 w-3" /> İptal
                   </button>
@@ -366,11 +359,11 @@ function DayCard({
                 <button
                   type="button"
                   onClick={() => setIsAddingExtraMeal(true)}
-                  className="flex w-full items-center justify-center gap-1 rounded-xl border border-dashed border-border/80 py-1.5 text-[11px] font-medium text-muted transition hover:border-primary/50 hover:bg-accent/30 hover:text-primary"
+                  className="flex w-full items-center justify-center gap-1 rounded-[10px] border border-dashed border-border-strong py-2 text-xs font-medium text-foreground-secondary transition-colors hover:border-primary hover:bg-surface-lavender hover:text-primary cursor-pointer"
                   title="Güne başka yemek ekle"
                 >
-                  <PlusIcon className="h-3 w-3" />
-                  <span>Yemek ekle</span>
+                  <PlusIcon className="h-3.5 w-3.5" />
+                  <span>Ek Yemek Ekle</span>
                 </button>
               )}
             </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import type { TaksitKarti, TaksitKalemi } from "@/domain/taksitTypes";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface TaksitProjeksiyonuProps {
   taksitler: TaksitKalemi[];
@@ -161,13 +162,13 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
       : null;
 
   return (
-    <div className="rounded-3xl border border-border/80 bg-surface shadow-xs p-5 sm:p-7 space-y-6">
+    <div className="ds-card p-5 sm:p-7 space-y-6">
       {/* Başlık ve Filtre Seçicisi */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xl">🔮</span>
-            <h3 className="text-lg font-black tracking-tight text-foreground">
+            <h3 className="text-lg font-bold tracking-tight text-foreground">
               Gelecek 6 Ayın Taksit Projeksiyonu
             </h3>
           </div>
@@ -177,11 +178,11 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
         </div>
 
         {/* Görünüm Filtre Butonları */}
-        <div className="flex items-center p-1 rounded-2xl bg-surface-raised border border-border/70 self-start sm:self-auto shrink-0">
+        <div className="flex items-center p-1 rounded-xl bg-surface-raised border border-border self-start sm:self-auto shrink-0">
           <button
             type="button"
             onClick={() => setGorunum("toplam")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               gorunum === "toplam"
                 ? "bg-surface text-foreground shadow-xs border border-border"
                 : "text-muted hover:text-foreground"
@@ -192,7 +193,7 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
           <button
             type="button"
             onClick={() => setGorunum("mert")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               gorunum === "mert"
                 ? "bg-surface text-foreground shadow-xs border border-border"
                 : "text-muted hover:text-foreground"
@@ -203,7 +204,7 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
           <button
             type="button"
             onClick={() => setGorunum("havsa")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               gorunum === "havsa"
                 ? "bg-surface text-foreground shadow-xs border border-border"
                 : "text-muted hover:text-foreground"
@@ -216,24 +217,24 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
 
       {/* Finansal Rahatlama Vurgusu */}
       {baslangicTutar > 0 && azalisYuzdesi > 0 && (
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-primary/10 to-transparent border border-emerald-500/20 flex items-center justify-between gap-3 flex-wrap">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-success-soft border border-success/25 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2.5">
             <span className="text-2xl">📉</span>
             <div>
               <span className="text-xs font-bold text-foreground block">
                 6 Ay Sonra Taksit Yükünüz %{azalisYuzdesi} Azalıyor!
               </span>
-              <span className="text-[11px] text-muted block">
+              <span className="text-[11px] text-foreground-secondary block">
                 Şu anki {paraFormat(baslangicTutar)} aylık ödeme, 6. ayda {paraFormat(bitisTutar)} seviyesine düşecek.
               </span>
             </div>
           </div>
 
           <div className="text-right shrink-0">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-500 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-success block">
               Aylık Rahatlama
             </span>
-            <span className="text-sm font-black text-emerald-400">
+            <span className="text-sm font-bold text-success tabular-nums">
               +{paraFormat(baslangicTutar - bitisTutar)} / ay
             </span>
           </div>
@@ -270,23 +271,23 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
               onClick={() => setSeciliAyIndex(isSelected ? null : ay.ayIndex)}
               className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between h-56 relative overflow-hidden group ${
                 isSelected
-                  ? "bg-primary/10 border-primary shadow-sm ring-2 ring-primary/30"
+                  ? "bg-surface-lavender border-primary shadow-xs ring-2 ring-primary/20"
                   : isCurrentMonth
-                  ? "bg-surface-raised/80 border-border hover:border-primary/50"
-                  : "bg-surface-raised/40 border-border/60 hover:bg-surface-raised hover:border-border"
+                  ? "bg-surface-raised border-border-strong hover:border-primary"
+                  : "bg-surface-raised/50 border-border hover:bg-surface-raised hover:border-border-strong"
               }`}
             >
               {/* Tepe Başlığı: Dönem & Yıl */}
               <div>
                 <div className="flex items-center justify-between gap-1">
                   <span
-                    className="text-[11px] sm:text-xs font-black text-foreground block truncate"
+                    className="text-[11px] sm:text-xs font-bold text-foreground block truncate"
                     title={ay.ayAdi}
                   >
                     {ay.ayAdi}
                   </span>
                   {isCurrentMonth && (
-                    <span className="text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-md bg-primary text-white uppercase tracking-wider shrink-0">
+                    <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary text-white uppercase tracking-wider shrink-0">
                       Bu Dönem
                     </span>
                   )}
@@ -297,7 +298,7 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
               {/* Tutar & Dikey Çubuk */}
               <div className="space-y-2 mt-auto">
                 <div className="text-left">
-                  <span className="text-sm sm:text-base font-black text-foreground block tracking-tight">
+                  <span className="text-sm sm:text-base font-bold text-foreground block tracking-tight tabular-nums">
                     {paraFormat(deger)}
                   </span>
                   <span className="text-[10px] text-muted block">
@@ -306,14 +307,14 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
                 </div>
 
                 {/* Dikey İlerleme Barı */}
-                <div className="h-16 w-full rounded-xl bg-surface border border-border/60 p-1 flex items-end overflow-hidden">
+                <div className="h-16 w-full rounded-xl bg-surface border border-border p-1 flex items-end overflow-hidden">
                   <div
                     className={`w-full rounded-lg transition-all duration-500 ${
                       isCurrentMonth
-                        ? "bg-gradient-to-t from-primary to-primary/80"
+                        ? "bg-primary"
                         : deger === 0
                         ? "bg-transparent"
-                        : "bg-gradient-to-t from-emerald-500/80 to-emerald-400"
+                        : "bg-success"
                     }`}
                     style={{ height: `${yukseklikYuzdesi}%` }}
                   />
@@ -321,12 +322,12 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
 
                 {/* Bu Ay Biten Varsa Rozet */}
                 {bitenSayisi > 0 ? (
-                  <span className="text-[10px] font-bold text-emerald-400 block truncate flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-success block truncate flex items-center gap-1">
                     <span>🎉</span>
                     <span>{bitenSayisi} taksit bitiyor</span>
                   </span>
                 ) : (
-                  <span className="text-[10px] text-muted/60 block truncate">
+                  <span className="text-[10px] text-muted block truncate">
                     Devam ediyor
                   </span>
                 )}
@@ -348,7 +349,7 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
         return (
           <div className="p-4 sm:p-5 rounded-2xl bg-surface-raised border border-border animate-in fade-in duration-150 space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-black text-foreground flex items-center gap-2">
+              <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <span>📅</span>
                 <span>
                   {seciliAy.ayAdi} {seciliAy.yil} Ödeme Detayları
@@ -367,9 +368,10 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
               <button
                 type="button"
                 onClick={() => setSeciliAyIndex(null)}
-                className="text-xs text-muted hover:text-foreground font-semibold cursor-pointer"
+                className="icon-button h-7 w-7 text-muted hover:text-foreground"
+                aria-label="Detayları kapat"
               >
-                Kapat ✕
+                <CloseIcon className="w-3.5 h-3.5" />
               </button>
             </div>
 
@@ -384,15 +386,15 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
                     key={`${item.urunAdi}-${idx}`}
                     className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
                       item.buAyBitiyor
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-200"
-                        : "bg-surface border-border/70"
+                        ? "bg-success-soft border-success/30 text-foreground"
+                        : "bg-surface border-border"
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-foreground flex items-center gap-1.5">
+                      <div className="font-bold text-foreground flex items-center gap-1.5 flex-wrap">
                         <span>{item.urunAdi}</span>
                         {item.buAyBitiyor && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500 text-slate-950 font-black">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-success text-white font-bold">
                             SON TAKSİT 🎉
                           </span>
                         )}
@@ -405,14 +407,14 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <div className="font-black text-foreground">
+                    <div className="text-right shrink-0 ml-2">
+                      <div className="font-bold text-foreground tabular-nums">
                         {gorunum !== "toplam" && item.sahip === "ortak"
                           ? paraFormat(item.aylikTutar / 2)
                           : paraFormat(item.aylikTutar)}
                       </div>
                       {gorunum !== "toplam" && item.sahip === "ortak" && (
-                        <div className="text-[10px] text-muted font-normal">
+                        <div className="text-[10px] text-muted font-normal tabular-nums">
                           (Tamamı: {paraFormat(item.aylikTutar)})
                         </div>
                       )}

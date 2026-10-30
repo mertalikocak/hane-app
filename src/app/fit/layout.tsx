@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ProfileService } from "@/services/profileService";
 import { Profile } from "@/domain/bodyTrackingTypes";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { FitIcon, PlusIcon, UserIcon } from "@/components/ui/Icons";
 
 export default function FitLayout({
   children,
@@ -58,68 +60,55 @@ export default function FitLayout({
     <div className="space-y-6">
       {/* App Header & Navigation */}
       {!isSelectionScreen && (
-        <div className="flex flex-col gap-4 border-b border-border/80 pb-5">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-2xl shadow-md text-white">
-                📐
-              </span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                    Hane Fit
-                  </h1>
-                  <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    Body Tracker
-                  </span>
-                </div>
-                <p className="text-xs sm:text-sm text-muted">
-                  Kilo, vücut ölçüleri ve tahmini yağ oranı takibi
-                </p>
+        <div className="space-y-4">
+          <PageHeader
+            title="Hane Fit"
+            description="Kilo, vücut ölçüleri ve tahmini yağ oranı takibi"
+            icon={<FitIcon className="w-6 h-6" />}
+            badge="Vücut Takibi"
+            action={
+              <div className="flex items-center gap-2 flex-wrap">
+                {isLoaded && profiles.length > 0 ? (
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-surface px-3 h-10 shadow-xs">
+                    <UserIcon className="w-4 h-4 text-muted shrink-0" />
+                    <span className="text-xs text-muted font-medium">Profil:</span>
+                    <select
+                      value={activeProfileId}
+                      onChange={(e) => handleProfileChange(e.target.value)}
+                      className="bg-transparent text-xs sm:text-sm font-semibold text-foreground outline-none cursor-pointer pr-2"
+                    >
+                      {profiles.map((p) => (
+                        <option key={p.id} value={p.id} className="bg-surface text-foreground">
+                          {p.firstName} {p.lastName} ({p.height} cm)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+
+                <Link
+                  href="/fit/profiles/new"
+                  className="secondary-button h-10 px-3.5 text-xs font-semibold"
+                >
+                  <PlusIcon className="w-3.5 h-3.5" />
+                  <span>Yeni Profil</span>
+                </Link>
               </div>
-            </div>
-
-            {/* Profile Switcher & Add Button */}
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              {isLoaded && profiles.length > 0 ? (
-                <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface px-3 py-1.5 shadow-xs">
-                  <span className="text-xs text-muted font-medium">Profil:</span>
-                  <select
-                    value={activeProfileId}
-                    onChange={(e) => handleProfileChange(e.target.value)}
-                    className="bg-transparent text-xs sm:text-sm font-semibold text-foreground outline-none cursor-pointer pr-2"
-                  >
-                    {profiles.map((p) => (
-                      <option key={p.id} value={p.id} className="bg-surface text-foreground">
-                        {p.firstName} {p.lastName} ({p.height} cm)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : null}
-
-              <Link
-                href="/fit/profiles/new"
-                className="inline-flex items-center gap-1.5 rounded-2xl border border-border/80 bg-surface-raised px-3 py-2 text-xs font-semibold text-foreground hover:border-emerald-500/50 hover:text-emerald-600 transition shadow-xs cursor-pointer"
-              >
-                <span>+</span>
-                <span>Yeni Profil</span>
-              </Link>
-            </div>
-          </div>
+            }
+          />
 
           {/* Tab Navigation */}
-          <nav className="flex items-center gap-1 overflow-x-auto pt-2 scrollbar-none">
+          <nav className="inline-flex items-center gap-1 p-1 rounded-2xl bg-background-subtle border border-border overflow-x-auto max-w-full scrollbar-none">
             {navTabs.map((tab) => {
               const isActive = pathname === tab.href;
               return (
                 <Link
                   key={tab.href}
                   href={tab.href}
-                  className={`whitespace-nowrap rounded-xl px-3.5 py-2 text-xs sm:text-sm font-medium transition-all ${
+                  className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold transition-all ${
                     isActive
-                      ? "bg-emerald-600 text-white shadow-xs font-semibold"
-                      : "text-muted hover:text-foreground hover:bg-surface-raised"
+                      ? "bg-surface text-foreground shadow-xs border border-border"
+                      : "text-muted hover:text-foreground"
                   }`}
                 >
                   {tab.label}

@@ -10,10 +10,8 @@ interface GiderV2KpiCardsProps {
 
 export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
   const {
-    genel,
     ortakPay,
     kisiselToplam,
-    ayriBireyselToplam,
     mertGider,
     havsaGider,
     mertGelir,
@@ -21,33 +19,32 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
     mertKalan,
     havsaKalan,
     evGideriToplami,
-    evGelirToplami,
     evKalan,
     kayitToplamlari,
     ayriBireyselHarcamalarToplami,
   } = calc;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* 1. MERT KPI KARTI */}
-      <div className="p-5 rounded-3xl bg-surface border border-sky-500/25 shadow-xs relative overflow-hidden flex flex-col justify-between space-y-4 hover:border-sky-500/40 transition">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-400 to-sky-600" />
-        
+      <div className="ds-card p-5 relative overflow-hidden flex flex-col justify-between space-y-4">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-sky-600" />
+
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center font-black text-xs">
+              <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center font-bold text-xs">
                 M
               </div>
-              <span className="text-xs font-black uppercase tracking-wider text-sky-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-700">
                 Mert (Bu Ay)
               </span>
             </div>
             <span
-              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                 mertKalan >= 0
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                  : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                  ? "bg-success-soft text-success border-success/25"
+                  : "bg-danger-soft text-danger border-danger/25"
               }`}
             >
               {mertKalan >= 0 ? "Kalan Bakiye" : "Açık (Ekside)"}
@@ -55,29 +52,29 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
           </div>
 
           <div className="mt-1">
-            <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+            <span className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
               {para(mertKalan)}
             </span>
-            <span className="block text-[11px] text-muted mt-0.5">
+            <span className="block text-xs text-muted mt-0.5">
               Tüm gelir ve harcamalar sonrası net cep bakiyesi
             </span>
           </div>
         </div>
 
-        <div className="pt-3 border-t border-border/70 space-y-2 text-xs">
+        <div className="pt-3 border-t border-border space-y-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" /> Gelir:
+              <span className="w-2 h-2 rounded-full bg-success" /> Gelir:
             </span>
-            <span className="font-bold text-emerald-400">{para(mertGelir)}</span>
+            <span className="font-bold text-success">{para(mertGelir)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-400" /> Toplam Gider:
+              <span className="w-2 h-2 rounded-full bg-danger" /> Toplam Gider:
             </span>
-            <span className="font-bold text-rose-400">{para(mertGider)}</span>
+            <span className="font-bold text-danger">{para(mertGider)}</span>
           </div>
-          <div className="text-[11px] text-muted flex items-center justify-between pt-1 pl-2 border-l-2 border-sky-500/40">
+          <div className="text-[11px] text-foreground-secondary flex items-center justify-between pt-1 pl-2 border-l-2 border-sky-500">
             <span>Ortak Pay: {para(ortakPay.mert)}</span>
             <span>Kişisel: {para(kisiselToplam.mert)}</span>
           </div>
@@ -85,24 +82,24 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
       </div>
 
       {/* 2. HAVSA KPI KARTI */}
-      <div className="p-5 rounded-3xl bg-surface border border-pink-500/25 shadow-xs relative overflow-hidden flex flex-col justify-between space-y-4 hover:border-pink-500/40 transition">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400 to-pink-600" />
-        
+      <div className="ds-card p-5 relative overflow-hidden flex flex-col justify-between space-y-4">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-pink-600" />
+
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-pink-500/15 border border-pink-500/30 text-pink-400 flex items-center justify-center font-black text-xs">
+              <div className="w-8 h-8 rounded-lg bg-pink-50 border border-pink-200 text-pink-700 flex items-center justify-center font-bold text-xs">
                 H
               </div>
-              <span className="text-xs font-black uppercase tracking-wider text-pink-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-pink-700">
                 Havsa (Bu Ay)
               </span>
             </div>
             <span
-              className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
                 havsaKalan >= 0
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                  : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                  ? "bg-success-soft text-success border-success/25"
+                  : "bg-danger-soft text-danger border-danger/25"
               }`}
             >
               {havsaKalan >= 0 ? "Kalan Bakiye" : "Açık (Ekside)"}
@@ -110,29 +107,29 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
           </div>
 
           <div className="mt-1">
-            <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+            <span className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
               {para(havsaKalan)}
             </span>
-            <span className="block text-[11px] text-muted mt-0.5">
+            <span className="block text-xs text-muted mt-0.5">
               Tüm gelir ve harcamalar sonrası net cep bakiyesi
             </span>
           </div>
         </div>
 
-        <div className="pt-3 border-t border-border/70 space-y-2 text-xs">
+        <div className="pt-3 border-t border-border space-y-2 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" /> Gelir:
+              <span className="w-2 h-2 rounded-full bg-success" /> Gelir:
             </span>
-            <span className="font-bold text-emerald-400">{para(havsaGelir)}</span>
+            <span className="font-bold text-success">{para(havsaGelir)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-400" /> Toplam Gider:
+              <span className="w-2 h-2 rounded-full bg-danger" /> Toplam Gider:
             </span>
-            <span className="font-bold text-rose-400">{para(havsaGider)}</span>
+            <span className="font-bold text-danger">{para(havsaGider)}</span>
           </div>
-          <div className="text-[11px] text-muted flex items-center justify-between pt-1 pl-2 border-l-2 border-pink-500/40">
+          <div className="text-[11px] text-foreground-secondary flex items-center justify-between pt-1 pl-2 border-l-2 border-pink-500">
             <span>Ortak Pay: {para(ortakPay.havsa)}</span>
             <span>Kişisel: {para(kisiselToplam.havsa)}</span>
           </div>
@@ -140,44 +137,44 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
       </div>
 
       {/* 3. EV ORTAK HAVUZU KPI KARTI */}
-      <div className="p-5 rounded-3xl bg-surface border border-purple-500/25 shadow-xs relative overflow-hidden flex flex-col justify-between space-y-4 hover:border-purple-500/40 transition">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 to-indigo-600" />
-        
+      <div className="ds-card-lavender p-5 relative overflow-hidden flex flex-col justify-between space-y-4">
+        <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
+
         <div>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center font-black text-xs">
+              <div className="w-8 h-8 rounded-lg bg-accent border border-border-lavender text-primary flex items-center justify-center font-bold text-xs">
                 🏠
               </div>
-              <span className="text-xs font-black uppercase tracking-wider text-purple-400">
+              <span className="text-xs font-bold uppercase tracking-wider text-primary">
                 Ev Toplam Masrafı
               </span>
             </div>
-            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-surface text-primary border border-border-lavender">
               Ortak & Bireysel
             </span>
           </div>
 
           <div className="mt-1">
-            <span className="text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+            <span className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight">
               {para(evGideriToplami)}
             </span>
-            <span className="block text-[11px] text-muted mt-0.5">
+            <span className="block text-xs text-foreground-secondary mt-0.5">
               Hane kartları ve harcamaların toplam maliyeti
             </span>
           </div>
         </div>
 
-        <div className="pt-3 border-t border-border/70 space-y-2 text-xs">
+        <div className="pt-3 border-t border-border-lavender space-y-2 text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-muted">Kartlar & Harcamalar:</span>
+            <span className="text-foreground-secondary">Kartlar & Harcamalar:</span>
             <span className="font-bold text-foreground">{para(kayitToplamlari)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted">Kişi Başı Yarı Pay:</span>
-            <span className="font-bold text-purple-400">{para(kayitToplamlari / 2)}</span>
+            <span className="text-foreground-secondary">Kişi Başı Yarı Pay:</span>
+            <span className="font-bold text-primary">{para(kayitToplamlari / 2)}</span>
           </div>
-          <div className="text-[11px] text-muted flex items-center justify-between pt-1 pl-2 border-l-2 border-purple-500/40">
+          <div className="text-[11px] text-foreground-secondary flex items-center justify-between pt-1 pl-2 border-l-2 border-primary">
             <span>Ayrı Harcamalar: {para(ayriBireyselHarcamalarToplami)}</span>
             <span>Ev Net Havuzu: {para(evKalan)}</span>
           </div>

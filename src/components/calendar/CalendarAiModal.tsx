@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   CalendarCategory,
-  CalendarScope,
   CALENDAR_CATEGORIES,
   AICalendarParsedEvent,
 } from "@/domain/calendarTypes";
@@ -11,6 +10,7 @@ import { saveCalendarEvent } from "@/storage/calendarStorage";
 import { getStoredGeminiApiKey, CALORIE_STORAGE_KEYS } from "@/storage/calorieStorage";
 import { queueLocalChangePush } from "@/lib/firebase/syncService";
 import { useProfile } from "@/context/ProfileContext";
+import { SparklesIcon, CloseIcon, CheckIcon } from "@/components/ui/Icons";
 
 interface CalendarAiModalProps {
   isOpen: boolean;
@@ -142,8 +142,6 @@ export function CalendarAiModal({
           };
 
           recognition.onerror = (e) => {
-            // Silently ignore browser speech network errors because MediaRecorder
-            // captures the true audio locally and sends it to Gemini directly!
             console.warn("Speech recognition notice (MediaRecorder active):", e.error);
           };
 
@@ -212,17 +210,13 @@ export function CalendarAiModal({
       };
 
       recorder.onstop = () => {
-        // Release hardware mic
         stream.getTracks().forEach((track) => track.stop());
 
-        // Eğer tarayıcı konuşmayı metne dökmeyi başardıysa, ses dosyası göndermeden
-        // doğrudan METİN ile analiz yapıyoruz (Böylece ses token'ı harcanmaz ve 1 sn'de biter!)
         if (promptTextRef.current && promptTextRef.current.trim().length > 3) {
           handleAnalyze();
           return;
         }
 
-        // Tarayıcı STT başarısız olduysa (network hatası vb.) ses kaydını Gemini'ye fallback olarak gönder
         const finalMime = recorder.mimeType || mimeTypeRef.current || "audio/webm";
         const audioBlob = new Blob(audioChunksRef.current, { type: finalMime });
 
@@ -247,7 +241,6 @@ export function CalendarAiModal({
       setIsRecording(true);
       setRecordSeconds(0);
 
-      // Start interim recognition if available
       if (recognitionRef.current) {
         try {
           recognitionRef.current.start();
@@ -404,7 +397,6 @@ export function CalendarAiModal({
       });
     });
 
-    // Buluta anında yedekle
     queueLocalChangePush(true);
     onEventsAdded();
     onClose();
@@ -436,24 +428,28 @@ export function CalendarAiModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150 overflow-y-auto"
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-xl rounded-3xl border border-border bg-surface p-5 sm:p-6 shadow-2xl space-y-4 my-8"
+        className="w-full max-w-xl rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-lg space-y-4 my-8 animate-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/70 pb-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-pink-600 text-xl text-white shadow-md">
-              ✨
+        <div className="flex items-center justify-between border-b border-border pb-3.5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-lavender border border-border-lavender text-primary">
+              <SparklesIcon className="h-5 w-5" />
             </span>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold text-foreground">
                   Yapay Zeka Takvim Asistanı
                 </h2>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-surface-lavender text-primary border border-border-lavender">
                   Ses & Metin
                 </span>
               </div>
@@ -465,9 +461,10 @@ export function CalendarAiModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer"
+            className="icon-button h-9 w-9"
+            aria-label="Kapat"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
@@ -479,48 +476,47 @@ export function CalendarAiModal({
               placeholder="Örn: 'Kasımda 10 12 15 günleri nöbet olarak ekle' veya 'Yarın saat 14:30 diş kontrolü'..."
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-surface-raised p-3.5 pr-14 text-xs sm:text-sm text-foreground placeholder:text-muted/60 focus:border-purple-500 focus:outline-none transition resize-none"
+              className="field w-full h-auto p-3.5 pr-14 text-xs sm:text-sm resize-none"
             />
 
-            {/* Glowing Microphone Button */}
+            {/* Microphone Button */}
             <button
               type="button"
               onClick={handleToggleVoice}
-              className={`absolute right-3 bottom-3.5 flex h-10 w-10 items-center justify-center rounded-xl transition cursor-pointer shadow-sm ${
+              className={`absolute right-3 bottom-3.5 flex h-10 w-10 items-center justify-center rounded-xl transition cursor-pointer shadow-xs ${
                 isRecording
-                  ? "bg-rose-500 text-white animate-pulse ring-4 ring-rose-500/30"
-                  : "bg-surface border border-border/80 text-foreground hover:text-purple-600 hover:border-purple-500/50"
+                  ? "bg-danger text-white animate-pulse ring-4 ring-danger/25"
+                  : "bg-surface border border-border text-foreground hover:text-primary hover:border-border-lavender"
               }`}
               title={isRecording ? "Kaydı Durdur ve Planla" : "Mikrofonla Konuşarak Söyle"}
             >
-              <span className="text-lg">{isRecording ? "⏹️" : "🎙️"}</span>
+              <span className="text-base">{isRecording ? "⏹️" : "🎙️"}</span>
             </button>
           </div>
 
           {/* Voice Recording Active Wave Indicator */}
           {isRecording && (
-            <div className="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-500 animate-in fade-in">
+            <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-danger-soft border border-danger/30 text-xs text-danger">
               <div className="flex items-center gap-2.5">
-                <span className="flex h-3 w-3 rounded-full bg-rose-500 animate-ping" />
+                <span className="flex h-2.5 w-2.5 rounded-full bg-danger animate-ping" />
                 <div>
                   <div className="font-bold flex items-center gap-1.5">
                     <span>Sesiniz kaydediliyor...</span>
-                    <span className="font-mono text-[11px] bg-rose-500/20 px-1.5 py-0.5 rounded-md">
+                    <span className="font-mono text-[11px] bg-surface px-1.5 py-0.5 rounded-md border border-danger/20">
                       00:{recordSeconds.toString().padStart(2, "0")}
                     </span>
                   </div>
-                  <div className="text-[10px] text-rose-500/80">
-                    Konuşmanız bittiğinde tamamla butonuna basın, yapay zeka doğrudan takvime aktaracaktır.
+                  <div className="text-[11px] opacity-85">
+                    Konuşmanız bittiğinde tamamla butonuna basın.
                   </div>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={stopVoiceRecording}
-                className="flex items-center gap-1 rounded-xl bg-rose-500 hover:bg-rose-600 text-white font-bold px-3 py-1.5 text-xs shadow-xs transition cursor-pointer shrink-0 ml-2"
+                className="rounded-lg bg-danger hover:opacity-90 text-white font-bold px-3 py-1.5 text-xs transition cursor-pointer shrink-0 ml-2"
               >
-                <span>⏹️</span>
-                <span>Tamamla</span>
+                Tamamla
               </button>
             </div>
           )}
@@ -528,14 +524,14 @@ export function CalendarAiModal({
           {/* Quick Examples */}
           {!extractedEvents.length && (
             <div className="space-y-1.5">
-              <span className="text-[11px] font-semibold text-muted">Örnek Cümleler:</span>
+              <span className="text-xs font-semibold text-muted">Örnek Cümleler:</span>
               <div className="flex flex-wrap gap-1.5">
                 {QUICK_EXAMPLES.map((ex, idx) => (
                   <button
                     key={idx}
                     type="button"
                     onClick={() => setPromptText(ex.substring(3))}
-                    className="rounded-xl border border-border/80 bg-surface-raised/60 hover:bg-surface-raised px-2.5 py-1 text-[11px] text-muted hover:text-foreground transition cursor-pointer truncate max-w-full"
+                    className="rounded-lg border border-border bg-surface-raised hover:bg-surface-lavender hover:border-border-lavender px-2.5 py-1 text-[11px] text-foreground-secondary hover:text-primary transition cursor-pointer truncate max-w-full"
                   >
                     {ex}
                   </button>
@@ -546,15 +542,15 @@ export function CalendarAiModal({
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-500 space-y-2">
+            <div className="rounded-xl border border-danger/30 bg-danger-soft p-3 text-xs text-danger space-y-2">
               <div className="font-semibold">{errorMessage}</div>
               {errorMessage.includes("API") && (
                 <button
                   type="button"
                   onClick={() => setIsKeyModalOpen(true)}
-                  className="rounded-xl bg-rose-500 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-600 transition cursor-pointer"
+                  className="rounded-lg bg-danger px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:opacity-90 transition cursor-pointer"
                 >
-                  🔑 Gemini API Anahtarını Gir
+                  Gemini API Anahtarını Gir
                 </button>
               )}
             </div>
@@ -572,7 +568,7 @@ export function CalendarAiModal({
                   handleAnalyze();
                 }
               }}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 py-3 text-xs font-bold text-white shadow-md hover:opacity-95 transition disabled:opacity-50 cursor-pointer"
+              className="primary-button w-full h-11 text-xs sm:text-sm"
             >
               {isAnalyzing ? (
                 <>
@@ -581,7 +577,7 @@ export function CalendarAiModal({
                 </>
               ) : (
                 <>
-                  <span>✨</span>
+                  <SparklesIcon className="h-4 w-4" />
                   <span>Etkinlikleri Çıkar & Planla</span>
                 </>
               )}
@@ -590,15 +586,15 @@ export function CalendarAiModal({
 
           {/* Extracted Events Preview */}
           {extractedEvents.length > 0 && (
-            <div className="space-y-3 animate-in fade-in duration-300">
-              <div className="flex items-center justify-between border-b border-border/80 pb-2">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-border pb-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-bold text-purple-600 dark:text-purple-400">
+                  <span className="text-xs font-bold text-primary">
                     ✓ {summaryMessage}
                   </span>
                   {modelUsed && (
-                    <span className="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-purple-500/10 text-purple-600 border border-purple-500/20">
-                      ⚡ {modelUsed}
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-surface-lavender text-primary border border-border-lavender">
+                      {modelUsed}
                     </span>
                   )}
                 </div>
@@ -619,19 +615,19 @@ export function CalendarAiModal({
                   return (
                     <div
                       key={idx}
-                      className="rounded-2xl border border-border/80 bg-surface-raised/70 p-3 space-y-2.5 text-xs hover:border-purple-500/40 transition"
+                      className="rounded-xl border border-border bg-surface-raised p-3 space-y-2.5 text-xs hover:border-border-lavender transition"
                     >
                       {/* Top Bar of Card */}
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-surface border border-border/60 text-sm shrink-0">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface border border-border text-sm shrink-0">
                             {catInfo.icon}
                           </span>
                           <input
                             type="text"
                             value={evt.title}
                             onChange={(e) => handleUpdateExtractedField(idx, "title", e.target.value)}
-                            className="w-full font-bold text-xs text-foreground bg-transparent border-b border-transparent hover:border-border focus:border-purple-500 focus:outline-none"
+                            className="w-full font-bold text-xs text-foreground bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none"
                             placeholder="Etkinlik Başlığı"
                           />
                         </div>
@@ -640,7 +636,7 @@ export function CalendarAiModal({
                         <select
                           value={evt.category}
                           onChange={(e) => handleUpdateExtractedField(idx, "category", e.target.value as CalendarCategory)}
-                          className="rounded-xl border border-border bg-surface px-2 py-1 text-[11px] font-semibold text-foreground focus:outline-none cursor-pointer"
+                          className="rounded-lg border border-border bg-surface px-2 py-1 text-[11px] font-semibold text-foreground focus:outline-none cursor-pointer"
                         >
                           {Object.values(CALENDAR_CATEGORIES).map((c) => (
                             <option key={c.id} value={c.id}>
@@ -653,17 +649,16 @@ export function CalendarAiModal({
                         <button
                           type="button"
                           onClick={() => handleRemoveExtractedEvent(idx)}
-                          className="text-muted hover:text-rose-500 text-xs px-1 cursor-pointer"
+                          className="text-muted hover:text-danger text-xs p-1 cursor-pointer"
                           title="Bu Etkinliği Çıkar"
                         >
-                          ✕
+                          <CloseIcon className="h-3.5 w-3.5" />
                         </button>
                       </div>
 
                       {/* Date & Time Row */}
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
-                        <div className="flex items-center gap-1.5 bg-surface border border-border/60 px-2 py-1 rounded-xl">
-                          <span className="text-muted">📅</span>
+                        <div className="flex items-center gap-1.5 bg-surface border border-border px-2.5 py-1.5 rounded-lg">
                           <input
                             type="date"
                             value={evt.date}
@@ -672,8 +667,7 @@ export function CalendarAiModal({
                           />
                         </div>
 
-                        <div className="flex items-center gap-1.5 bg-surface border border-border/60 px-2 py-1 rounded-xl">
-                          <span className="text-muted">⏰</span>
+                        <div className="flex items-center gap-1.5 bg-surface border border-border px-2.5 py-1.5 rounded-lg">
                           <input
                             type="time"
                             value={evt.time || ""}
@@ -688,18 +682,14 @@ export function CalendarAiModal({
                       </div>
 
                       {/* Scope & Profile Row */}
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border/50 text-[11px]">
+                      <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border text-[11px]">
                         <div className="flex items-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleUpdateExtractedField(idx, "scope", evt.scope === "common" ? "personal" : "common")}
-                            className={`rounded-lg px-2 py-0.5 text-[10px] font-bold transition cursor-pointer border ${
-                              evt.scope === "common"
-                                ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-600 dark:text-indigo-400"
-                                : "bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400"
-                            }`}
+                            className="rounded-md px-2 py-0.5 text-[10px] font-semibold transition cursor-pointer border border-border-lavender bg-surface-lavender text-primary"
                           >
-                            {evt.scope === "common" ? "👥 Ortak Aile" : "👤 Kişisel"}
+                            {evt.scope === "common" ? "Ortak Aile" : "Kişisel"}
                           </button>
 
                           {evt.scope === "personal" && (
@@ -711,7 +701,7 @@ export function CalendarAiModal({
                                 handleUpdateExtractedField(idx, "targetProfileId", pid);
                                 handleUpdateExtractedField(idx, "targetProfileName", p ? `${p.firstName} ${p.lastName}`.trim() : undefined);
                               }}
-                              className="rounded-lg border border-border bg-surface px-2 py-0.5 text-[10px] text-foreground focus:outline-none"
+                              className="rounded-md border border-border bg-surface px-2 py-0.5 text-[10px] text-foreground focus:outline-none"
                             >
                               <option value="">Profil Seçin...</option>
                               {profiles.map((p) => (
@@ -733,20 +723,21 @@ export function CalendarAiModal({
               </div>
 
               {/* Confirm & Save Button */}
-              <div className="flex items-center justify-between pt-2 border-t border-border/70">
+              <div className="flex items-center justify-between pt-2 border-t border-border">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="rounded-xl px-4 py-2 text-xs font-semibold text-muted hover:text-foreground transition cursor-pointer"
+                  className="secondary-button h-10 px-4 text-xs"
                 >
                   İptal
                 </button>
                 <button
                   type="button"
                   onClick={handleSaveAllEvents}
-                  className="rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:opacity-95 transition cursor-pointer"
+                  className="primary-button h-10 px-5 text-xs"
                 >
-                  ✓ Hepsini Takvime Ekle ({extractedEvents.length} Etkinlik)
+                  <CheckIcon className="h-4 w-4" />
+                  <span>Hepsini Takvime Ekle ({extractedEvents.length} Etkinlik)</span>
                 </button>
               </div>
             </div>
@@ -755,19 +746,19 @@ export function CalendarAiModal({
 
         {/* API Key Modal inside if needed */}
         {isKeyModalOpen && (
-          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px]">
             <form
               onSubmit={handleSaveApiKey}
-              className="w-full max-w-sm rounded-3xl border border-border bg-surface p-5 shadow-2xl space-y-3"
+              className="w-full max-w-sm rounded-2xl border border-border bg-surface p-5 shadow-lg space-y-3"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-foreground">🔑 Gemini API Anahtarı</h3>
+                <h3 className="text-sm font-bold text-foreground">Gemini API Anahtarı</h3>
                 <button
                   type="button"
                   onClick={() => setIsKeyModalOpen(false)}
-                  className="text-muted hover:text-foreground"
+                  className="icon-button h-7 w-7"
                 >
-                  ✕
+                  <CloseIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
               <p className="text-xs text-muted">
@@ -779,19 +770,19 @@ export function CalendarAiModal({
                 placeholder="AIzaSy..."
                 value={apiKeyInput}
                 onChange={(e) => setApiKeyInput(e.target.value)}
-                className="w-full rounded-xl border border-border bg-surface-raised px-3 py-2 text-xs text-foreground focus:outline-none"
+                className="field w-full text-xs"
               />
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsKeyModalOpen(false)}
-                  className="px-3 py-1.5 text-xs text-muted"
+                  className="secondary-button h-9 px-3 text-xs"
                 >
                   İptal
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-white shadow-xs"
+                  className="primary-button h-9 px-4 text-xs"
                 >
                   Kaydet
                 </button>

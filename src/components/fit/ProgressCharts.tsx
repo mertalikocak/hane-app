@@ -28,10 +28,10 @@ const METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     title: "Kilo Değişimi",
     unit: "kg",
     icon: "⚖️",
-    color: "emerald",
-    strokeColor: "#10b981", // emerald-500
-    gradientFrom: "rgba(16, 185, 129, 0.35)",
-    gradientTo: "rgba(16, 185, 129, 0.0)",
+    color: "purple",
+    strokeColor: "#76548F",
+    gradientFrom: "rgba(118, 84, 143, 0.28)",
+    gradientTo: "rgba(118, 84, 143, 0.0)",
     extractValue: (rec) => rec.measurement.weight,
   },
   bodyFat: {
@@ -39,10 +39,10 @@ const METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     title: "Yağ Oranı Değişimi",
     unit: "%",
     icon: "🎯",
-    color: "teal",
-    strokeColor: "#14b8a6", // teal-500
-    gradientFrom: "rgba(20, 184, 166, 0.35)",
-    gradientTo: "rgba(20, 184, 166, 0.0)",
+    color: "emerald",
+    strokeColor: "#2D7A53",
+    gradientFrom: "rgba(45, 122, 83, 0.28)",
+    gradientTo: "rgba(45, 122, 83, 0.0)",
     extractValue: (rec) => rec.measurement.bodyFat,
   },
   waist: {
@@ -51,9 +51,9 @@ const METRIC_CONFIGS: Record<MetricType, MetricConfig> = {
     unit: "cm",
     icon: "📐",
     color: "blue",
-    strokeColor: "#3b82f6", // blue-500
-    gradientFrom: "rgba(59, 130, 246, 0.35)",
-    gradientTo: "rgba(59, 130, 246, 0.0)",
+    strokeColor: "#3B6FA0",
+    gradientFrom: "rgba(59, 111, 160, 0.28)",
+    gradientTo: "rgba(59, 111, 160, 0.0)",
     extractValue: (rec) => rec.measurement.waist,
   },
 };
@@ -112,14 +112,12 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  // Sort chronological ascending (oldest to newest for progression graphs)
   const chronologicalRecords = useMemo(() => {
     return [...records].sort(
       (a, b) => new Date(a.measurement.date).getTime() - new Date(b.measurement.date).getTime()
     );
   }, [records]);
 
-  // Extract datasets for all 3 metrics
   const dataSeries = useMemo(() => {
     const getPointsForMetric = (cfg: MetricConfig): DataPoint[] => {
       const points: DataPoint[] = [];
@@ -149,7 +147,6 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
   const activeData = dataSeries[activeTab];
   const hasEnoughData = activeData.length >= 2;
 
-  // Compute metric stats (Initial, Current, Min, Max, Total Change)
   const stats = useMemo(() => {
     if (activeData.length === 0) return null;
 
@@ -170,7 +167,6 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
     };
   }, [activeData]);
 
-  // SVG Chart Geometry Calculations
   const chartGeometry = useMemo(() => {
     if (!hasEnoughData) return null;
 
@@ -185,7 +181,6 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
     const dataMin = Math.min(...values);
     const dataMax = Math.max(...values);
 
-    // Add safe buffer to Y-axis
     const range = dataMax - dataMin;
     const buffer = range === 0 ? Math.max(1, dataMax * 0.05) : range * 0.15;
     const yMin = Math.max(0, Math.floor((dataMin - buffer) * 10) / 10);
@@ -198,7 +193,6 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
       return { ...d, x, y, index };
     });
 
-    // Generate smooth bezier curve path or straight polyline
     let pathD = `M ${points[0].x} ${points[0].y}`;
     for (let i = 0; i < points.length - 1; i++) {
       const current = points[i];
@@ -207,12 +201,10 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
       pathD += ` C ${controlX} ${current.y}, ${controlX} ${next.y}, ${next.x} ${next.y}`;
     }
 
-    // Generate closed area path for fill gradient
     const areaD = `${pathD} L ${points[points.length - 1].x} ${
       padding.top + innerHeight
     } L ${points[0].x} ${padding.top + innerHeight} Z`;
 
-    // Horizontal Grid ticks (4 levels)
     const gridLevels = [0, 0.33, 0.66, 1];
     const yTicks = gridLevels.map((lvl) => {
       const val = yMin + lvl * yRange;
@@ -238,7 +230,6 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
     };
   }, [activeData, hasEnoughData]);
 
-  // Handle mouse move over SVG to find closest data point
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!chartGeometry || !svgRef.current) return;
     const rect = svgRef.current.getBoundingClientRect();
@@ -268,11 +259,11 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
       : null;
 
   return (
-    <section className="rounded-3xl border border-border/80 bg-surface p-6 sm:p-8 shadow-xs space-y-6">
+    <section className="ds-card p-6 sm:p-7 space-y-6">
       {/* 1. Header & Metric Tabs */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border/70">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <h3 className="text-xl font-black tracking-tight text-foreground flex items-center gap-2">
+          <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
             <span>📈</span>
             <span>Gelişim ve İlerleme Grafikleri</span>
           </h3>
@@ -282,7 +273,7 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
         </div>
 
         {/* Tab Controls */}
-        <div className="flex flex-wrap items-center gap-2 bg-surface-raised/80 p-1.5 rounded-2xl border border-border/60 self-start lg:self-auto">
+        <div className="flex flex-wrap items-center gap-1.5 bg-surface-raised p-1 rounded-xl border border-border self-start lg:self-auto">
           {(["weight", "bodyFat", "waist"] as MetricType[]).map((type) => {
             const cfg = METRIC_CONFIGS[type];
             const count = dataSeries[type].length;
@@ -296,18 +287,18 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                   setActiveTab(type);
                   setHoveredPointIndex(null);
                 }}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer select-none ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer select-none ${
                   isSelected
                     ? "bg-surface text-foreground shadow-xs border border-border"
-                    : "text-muted hover:text-foreground hover:bg-surface/50"
+                    : "text-muted hover:text-foreground"
                 }`}
               >
                 <span>{cfg.icon}</span>
                 <span>{cfg.title.replace(" Değişimi", "")}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-extrabold ${
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
                     isSelected
-                      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                      ? "bg-surface-lavender text-primary"
                       : "bg-surface-raised text-muted"
                   }`}
                 >
@@ -319,40 +310,37 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
         </div>
       </div>
 
-      {/* 2. Stats Bar (If active metric has enough data) */}
+      {/* 2. Stats Bar */}
       {hasEnoughData && stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 animate-in fade-in duration-200">
-          {/* Başlangıç */}
-          <div className="rounded-2xl border border-border/60 bg-surface-raised/60 p-3 space-y-0.5">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 animate-in fade-in duration-150">
+          <div className="rounded-xl border border-border bg-surface-raised p-3 space-y-0.5">
             <span className="text-[10px] font-bold uppercase text-muted block">
               İlk Kayıt ({formatTurkishShortDate(activeData[0].date)})
             </span>
-            <div className="text-sm font-black text-foreground">
+            <div className="text-sm font-bold text-foreground tabular-nums">
               {stats.first} <span className="text-xs text-muted font-normal">{activeConfig.unit}</span>
             </div>
           </div>
 
-          {/* Güncel */}
-          <div className="rounded-2xl border border-border/60 bg-surface-raised/60 p-3 space-y-0.5">
+          <div className="rounded-xl border border-border bg-surface-raised p-3 space-y-0.5">
             <span className="text-[10px] font-bold uppercase text-muted block">
               Son Kayıt ({formatTurkishShortDate(activeData[activeData.length - 1].date)})
             </span>
-            <div className="text-sm font-black text-foreground">
+            <div className="text-sm font-bold text-foreground tabular-nums">
               {stats.latest} <span className="text-xs text-muted font-normal">{activeConfig.unit}</span>
             </div>
           </div>
 
-          {/* Toplam Değişim */}
-          <div className="rounded-2xl border border-border/60 bg-surface-raised/60 p-3 space-y-0.5">
+          <div className="rounded-xl border border-border bg-surface-raised p-3 space-y-0.5">
             <span className="text-[10px] font-bold uppercase text-muted block">
               Net Değişim
             </span>
             <div
-              className={`text-sm font-black ${
+              className={`text-sm font-bold tabular-nums ${
                 stats.change < 0
-                  ? "text-emerald-500"
+                  ? "text-success"
                   : stats.change > 0
-                  ? "text-amber-500"
+                  ? "text-warning"
                   : "text-muted"
               }`}
             >
@@ -361,22 +349,20 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
             </div>
           </div>
 
-          {/* En Düşük */}
-          <div className="rounded-2xl border border-border/60 bg-surface-raised/60 p-3 space-y-0.5">
+          <div className="rounded-xl border border-border bg-surface-raised p-3 space-y-0.5">
             <span className="text-[10px] font-bold uppercase text-muted block">
               En Düşük
             </span>
-            <div className="text-sm font-black text-foreground">
+            <div className="text-sm font-bold text-foreground tabular-nums">
               {stats.min} <span className="text-xs text-muted font-normal">{activeConfig.unit}</span>
             </div>
           </div>
 
-          {/* En Yüksek */}
-          <div className="rounded-2xl border border-border/60 bg-surface-raised/60 p-3 space-y-0.5 col-span-2 sm:col-span-1">
+          <div className="rounded-xl border border-border bg-surface-raised p-3 space-y-0.5 col-span-2 sm:col-span-1">
             <span className="text-[10px] font-bold uppercase text-muted block">
               En Yüksek
             </span>
-            <div className="text-sm font-black text-foreground">
+            <div className="text-sm font-bold text-foreground tabular-nums">
               {stats.max} <span className="text-xs text-muted font-normal">{activeConfig.unit}</span>
             </div>
           </div>
@@ -385,8 +371,8 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
 
       {/* 3. Main Chart Canvas Area OR Empty State */}
       {!hasEnoughData ? (
-        <div className="rounded-3xl border border-dashed border-border p-10 text-center bg-surface-raised/40 space-y-3">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-surface border border-border/60 text-2xl shadow-xs">
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center bg-surface-raised/50 space-y-3">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-surface border border-border text-xl shadow-xs">
             {activeConfig.icon}
           </div>
           <div className="space-y-1 max-w-md mx-auto">
@@ -402,11 +388,11 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
         </div>
       ) : (
         chartGeometry && (
-          <div className="relative rounded-3xl border border-border/70 bg-surface-raised/30 p-4 sm:p-6 overflow-hidden">
+          <div className="relative rounded-2xl border border-border bg-surface-raised/40 p-4 sm:p-6 overflow-hidden">
             {/* Interactive Tooltip Card Overlay */}
             {activeHoverPoint && (
               <div
-                className="absolute z-20 pointer-events-none rounded-2xl border border-border/80 bg-surface/95 backdrop-blur-md px-4 py-2.5 shadow-xl transition-all duration-75 space-y-0.5 text-left min-w-[140px]"
+                className="absolute z-20 pointer-events-none rounded-xl border border-border bg-surface px-4 py-2.5 shadow-md transition-all duration-75 space-y-0.5 text-left min-w-[140px]"
                 style={{
                   left: `clamp(10px, ${
                     (activeHoverPoint.x / chartGeometry.width) * 100
@@ -415,16 +401,16 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                   transform: "translateX(-50%)",
                 }}
               >
-                <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-1">
+                <div className="flex items-center justify-between gap-2 border-b border-border pb-1">
                   <span className="text-[10px] font-bold text-muted">
                     📅 {activeHoverPoint.formattedShortDate}
                   </span>
-                  <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                  <span className="text-[9px] font-bold text-primary bg-surface-lavender px-1.5 py-0.5 rounded">
                     #{activeHoverPoint.index + 1}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-1 pt-0.5">
-                  <span className="text-lg font-black text-foreground">
+                  <span className="text-lg font-bold text-foreground tabular-nums">
                     {activeHoverPoint.value}
                   </span>
                   <span className="text-xs font-bold text-muted">
@@ -438,11 +424,11 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                       const diff = Number((activeHoverPoint.value - prevVal).toFixed(1));
                       return (
                         <span
-                          className={`font-bold ${
+                          className={`font-bold tabular-nums ${
                             diff < 0
-                              ? "text-emerald-500"
+                              ? "text-success"
                               : diff > 0
-                              ? "text-amber-500"
+                              ? "text-warning"
                               : "text-muted"
                           }`}
                         >
@@ -467,7 +453,6 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                 onMouseLeave={handleMouseLeave}
               >
                 <defs>
-                  {/* Glowing line gradient */}
                   <linearGradient
                     id={`gradient-area-${activeTab}`}
                     x1="0"
@@ -478,17 +463,6 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                     <stop offset="0%" stopColor={activeConfig.gradientFrom} />
                     <stop offset="100%" stopColor={activeConfig.gradientTo} />
                   </linearGradient>
-
-                  {/* Drop shadow for line curve */}
-                  <filter id="glow-shadow" x="-10%" y="-10%" width="130%" height="130%">
-                    <feDropShadow
-                      dx="0"
-                      dy="4"
-                      stdDeviation="6"
-                      floodColor={activeConfig.strokeColor}
-                      floodOpacity="0.3"
-                    />
-                  </filter>
                 </defs>
 
                 {/* Horizontal Grid Lines and Y-Axis Ticks */}
@@ -500,7 +474,7 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                       x2={chartGeometry.width - chartGeometry.padding.right}
                       y2={tick.y}
                       stroke="currentColor"
-                      strokeOpacity={i === 0 ? "0.15" : "0.08"}
+                      strokeOpacity={i === 0 ? "0.18" : "0.1"}
                       strokeDasharray={i === 0 ? "none" : "4 4"}
                       strokeWidth="1"
                     />
@@ -529,10 +503,9 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                   d={chartGeometry.pathD}
                   fill="none"
                   stroke={activeConfig.strokeColor}
-                  strokeWidth="3.5"
+                  strokeWidth="3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  filter="url(#glow-shadow)"
                   className="transition-all duration-300"
                 />
 
@@ -544,46 +517,42 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                     x2={activeHoverPoint.x}
                     y2={chartGeometry.height - chartGeometry.padding.bottom}
                     stroke="currentColor"
-                    strokeOpacity="0.3"
+                    strokeOpacity="0.25"
                     strokeDasharray="3 3"
                     strokeWidth="1.5"
                   />
                 )}
 
-                {/* Data Points (Circles) */}
+                {/* Data Points */}
                 {chartGeometry.points.map((pt, index) => {
                   const isHovered = hoveredPointIndex === index;
                   return (
                     <g key={pt.id} className="cursor-pointer">
-                      {/* Outer pulse ring on hover */}
                       {isHovered && (
                         <circle
                           cx={pt.x}
                           cy={pt.y}
-                          r="11"
+                          r="10"
                           fill={activeConfig.strokeColor}
-                          fillOpacity="0.25"
-                          className="animate-ping"
+                          fillOpacity="0.2"
                         />
                       )}
 
-                      {/* Main Point Circle */}
                       <circle
                         cx={pt.x}
                         cy={pt.y}
-                        r={isHovered ? "6.5" : "4.5"}
+                        r={isHovered ? "6" : "4.5"}
                         fill="#ffffff"
                         stroke={activeConfig.strokeColor}
                         strokeWidth={isHovered ? "3" : "2.5"}
-                        className="transition-all duration-150 shadow-md"
+                        className="transition-all duration-150"
                       />
                     </g>
                   );
                 })}
 
-                {/* X-Axis Date Labels (First, Middle, and Last or Key points) */}
+                {/* X-Axis Date Labels */}
                 {chartGeometry.points.map((pt, index) => {
-                  // Show date label for first, last, and intermittent points
                   const shouldShow =
                     index === 0 ||
                     index === chartGeometry.points.length - 1 ||
@@ -610,11 +579,11 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
             </div>
 
             {/* Bottom Chart Footer Legend */}
-            <div className="flex items-center justify-between pt-3 border-t border-border/60 text-[11px] text-muted">
+            <div className="flex items-center justify-between pt-3 border-t border-border text-[11px] text-muted">
               <span>
                 Toplam <strong>{activeData.length}</strong> ölçüm noktası
               </span>
-              <span className="flex items-center gap-1 font-semibold text-foreground">
+              <span className="flex items-center gap-1.5 font-semibold text-foreground">
                 <span
                   className="w-2.5 h-2.5 rounded-full inline-block"
                   style={{ backgroundColor: activeConfig.strokeColor }}

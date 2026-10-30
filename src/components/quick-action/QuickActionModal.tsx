@@ -221,20 +221,20 @@ export function QuickActionModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-lg max-h-[92vh] flex flex-col rounded-3xl border border-border/80 bg-surface shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="w-full max-w-lg max-h-[92vh] flex flex-col rounded-2xl border border-border bg-surface shadow-lg overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border/70 bg-surface/90 backdrop-blur-md shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border bg-surface shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white font-bold text-lg shadow-sm shadow-primary/25">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary font-bold text-lg">
               <BoltIcon className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-foreground">
+                <h2 className="text-base font-bold tracking-tight text-foreground">
                   Hızlı Ekle & Kaydet
                 </h2>
                 <span className="hidden sm:inline-block px-2 py-0.5 rounded-md bg-surface-raised border border-border text-[10px] font-mono text-muted">
@@ -250,21 +250,21 @@ export function QuickActionModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-surface-raised text-muted hover:text-foreground transition cursor-pointer"
+            className="icon-button h-8 w-8"
           >
             <CloseIcon className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Selection */}
-        <div className="grid grid-cols-5 p-2 bg-surface-raised/40 border-b border-border/60 gap-1 text-center shrink-0">
+        <div className="grid grid-cols-5 p-1.5 bg-surface-raised border-b border-border gap-1 text-center shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("shopping")}
-            className={`py-2 px-1 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+            className={`py-2 px-1 rounded-lg text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
               activeTab === "shopping"
-                ? "bg-surface text-primary shadow-xs border border-border"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>🛒</span>
@@ -274,10 +274,10 @@ export function QuickActionModal({
           <button
             type="button"
             onClick={() => setActiveTab("gider")}
-            className={`py-2 px-1 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+            className={`py-2 px-1 rounded-lg text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
               activeTab === "gider"
-                ? "bg-surface text-primary shadow-xs border border-border"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>💰</span>
@@ -287,10 +287,10 @@ export function QuickActionModal({
           <button
             type="button"
             onClick={() => setActiveTab("cleaning")}
-            className={`py-2 px-1 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+            className={`py-2 px-1 rounded-lg text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
               activeTab === "cleaning"
-                ? "bg-surface text-primary shadow-xs border border-border"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>🧹</span>
@@ -300,10 +300,10 @@ export function QuickActionModal({
           <button
             type="button"
             onClick={() => setActiveTab("calendar")}
-            className={`py-2 px-1 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+            className={`py-2 px-1 rounded-lg text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
               activeTab === "calendar"
-                ? "bg-surface text-primary shadow-xs border border-border"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>📅</span>
@@ -313,10 +313,10 @@ export function QuickActionModal({
           <button
             type="button"
             onClick={() => setActiveTab("cardo")}
-            className={`py-2 px-1 rounded-xl text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
+            className={`py-2 px-1 rounded-lg text-xs font-bold transition flex flex-col sm:flex-row items-center justify-center gap-1 cursor-pointer ${
               activeTab === "cardo"
-                ? "bg-surface text-primary shadow-xs border border-border"
-                : "text-muted hover:text-foreground hover:bg-surface/50"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
             }`}
           >
             <span>🚗</span>
@@ -326,7 +326,7 @@ export function QuickActionModal({
 
         {/* Toast Alert */}
         {toastMsg && (
-          <div className="mx-5 mt-3 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center gap-2 animate-in fade-in shrink-0">
+          <div className="mx-5 mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 text-xs font-bold flex items-center gap-2 animate-in fade-in shrink-0">
             <span>✨</span>
             <span>{toastMsg}</span>
           </div>
@@ -420,8 +420,8 @@ export function QuickActionModal({
                     onClick={() => setGiderKullanici("mert")}
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
                       giderKullanici === "mert"
-                        ? "bg-primary text-white border-primary shadow-xs"
-                        : "bg-surface-raised border-border text-foreground hover:bg-border/30"
+                        ? "bg-primary text-white border-primary"
+                        : "bg-surface-raised border-border text-foreground hover:bg-background-subtle"
                     }`}
                   >
                     👤 Mert
@@ -431,8 +431,8 @@ export function QuickActionModal({
                     onClick={() => setGiderKullanici("havsa")}
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer ${
                       giderKullanici === "havsa"
-                        ? "bg-primary text-white border-primary shadow-xs"
-                        : "bg-surface-raised border-border text-foreground hover:bg-border/30"
+                        ? "bg-primary text-white border-primary"
+                        : "bg-surface-raised border-border text-foreground hover:bg-background-subtle"
                     }`}
                   >
                     👤 Havsa
@@ -467,7 +467,7 @@ export function QuickActionModal({
                     if (e.key === "Enter") handleGiderSubmit(false);
                   }}
                   placeholder="0.00"
-                  className="field"
+                  className="field tabular-nums"
                 />
               </div>
 
@@ -509,7 +509,7 @@ export function QuickActionModal({
               </div>
 
               {rooms.length === 0 ? (
-                <div className="p-6 text-center rounded-2xl border border-dashed border-border text-xs text-muted">
+                <div className="p-6 text-center rounded-xl border border-dashed border-border text-xs text-muted">
                   Henüz kayıtlı oda yok. Hane Cleaning sayfasından oda ekleyebilirsiniz.
                 </div>
               ) : (
@@ -521,9 +521,9 @@ export function QuickActionModal({
                         key={room.id}
                         type="button"
                         onClick={() => handleCleanRoom(room)}
-                        className={`p-3 rounded-2xl border text-left transition flex items-center justify-between cursor-pointer group ${
+                        className={`p-3 rounded-xl border text-left transition flex items-center justify-between cursor-pointer group ${
                           isCleaned
-                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                            ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700"
                             : "bg-surface-raised border-border text-foreground hover:border-primary/40 hover:bg-surface"
                         }`}
                       >
@@ -572,7 +572,7 @@ export function QuickActionModal({
                     type="date"
                     value={calDate}
                     onChange={(e) => setCalDate(e.target.value)}
-                    className="field"
+                    className="field tabular-nums"
                   />
                 </div>
 
@@ -584,7 +584,7 @@ export function QuickActionModal({
                     type="time"
                     value={calTime}
                     onChange={(e) => setCalTime(e.target.value)}
-                    className="field"
+                    className="field tabular-nums"
                   />
                 </div>
               </div>
@@ -659,7 +659,7 @@ export function QuickActionModal({
                     if (e.key === "Enter") handleCarSubmit(false);
                   }}
                   placeholder="0.00"
-                  className="field"
+                  className="field tabular-nums"
                 />
               </div>
 

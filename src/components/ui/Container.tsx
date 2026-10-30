@@ -9,7 +9,7 @@ interface ContainerProps {
 const SIZE_MAP = {
   narrow: "max-w-xl",
   default: "max-w-4xl",
-  wide: "max-w-[1680px]",
+  wide: "max-w-7xl",
   full: "max-w-full",
 };
 
@@ -19,9 +19,7 @@ export function Container({
   size = "wide",
 }: ContainerProps) {
   return (
-    <div
-      className={`mx-auto w-full px-3.5 sm:px-6 lg:px-8 ${SIZE_MAP[size]} ${className}`}
-    >
+    <div className={`mx-auto w-full ${SIZE_MAP[size]} ${className}`}>
       {children}
     </div>
   );

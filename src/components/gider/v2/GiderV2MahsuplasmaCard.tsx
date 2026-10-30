@@ -27,8 +27,6 @@ export function GiderV2MahsuplasmaCard({
     havsaOdedi,
     mertPayinaDusen,
     havsaPayinaDusen,
-    hamTransferTutari,
-    hamBorcluKisi,
     borcluKisi,
     transferTutari,
     toplamTransferEdilen,
@@ -40,19 +38,19 @@ export function GiderV2MahsuplasmaCard({
   const havsaNetBakiye = havsaOdedi - havsaPayinaDusen;
 
   return (
-    <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-surface via-surface to-surface-raised border border-purple-500/30 shadow-xs relative overflow-hidden">
+    <div className="ds-card p-5 sm:p-6 relative overflow-hidden">
       {/* Üst Çizgi Efekti */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-purple-500 to-pink-500" />
+      <div className="absolute top-0 left-0 right-0 h-1 bg-primary" />
 
       {/* Başlık ve Durum */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center text-xl shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-surface-lavender border border-border-lavender text-primary flex items-center justify-center text-lg shrink-0">
             🤝
           </div>
           <div>
-            <h2 className="text-base sm:text-lg font-black text-foreground tracking-tight flex items-center gap-2">
-              <span>Ay Sonu Net Mahsuplaşma & Hesap Kapatma</span>
+            <h2 className="text-base sm:text-lg font-bold text-foreground tracking-tight">
+              Ay Sonu Net Mahsuplaşma & Hesap Kapatma
             </h2>
             <p className="text-xs text-muted">
               Ortak harcamalar ve kart ödemeleri dengelenerek tek bir net transfer tutarı üretilir.
@@ -62,13 +60,13 @@ export function GiderV2MahsuplasmaCard({
 
         <div className="self-start sm:self-auto flex items-center gap-2">
           {tamamlandiMi ? (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Hesaplar Tam Kapandı 🎉
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-success-soft text-success border border-success/25">
+              <span className="w-2 h-2 rounded-full bg-success" />
+              Hesaplar Tam Kapandı
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-amber-500/15 text-amber-400 border border-amber-500/30">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-warning-soft text-warning border border-warning/25">
+              <span className="w-2 h-2 rounded-full bg-warning animate-ping" />
               Tek Havale Bekleniyor
             </span>
           )}
@@ -76,15 +74,15 @@ export function GiderV2MahsuplasmaCard({
       </div>
 
       {/* Görsel Transfer Akışı (Mert <--- Tutar ---> Havsa) */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-3 sm:gap-4 p-4 sm:p-5 rounded-2xl bg-surface-raised/70 border border-border/80 backdrop-blur-xs items-center">
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl bg-surface-raised border border-border items-center">
         {/* Sol: Mert (2 Kolon) */}
         <div className="md:col-span-2 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-sky-500/20 border-2 border-sky-500/40 text-sky-400 flex items-center justify-center font-black text-lg shrink-0 shadow-xs">
+          <div className="w-11 h-11 rounded-xl bg-sky-50 border border-sky-200 text-sky-700 flex items-center justify-center font-bold text-base shrink-0">
             M
           </div>
           <div className="text-xs space-y-0.5">
             <div className="flex items-center gap-1.5">
-              <span className="font-black text-sm text-foreground">Mert'in Kartları</span>
+              <span className="font-bold text-sm text-foreground">Mert&apos;in Kartları</span>
             </div>
             <span className="text-muted block text-[11px]">
               Cebinden Çıkan:{" "}
@@ -92,26 +90,26 @@ export function GiderV2MahsuplasmaCard({
             </span>
             <span className="text-muted block text-[11px]">
               Payına Düşen:{" "}
-              <strong className="text-sky-400 font-mono font-bold">{para(mertPayinaDusen)}</strong>
+              <strong className="text-sky-700 font-mono font-bold">{para(mertPayinaDusen)}</strong>
             </span>
-            <span className="text-[10px] font-extrabold block">
+            <span className="text-[11px] font-bold block">
               {mertNetBakiye >= 0 ? (
-                <span className="text-emerald-400">+{para(mertNetBakiye)} (Alacaklı)</span>
+                <span className="text-success">+{para(mertNetBakiye)} (Alacaklı)</span>
               ) : (
-                <span className="text-rose-400">{para(mertNetBakiye)} (Borçlu)</span>
+                <span className="text-danger">{para(mertNetBakiye)} (Borçlu)</span>
               )}
             </span>
           </div>
         </div>
 
         {/* Orta: Transfer Kapsülü (3 Kolon) */}
-        <div className="md:col-span-3 text-center py-3 px-4 rounded-2xl bg-surface border border-purple-500/25 shadow-xs flex flex-col items-center justify-center">
+        <div className="md:col-span-3 text-center py-3.5 px-4 rounded-xl bg-surface border border-border-lavender shadow-2xs flex flex-col items-center justify-center">
           {tamamlandiMi ? (
             <div className="space-y-1">
-              <span className="text-xs font-black text-emerald-400 uppercase tracking-wider block">
-                ✅ Hesaplar Tam Dengede
+              <span className="text-xs font-bold text-success uppercase tracking-wider block">
+                ✓ Hesaplar Tam Dengede
               </span>
-              <div className="text-base sm:text-lg font-black text-foreground">
+              <div className="text-base sm:text-lg font-extrabold text-foreground">
                 0,00 ₺ Kalan
               </div>
               <span className="text-[11px] text-muted block">
@@ -122,16 +120,16 @@ export function GiderV2MahsuplasmaCard({
             </div>
           ) : (
             <div className="space-y-1.5 w-full">
-              <div className="flex items-center justify-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-muted">
+              <div className="flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-wider text-primary">
                 <span>{borcluKisi === "havsa" ? "Havsa ➔ Mert" : "Mert ➔ Havsa"}</span>
-                <span>💳 Havale Tutarı</span>
+                <span>• Havale Tutarı</span>
               </div>
 
-              <div className="text-xl sm:text-2xl font-black text-emerald-400 font-mono tracking-tight bg-emerald-500/10 border border-emerald-500/20 py-1.5 px-3 rounded-xl inline-block">
+              <div className="text-xl sm:text-2xl font-extrabold text-primary font-mono tracking-tight bg-surface-lavender border border-border-lavender py-1.5 px-3.5 rounded-xl inline-block">
                 {para(transferTutari)}
               </div>
 
-              <div className="text-[11px] text-muted">
+              <div className="text-xs text-foreground-secondary">
                 {durumMetni}
               </div>
             </div>
@@ -142,7 +140,7 @@ export function GiderV2MahsuplasmaCard({
         <div className="md:col-span-2 flex items-center gap-3 md:justify-end">
           <div className="text-xs md:text-right space-y-0.5 order-2 md:order-1">
             <div className="flex items-center gap-1.5 md:justify-end">
-              <span className="font-black text-sm text-foreground">Havsa'nın Kartları</span>
+              <span className="font-bold text-sm text-foreground">Havsa&apos;nın Kartları</span>
             </div>
             <span className="text-muted block text-[11px]">
               Cebinden Çıkan:{" "}
@@ -150,28 +148,28 @@ export function GiderV2MahsuplasmaCard({
             </span>
             <span className="text-muted block text-[11px]">
               Payına Düşen:{" "}
-              <strong className="text-pink-400 font-mono font-bold">{para(havsaPayinaDusen)}</strong>
+              <strong className="text-pink-700 font-mono font-bold">{para(havsaPayinaDusen)}</strong>
             </span>
-            <span className="text-[10px] font-extrabold block">
+            <span className="text-[11px] font-bold block">
               {havsaNetBakiye >= 0 ? (
-                <span className="text-emerald-400">+{para(havsaNetBakiye)} (Alacaklı)</span>
+                <span className="text-success">+{para(havsaNetBakiye)} (Alacaklı)</span>
               ) : (
-                <span className="text-rose-400">{para(havsaNetBakiye)} (Borçlu)</span>
+                <span className="text-danger">{para(havsaNetBakiye)} (Borçlu)</span>
               )}
             </span>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-pink-500/20 border-2 border-pink-500/40 text-pink-400 flex items-center justify-center font-black text-lg shrink-0 shadow-xs order-1 md:order-2">
+          <div className="w-11 h-11 rounded-xl bg-pink-50 border border-pink-200 text-pink-700 flex items-center justify-center font-bold text-base shrink-0 order-1 md:order-2">
             H
           </div>
         </div>
       </div>
 
       {/* Hızlı Butonlar & Matematiksel İnceleme Butonu */}
-      <div className="mt-4 pt-3.5 border-t border-border/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+      <div className="mt-4 pt-3.5 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
         <button
           type="button"
           onClick={() => setShowMathExplainer((v) => !v)}
-          className="text-xs font-bold text-muted hover:text-purple-400 flex items-center gap-1.5 cursor-pointer self-start transition"
+          className="text-xs font-semibold text-foreground-secondary hover:text-primary flex items-center gap-1.5 cursor-pointer self-start transition"
         >
           <span>🔍</span>
           <span>{showMathExplainer ? "Hesap Detayını Gizle" : "Bu Rakam Nasıl Çıktı? (Matematiksel Şeffaflık)"}</span>
@@ -182,7 +180,7 @@ export function GiderV2MahsuplasmaCard({
           <button
             type="button"
             onClick={onTransferModalAc}
-            className="primary-button h-9 px-3.5 text-xs font-bold shadow-xs cursor-pointer flex items-center gap-1.5"
+            className="primary-button h-9 px-3.5 text-xs"
           >
             <span>💸</span>
             <span>Para Transferi / Borç Öde</span>
@@ -191,7 +189,7 @@ export function GiderV2MahsuplasmaCard({
           <button
             type="button"
             onClick={onKopyala}
-            className="secondary-button h-9 px-3 text-xs font-bold text-foreground cursor-pointer flex items-center gap-1.5"
+            className="secondary-button h-9 px-3 text-xs"
             title="Hesaplaşma özetini panoya kopyala"
           >
             <span>📋</span>
@@ -202,43 +200,43 @@ export function GiderV2MahsuplasmaCard({
 
       {/* ŞEFFAF MATEMATİKSEL İNCELEME ÇEKMECESİ */}
       {showMathExplainer && (
-        <div className="mt-4 p-4 rounded-2xl bg-surface/90 border border-purple-500/30 text-xs space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
-          <div className="flex items-center justify-between border-b border-border/70 pb-2">
-            <span className="font-black text-foreground flex items-center gap-2">
+        <div className="mt-4 p-4 rounded-xl bg-surface-lavender border border-border-lavender text-xs space-y-3 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between border-b border-border-lavender pb-2">
+            <span className="font-bold text-foreground flex items-center gap-2">
               <span>🧮</span> Adım Adım Hesaplama Tablosu
             </span>
             <span className="text-[11px] text-muted">Kişi başı adil paylaşım prensibi</span>
           </div>
 
-          <div className="space-y-2 text-muted leading-relaxed">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-surface-raised/70">
+          <div className="space-y-2 text-foreground-secondary leading-relaxed">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-surface border border-border">
               <div>
                 <strong className="text-foreground block mb-1">1. Cebinden Çıkan Ödemeler:</strong>
-                <p>• Mert'in kartından / hesabından ödenen: <span className="font-bold text-foreground font-mono">{para(mertOdedi)}</span></p>
-                <p>• Havsa'nın kartından / hesabından ödenen: <span className="font-bold text-foreground font-mono">{para(havsaOdedi)}</span></p>
-                <p>• Toplam Ortak & Kart Yükü: <span className="font-bold text-purple-400 font-mono">{para(mertOdedi + havsaOdedi)}</span></p>
+                <p>• Mert&apos;in kartından / hesabından ödenen: <span className="font-bold text-foreground font-mono">{para(mertOdedi)}</span></p>
+                <p>• Havsa&apos;nın kartından / hesabından ödenen: <span className="font-bold text-foreground font-mono">{para(havsaOdedi)}</span></p>
+                <p>• Toplam Ortak & Kart Yükü: <span className="font-bold text-primary font-mono">{para(mertOdedi + havsaOdedi)}</span></p>
               </div>
 
               <div>
                 <strong className="text-foreground block mb-1">2. Kimin Ne Kadar Tükettiği (Payı):</strong>
-                <p>• Mert'in Payı (Ortak/2 + Kendi Bireyseli): <span className="font-bold text-sky-400 font-mono">{para(mertPayinaDusen)}</span></p>
-                <p>• Havsa'nın Payı (Ortak/2 + Kendi Bireyseli): <span className="font-bold text-pink-400 font-mono">{para(havsaPayinaDusen)}</span></p>
-                <p className="text-[11px] text-muted/80 mt-1">
+                <p>• Mert&apos;in Payı (Ortak/2 + Kendi Bireyseli): <span className="font-bold text-sky-700 font-mono">{para(mertPayinaDusen)}</span></p>
+                <p>• Havsa&apos;nın Payı (Ortak/2 + Kendi Bireyseli): <span className="font-bold text-pink-700 font-mono">{para(havsaPayinaDusen)}</span></p>
+                <p className="text-[11px] text-muted mt-1">
                   (Ortak harcamalar 50/50 yarıya bölünür; ekstre içi bireysel harcamalar doğrudan ilgili kişiye yazılır)
                 </p>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-surface-raised/70 space-y-1">
+            <div className="p-3 rounded-xl bg-surface border border-border space-y-1">
               <strong className="text-foreground block">3. Net Mahsuplaşma Formülü:</strong>
               <p>
-                Fark = (Mert'in Ödediği - Mert'in Payı) = {para(mertOdedi)} - {para(mertPayinaDusen)} ={" "}
+                Fark = (Mert&apos;in Ödediği - Mert&apos;in Payı) = {para(mertOdedi)} - {para(mertPayinaDusen)} ={" "}
                 <strong className="text-foreground font-mono">
                   {mertNetBakiye >= 0 ? `+${para(mertNetBakiye)} (Mert Alacaklı)` : `${para(mertNetBakiye)} (Mert Borçlu)`}
                 </strong>
               </p>
               {toplamTransferEdilen > 0 && (
-                <p className="text-emerald-400">
+                <p className="text-success font-medium">
                   - Yapılan Transferler: {para(toplamTransferEdilen)} ödendi. Kalan net: <strong>{para(transferTutari)}</strong>
                 </p>
               )}
@@ -251,14 +249,14 @@ export function GiderV2MahsuplasmaCard({
       )}
 
       {/* YAPILAN HAVALE & PARA TRANSFERLERİ */}
-      <div className="mt-4 pt-3.5 border-t border-border/70 space-y-2">
+      <div className="mt-4 pt-3.5 border-t border-border space-y-2">
         <div className="flex items-center justify-between text-xs">
-          <span className="font-black text-foreground flex items-center gap-1.5">
+          <span className="font-bold text-foreground flex items-center gap-1.5">
             <span>💸</span> Bu Ay Yapılan Havale / Transferler ({transferler.length})
           </span>
           <div className="flex items-center gap-2">
             {toplamTransferEdilen > 0 && (
-              <span className="font-bold text-emerald-400 text-[11px]">
+              <span className="font-bold text-success text-[11px]">
                 Toplam Ödenen: {para(toplamTransferEdilen)}
               </span>
             )}
@@ -267,25 +265,20 @@ export function GiderV2MahsuplasmaCard({
               onClick={onTransferModalAc}
               className="text-[11px] font-bold text-primary hover:underline cursor-pointer flex items-center gap-1"
             >
-              <span>➕</span>
-              <span>Havale Ekle</span>
+              <span>+ Havale Ekle</span>
             </button>
           </div>
         </div>
 
         {transferler.length === 0 ? (
-          <div className="py-3 px-4 rounded-2xl bg-surface-raised/40 border border-dashed border-border/70 text-xs text-muted flex flex-col sm:flex-row items-center justify-between gap-2">
-            <span className="flex items-center gap-1.5">
-              <span>ℹ️</span>
-              <span>Bu ay için henüz kayıtlı bir havale/borç transferi yok.</span>
-            </span>
+          <div className="py-3 px-4 rounded-xl bg-surface-raised border border-dashed border-border text-xs text-muted flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>Bu ay için henüz kayıtlı bir havale/borç transferi yok.</span>
             <button
               type="button"
               onClick={onTransferModalAc}
-              className="primary-button h-7 px-3 text-[11px] font-bold shrink-0 cursor-pointer flex items-center gap-1"
+              className="accent-button h-8 px-3 text-xs shrink-0"
             >
-              <span>💸</span>
-              <span>Havale / Transfer Kaydet</span>
+              <span>💸 Havale / Transfer Kaydet</span>
             </button>
           </div>
         ) : (
@@ -293,29 +286,29 @@ export function GiderV2MahsuplasmaCard({
             {transferler.map((tr) => (
               <div
                 key={tr.id}
-                className="flex items-center justify-between gap-3 p-2.5 rounded-2xl bg-surface border border-border/70 text-xs shadow-2xs"
+                className="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-surface-raised border border-border text-xs"
               >
                 <div className="flex items-center gap-2 flex-wrap">
                   <span
-                    className={`font-black text-[10px] px-2 py-0.5 rounded-full ${
+                    className={`font-bold text-[10px] px-2 py-0.5 rounded-md border ${
                       tr.gonderen === "mert"
-                        ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                        : "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                        ? "bg-sky-50 text-sky-700 border-sky-200"
+                        : "bg-pink-50 text-pink-700 border-pink-200"
                     }`}
                   >
                     {KULLANICI_ETIKET[tr.gonderen]}
                   </span>
                   <span className="text-muted text-[11px]">➔</span>
                   <span
-                    className={`font-black text-[10px] px-2 py-0.5 rounded-full ${
+                    className={`font-bold text-[10px] px-2 py-0.5 rounded-md border ${
                       tr.alan === "mert"
-                        ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                        : "bg-pink-500/15 text-pink-400 border border-pink-500/30"
+                        ? "bg-sky-50 text-sky-700 border-sky-200"
+                        : "bg-pink-50 text-pink-700 border-pink-200"
                     }`}
                   >
                     {KULLANICI_ETIKET[tr.alan]}
                   </span>
-                  <span className="font-black text-emerald-400 font-mono">
+                  <span className="font-bold text-success font-mono">
                     {para(tr.tutar)}
                   </span>
                   {tr.tarih && (
@@ -323,12 +316,12 @@ export function GiderV2MahsuplasmaCard({
                   )}
                   {tr.aciklama && (
                     <span className="text-[11px] text-muted italic">
-                      "{tr.aciklama}"
+                      &ldquo;{tr.aciklama}&rdquo;
                     </span>
                   )}
                   {tr.bireyselGidereYansit && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                      {KULLANICI_ETIKET[tr.alan]}'e Gider Yazıldı
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-warning-soft text-warning border border-warning/25">
+                      {KULLANICI_ETIKET[tr.alan]}&apos;e Gider Yazıldı
                     </span>
                   )}
                 </div>
@@ -336,7 +329,7 @@ export function GiderV2MahsuplasmaCard({
                 <button
                   type="button"
                   onClick={() => onTransferSil(tr.id)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer font-bold"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-muted hover:text-danger hover:bg-danger-soft transition cursor-pointer font-bold"
                   title="Transfer kaydını sil"
                 >
                   ✕

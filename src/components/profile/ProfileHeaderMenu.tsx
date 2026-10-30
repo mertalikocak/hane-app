@@ -2,15 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { useProfile } from "@/context/ProfileContext";
-
-const AVATAR_GRADIENTS = [
-  "from-emerald-500 to-teal-700",
-  "from-blue-500 to-indigo-700",
-  "from-violet-500 to-purple-800",
-  "from-amber-500 to-orange-600",
-  "from-rose-500 to-pink-700",
-  "from-cyan-500 to-teal-600",
-];
+import { ChevronDownIcon, PlusIcon, UserIcon, CheckIcon } from "@/components/ui/Icons";
 
 interface ProfileHeaderMenuProps {
   variant?: "desktop" | "mobile";
@@ -29,7 +21,6 @@ export function ProfileHeaderMenu({ variant = "desktop" }: ProfileHeaderMenuProp
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -49,23 +40,17 @@ export function ProfileHeaderMenu({ variant = "desktop" }: ProfileHeaderMenuProp
   const getInitials = (first: string, last?: string) => {
     const f = first ? first[0].toUpperCase() : "";
     const l = last ? last[0].toUpperCase() : "";
-    return `${f}${l}` || "👤";
+    return `${f}${l}` || "K";
   };
-
-  const activeIndex = profiles.findIndex((p) => p.id === activeProfileId);
-  const activeGradient =
-    activeIndex >= 0
-      ? AVATAR_GRADIENTS[activeIndex % AVATAR_GRADIENTS.length]
-      : "from-orange-500 to-amber-600";
 
   if (profiles.length === 0) {
     return (
       <button
         type="button"
         onClick={() => openProfileModal("create")}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 text-white text-xs font-bold shadow-xs hover:scale-105 active:scale-95 transition cursor-pointer"
+        className="inline-flex h-9 items-center gap-1.5 px-3 rounded-[10px] bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors duration-150 cursor-pointer"
       >
-        <span>+</span>
+        <PlusIcon className="h-3.5 w-3.5" />
         <span>Profil Oluştur</span>
       </button>
     );
@@ -73,60 +58,53 @@ export function ProfileHeaderMenu({ variant = "desktop" }: ProfileHeaderMenuProp
 
   return (
     <div className="relative" ref={menuRef}>
-      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 rounded-2xl border transition-all cursor-pointer select-none ${
+        className={`flex items-center gap-2 rounded-[10px] border transition-colors duration-150 cursor-pointer select-none ${
           variant === "mobile"
-            ? "h-9 px-2 bg-surface-raised border-border text-foreground"
-            : "px-2.5 py-1.5 bg-surface hover:bg-surface-raised border-border/80 text-foreground shadow-xs"
+            ? "h-9 px-2.5 bg-surface border-border text-foreground hover:bg-surface-raised"
+            : "h-9 px-2.5 bg-surface hover:bg-surface-raised border-border-strong text-foreground shadow-[var(--shadow-xs)]"
         }`}
         title="Profil Değiştir"
       >
-        {/* Avatar Circle */}
-        <div
-          className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${activeGradient} text-white font-black text-[10px] sm:text-xs shadow-xs`}
-        >
-          {activeProfile ? getInitials(activeProfile.firstName, activeProfile.lastName) : "👤"}
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary text-white font-semibold text-[11px]">
+          {activeProfile ? getInitials(activeProfile.firstName, activeProfile.lastName) : <UserIcon className="h-3.5 w-3.5" />}
         </div>
 
-        {/* Profile Name (Hidden or truncated on small screens) */}
-        <div className="flex items-center gap-1 max-w-[110px] sm:max-w-[140px] truncate">
-          <span className="text-xs font-bold truncate">
+        <div className="flex items-center gap-1 max-w-[100px] sm:max-w-[130px] truncate">
+          <span className="text-xs font-semibold truncate text-foreground">
             {activeProfile ? activeProfile.firstName : "Profil Seç"}
           </span>
-          <span className="text-[10px] text-muted">▾</span>
+          <ChevronDownIcon className="h-3 w-3 text-muted shrink-0" />
         </div>
       </button>
 
-      {/* Popover Dropdown Menu */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-64 rounded-3xl border border-border/90 bg-surface/95 backdrop-blur-xl p-3 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150 space-y-2"
+          className="absolute right-0 mt-2 w-60 rounded-[14px] border border-border-strong bg-surface p-2 shadow-[var(--shadow-md)] z-50 space-y-1.5"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="px-3 py-2 border-b border-border/60">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
+          <div className="px-3 py-2 rounded-[10px] bg-background">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted block">
               Aktif Profil
             </span>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-sm font-extrabold text-foreground truncate">
+            <div className="flex items-center justify-between mt-0.5">
+              <span className="text-xs font-semibold text-foreground truncate">
                 {activeProfile ? `${activeProfile.firstName} ${activeProfile.lastName}` : "Seçilmedi"}
               </span>
-              <span className="text-xs">{activeProfile?.gender === "male" ? "👨" : "👩"}</span>
+              <span className="text-[11px] font-medium text-muted">
+                {activeProfile?.gender === "male" ? "Erkek" : "Kadın"}
+              </span>
             </div>
           </div>
 
-          {/* Quick Switch List */}
-          <div className="space-y-1 max-h-48 overflow-y-auto py-1">
-            <span className="px-3 text-[10px] font-bold text-muted uppercase tracking-wider block mb-1">
-              Profiller
+          <div className="space-y-0.5 max-h-48 overflow-y-auto py-1">
+            <span className="px-2.5 text-[10px] font-semibold text-muted uppercase tracking-wider block mb-1">
+              Hane Üyeleri
             </span>
-            {profiles.map((p, idx) => {
+            {profiles.map((p) => {
               const isSelected = p.id === activeProfileId;
-              const grad = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length];
               const initials = getInitials(p.firstName, p.lastName);
 
               return (
@@ -137,38 +115,39 @@ export function ProfileHeaderMenu({ variant = "desktop" }: ProfileHeaderMenuProp
                     setActiveProfileId(p.id);
                     setIsOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-2xl text-xs font-semibold transition cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors duration-150 cursor-pointer ${
                     isSelected
-                      ? "bg-primary/15 text-primary border border-primary/20"
-                      : "text-foreground/80 hover:bg-surface-raised hover:text-foreground"
+                      ? "bg-accent text-foreground font-semibold"
+                      : "text-foreground-secondary hover:bg-background hover:text-foreground"
                   }`}
                 >
                   <div className="flex items-center gap-2.5 truncate">
                     <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${grad} text-white font-black text-[10px]`}
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold ${
+                        isSelected ? "bg-primary text-white" : "bg-background-subtle text-foreground"
+                      }`}
                     >
                       {initials}
                     </span>
                     <span className="truncate">{p.firstName} {p.lastName}</span>
                   </div>
 
-                  {isSelected && <span className="text-primary font-bold">✓</span>}
+                  {isSelected && <CheckIcon className="h-3.5 w-3.5 text-primary shrink-0" />}
                 </button>
               );
             })}
           </div>
 
-          {/* Action Buttons */}
-          <div className="pt-2 border-t border-border/60 space-y-1">
+          <div className="pt-1.5 border-t border-border space-y-0.5">
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false);
                 openProfileModal("create");
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-primary hover:bg-primary/10 transition cursor-pointer"
+              className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-semibold text-primary hover:bg-surface-lavender transition-colors duration-150 cursor-pointer"
             >
-              <span>+</span>
+              <PlusIcon className="h-3.5 w-3.5" />
               <span>Yeni Profil Ekle</span>
             </button>
 
@@ -178,9 +157,9 @@ export function ProfileHeaderMenu({ variant = "desktop" }: ProfileHeaderMenuProp
                 setIsOpen(false);
                 openProfileModal("select");
               }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-muted hover:text-foreground hover:bg-surface-raised transition cursor-pointer"
+              className="w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium text-foreground-secondary hover:text-foreground hover:bg-background transition-colors duration-150 cursor-pointer"
             >
-              <span>👥 Tüm Profiller / Yönet</span>
+              <span>Profilleri Yönet</span>
               <span>→</span>
             </button>
           </div>

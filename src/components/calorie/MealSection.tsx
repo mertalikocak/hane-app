@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
-import { FoodItem, MealType, SavedMealTemplate, SavedFoodItem } from "@/domain/calorieTypes";
+import React, { useState, useEffect } from "react";
+import { FoodItem, MealType, SavedMealTemplate, SavedFoodItem, SharedMeal } from "@/domain/calorieTypes";
+import { ChevronDownIcon, CloseIcon, PlusIcon } from "@/components/ui/Icons";
 
 interface MealSectionProps {
   items: FoodItem[];
   savedTemplates: SavedMealTemplate[];
   savedFoods: SavedFoodItem[];
+  sharedMeals?: SharedMeal[];
+  selectedDate?: string;
+  activeProfileId?: string;
   onRemoveItem: (id: string) => void;
   onOpenAddModalForMeal: (mealType: MealType) => void;
   onOpenFetchDinnerModal: () => void;
   onOpenSaveTemplateModal: (mealType: MealType, items: FoodItem[]) => void;
+  onShareMeal?: (mealType: MealType, items: FoodItem[]) => void;
   onToggleSaveFood: (item: FoodItem) => void;
 }
 
@@ -26,25 +31,25 @@ const MEAL_CONFIGS: MealConfig[] = [
     type: "breakfast",
     title: "Kahvaltı",
     icon: "🌅",
-    colorClass: "from-amber-500/15 to-orange-500/5 text-amber-500 border-amber-500/20",
+    colorClass: "bg-amber-500/10 text-amber-700 border-amber-500/25",
   },
   {
     type: "lunch",
     title: "Öğle Yemeği",
     icon: "☀️",
-    colorClass: "from-blue-500/15 to-indigo-500/5 text-blue-500 border-blue-500/20",
+    colorClass: "bg-blue-500/10 text-blue-700 border-blue-500/25",
   },
   {
     type: "dinner",
     title: "Akşam Yemeği",
     icon: "🌙",
-    colorClass: "from-purple-500/15 to-pink-500/5 text-purple-500 border-purple-500/20",
+    colorClass: "bg-accent/70 text-primary border-border-lavender",
   },
   {
     type: "snack",
     title: "Ara Öğün / Atıştırmalık",
     icon: "🍎",
-    colorClass: "from-emerald-500/15 to-teal-500/5 text-emerald-500 border-emerald-500/20",
+    colorClass: "bg-emerald-500/10 text-emerald-700 border-emerald-500/25",
   },
 ];
 
@@ -52,30 +57,33 @@ export function MealSection({
   items,
   savedTemplates,
   savedFoods,
+  sharedMeals = [],
+  selectedDate,
+  activeProfileId,
   onRemoveItem,
   onOpenAddModalForMeal,
   onOpenFetchDinnerModal,
   onOpenSaveTemplateModal,
+  onShareMeal,
   onToggleSaveFood,
 }: MealSectionProps) {
-  const [openMeals, setOpenMeals] = useState<Record<MealType, boolean>>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("hane_calorie_open_meals");
-        if (saved) {
-          return JSON.parse(saved);
-        }
-      } catch {
-        // ignore
-      }
-    }
-    return {
-      breakfast: true,
-      lunch: true,
-      dinner: true,
-      snack: true,
-    };
+  const [openMeals, setOpenMeals] = useState<Record<MealType, boolean>>({
+    breakfast: true,
+    lunch: true,
+    dinner: true,
+    snack: true,
   });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("hane_calorie_open_meals");
+      if (saved) {
+        setOpenMeals(JSON.parse(saved));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const toggleMeal = (type: MealType) => {
     setOpenMeals((prev) => {
@@ -107,20 +115,20 @@ export function MealSection({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {/* Accordion Master Toggle Button */}
       <div className="flex justify-end">
         <button
           type="button"
           onClick={toggleAllMeals}
-          className="text-[11px] font-bold text-muted hover:text-foreground flex items-center gap-1.5 transition cursor-pointer px-2.5 py-1 rounded-xl bg-surface border border-border/70 hover:bg-surface-raised shadow-2xs"
+          className="secondary-button px-3 py-1.5 text-xs h-8 min-h-0"
           title={allOpen ? "Tüm öğünleri kapat" : "Tüm öğünleri aç"}
         >
           <span>{allOpen ? "🔼 Tümünü Kapat" : "🔽 Tümünü Aç"}</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 items-start gap-4">
         {MEAL_CONFIGS.map((cfg) => {
           const isOpen = Boolean(openMeals[cfg.type]);
           const mealItems = items.filter((item) => item.mealType === cfg.type);
@@ -155,14 +163,26 @@ export function MealSection({
                 )
             );
 
+          // Bu öğün diğer kullanıcılarla paylaşılmış mı?
+          const isMealShared =
+            mealItems.length > 0 &&
+            sharedMeals.some(
+              (s) =>
+                (!selectedDate || s.date === selectedDate) &&
+                (!activeProfileId || s.sharedByProfileId === activeProfileId) &&
+                s.mealType === cfg.type &&
+                s.items.length === mealItems.length &&
+                s.items.every((si) =>
+                  mealItems.some(
+                    (mi) => mi.name.toLowerCase().trim() === si.name.toLowerCase().trim()
+                  )
+                )
+            );
+
           return (
             <div
               key={cfg.type}
-              className={`flex flex-col rounded-3xl border border-border bg-surface p-4 shadow-xs transition duration-200 ${
-                isOpen
-                  ? "justify-between hover:border-border/80"
-                  : "hover:border-primary/40 hover:bg-surface-raised/40"
-              }`}
+              className="ds-card self-start flex flex-col p-4 transition duration-150"
             >
               <div>
                 {/* Meal Card Header (Clickable Accordion Trigger) */}
@@ -178,12 +198,12 @@ export function MealSection({
                     }
                   }}
                   className={`flex items-center justify-between cursor-pointer select-none group/header ${
-                    isOpen ? "pb-3 border-b border-border/70" : ""
+                    isOpen ? "pb-3 border-b border-border" : ""
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br border ${cfg.colorClass} text-lg shadow-2xs shrink-0`}
+                      className={`flex h-9 w-9 items-center justify-center rounded-xl border ${cfg.colorClass} text-lg shrink-0`}
                     >
                       {cfg.icon}
                     </span>
@@ -194,7 +214,7 @@ export function MealSection({
                         </h3>
 
                         {/* Item count badge */}
-                        <span className="text-[10px] font-semibold text-muted bg-surface-raised px-1.5 py-0.5 rounded-md border border-border/60">
+                        <span className="ds-badge ds-badge-neutral text-[10px]">
                           {mealItems.length} yiyecek
                         </span>
 
@@ -203,7 +223,7 @@ export function MealSection({
                           isMealSaved ? (
                             <span
                               onClick={(e) => e.stopPropagation()}
-                              className="text-[10px] font-extrabold text-amber-500 bg-amber-500/10 border border-amber-500/25 px-2 py-0.5 rounded-lg flex items-center gap-1"
+                              className="ds-badge ds-badge-warning text-[10px]"
                             >
                               <span>✓</span>
                               <span>Kaydedildi</span>
@@ -215,7 +235,7 @@ export function MealSection({
                                 e.stopPropagation();
                                 onOpenSaveTemplateModal(cfg.type, mealItems);
                               }}
-                              className="text-[10px] font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-0.5 cursor-pointer"
+                              className="text-[11px] font-bold text-warning hover:underline flex items-center gap-1 cursor-pointer"
                               title="Bu öğünü şablon olarak kaydet"
                             >
                               <span>💾</span>
@@ -223,8 +243,34 @@ export function MealSection({
                             </button>
                           )
                         )}
+
+                        {/* Paylaş / Paylaşıldı Durumu */}
+                        {mealItems.length > 0 && onShareMeal && (
+                          isMealShared ? (
+                            <span
+                              onClick={(e) => e.stopPropagation()}
+                              className="ds-badge ds-badge-primary text-[10px]"
+                            >
+                              <span>🤝</span>
+                              <span>Paylaşıldı</span>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onShareMeal(cfg.type, mealItems);
+                              }}
+                              className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                              title="Bu öğünü diğer hane üyeleriyle paylaş"
+                            >
+                              <span>🤝</span>
+                              <span>Paylaş</span>
+                            </button>
+                          )
+                        )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted">
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted tabular-nums">
                         <span>P: {Math.round(mealProtein)}g</span>
                         <span>•</span>
                         <span>K: {Math.round(mealCarbs)}g</span>
@@ -235,8 +281,8 @@ export function MealSection({
                   </div>
 
                   <div className="flex items-center gap-2.5 shrink-0 ml-2">
-                    <div className="text-right">
-                      <span className="text-sm font-black text-foreground">
+                    <div className="text-right tabular-nums">
+                      <span className="text-sm font-bold text-foreground">
                         {mealCalories}
                       </span>
                       <span className="text-[10px] text-muted ml-0.5">kcal</span>
@@ -244,31 +290,23 @@ export function MealSection({
 
                     {/* Animated Chevron Indicator */}
                     <div
-                      className={`flex h-7 w-7 items-center justify-center rounded-xl bg-surface-raised border border-border/60 text-muted group-hover/header:text-foreground group-hover/header:border-primary/40 transition-transform duration-200 ${
+                      className={`flex h-7 w-7 items-center justify-center rounded-lg bg-surface-raised border border-border text-muted group-hover/header:text-foreground group-hover/header:border-primary/40 transition-transform duration-150 ${
                         isOpen ? "rotate-180" : "rotate-0"
                       }`}
                       title={isOpen ? "Öğünü Gizle" : "Öğünü Aç"}
                     >
-                      <svg
-                        className="w-3.5 h-3.5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={2.5}
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
+                      <ChevronDownIcon size={14} />
                     </div>
                   </div>
                 </div>
 
                 {/* Collapsible Content */}
                 {isOpen && (
-                  <div className="animate-in fade-in duration-200">
+                  <div className="animate-in fade-in duration-150">
                     {/* Items List */}
                     <div className="py-3 space-y-2">
                       {mealItems.length === 0 ? (
-                        <div className="py-5 text-center text-xs text-muted/70 italic">
+                        <div className="py-5 text-center text-xs text-muted italic">
                           Henüz yiyecek eklenmedi
                         </div>
                       ) : (
@@ -280,7 +318,7 @@ export function MealSection({
                           return (
                             <div
                               key={item.id}
-                              className="group flex items-center justify-between rounded-2xl border border-border/60 bg-surface-raised/60 p-2.5 hover:bg-surface-raised transition"
+                              className="group flex items-center justify-between rounded-xl border border-border bg-surface-raised p-2.5 transition"
                             >
                               <div className="flex flex-col min-w-0 pr-2">
                                 <div className="flex items-center gap-1.5">
@@ -288,38 +326,38 @@ export function MealSection({
                                     {item.name}
                                   </span>
                                   {item.source === "ai" && (
-                                    <span className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-1 py-0.2 text-[9px] font-extrabold text-emerald-500">
+                                    <span className="ds-badge ds-badge-success text-[9px] px-1.5 py-0">
                                       AI
                                     </span>
                                   )}
                                   {item.source === "dinner" && (
-                                    <span className="rounded-md bg-purple-500/10 border border-purple-500/20 px-1 py-0.2 text-[9px] font-extrabold text-purple-500">
+                                    <span className="ds-badge ds-badge-primary text-[9px] px-1.5 py-0">
                                       Dinner
                                     </span>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 text-[11px] text-muted mt-0.5">
+                                <div className="flex items-center gap-2 text-[11px] text-muted mt-0.5 tabular-nums">
                                   <span>{item.portion}</span>
                                   <span>•</span>
-                                  <span className="text-muted/80">
+                                  <span>
                                     P:{Math.round(item.protein)}g K:{Math.round(item.carbs)}g Y:{Math.round(item.fat)}g
                                   </span>
                                 </div>
                               </div>
 
                               <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="text-xs font-bold text-foreground mr-1">
+                                <span className="text-xs font-bold text-foreground mr-1 tabular-nums">
                                   {item.calories} kcal
                                 </span>
 
-                                {/* Save Single Food to Favorites (Yellow star if saved) */}
+                                {/* Save Single Food to Favorites */}
                                 <button
                                   type="button"
                                   onClick={() => onToggleSaveFood(item)}
-                                  className={`flex h-7 w-7 items-center justify-center rounded-xl transition cursor-pointer text-sm font-bold ${
+                                  className={`flex h-7 w-7 items-center justify-center rounded-lg transition cursor-pointer text-sm font-bold ${
                                     isFoodSaved
-                                      ? "text-amber-400 bg-amber-500/15 border border-amber-500/35 opacity-100 shadow-xs scale-105"
-                                      : "text-muted hover:text-amber-400 opacity-35 group-hover:opacity-90 hover:bg-surface border border-transparent"
+                                      ? "text-amber-600 bg-amber-500/15 border border-amber-500/35 opacity-100"
+                                      : "text-muted hover:text-amber-600 opacity-100 sm:opacity-60 sm:group-hover:opacity-100 hover:bg-surface border border-transparent"
                                   }`}
                                   title={isFoodSaved ? "Favorilerden Çıkar (Kaydedildi)" : "Favorilere Kaydet"}
                                   aria-label={`${item.name} favori durumunu değiştir`}
@@ -331,11 +369,11 @@ export function MealSection({
                                 <button
                                   type="button"
                                   onClick={() => onRemoveItem(item.id)}
-                                  className="opacity-40 group-hover:opacity-100 flex h-7 w-7 items-center justify-center rounded-xl text-muted hover:text-rose-500 hover:bg-rose-500/10 transition cursor-pointer"
+                                  className="opacity-100 sm:opacity-60 sm:group-hover:opacity-100 flex h-7 w-7 items-center justify-center rounded-lg text-muted hover:text-rose-600 hover:bg-rose-500/10 transition cursor-pointer"
                                   title="Yiyeceği Sil"
                                   aria-label={`${item.name} öğesini sil`}
                                 >
-                                  ✕
+                                  <CloseIcon size={13} />
                                 </button>
                               </div>
                             </div>
@@ -350,7 +388,7 @@ export function MealSection({
                         <button
                           type="button"
                           onClick={onOpenFetchDinnerModal}
-                          className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl border border-purple-500/30 bg-purple-500/10 py-2 text-xs font-bold text-purple-600 dark:text-purple-400 hover:bg-purple-500/20 transition cursor-pointer"
+                          className="accent-button flex-1 py-2 text-xs"
                         >
                           <span>🍽️</span>
                           <span>Akşam Yemeğini Çek</span>
@@ -360,15 +398,31 @@ export function MealSection({
                       <button
                         type="button"
                         onClick={() => onOpenAddModalForMeal(cfg.type)}
-                        className={`flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border/80 py-2 text-xs font-semibold text-muted hover:text-foreground hover:bg-surface-raised hover:border-primary/40 transition cursor-pointer ${
+                        className={`secondary-button border-dashed py-2 text-xs ${
                           cfg.type === "dinner" ? "flex-1" : "w-full"
                         }`}
                       >
-                        <span className="text-primary font-bold">+</span>
+                        <PlusIcon size={14} className="text-primary" />
                         <span>{cfg.title} Ekle</span>
                       </button>
                     </div>
                   </div>
+                )}
+
+                {/* Collapsed Summary Line when accordion is closed and has foods */}
+                {!isOpen && mealItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => toggleMeal(cfg.type)}
+                    className="mt-2.5 pt-2.5 border-t border-border w-full flex items-center justify-between gap-2 text-left text-xs text-muted hover:text-foreground transition-colors cursor-pointer"
+                  >
+                    <span className="truncate">
+                      {mealItems.map((i) => i.name).join(", ")}
+                    </span>
+                    <span className="shrink-0 text-[11px] font-semibold text-primary">
+                      Detayları Gör
+                    </span>
+                  </button>
                 )}
               </div>
             </div>
@@ -378,4 +432,3 @@ export function MealSection({
     </div>
   );
 }
-

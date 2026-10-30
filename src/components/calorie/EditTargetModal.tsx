@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { setCustomTarget } from "@/storage/calorieStorage";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface EditTargetModalProps {
   isOpen: boolean;
@@ -45,15 +46,15 @@ export function EditTargetModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
-        className="w-full max-w-sm rounded-3xl border border-border bg-surface p-5 shadow-2xl space-y-4"
+        className="w-full max-w-sm rounded-2xl border border-border bg-surface p-5 shadow-lg space-y-4"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between border-b border-border/70 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary text-base">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary text-base">
               🎯
             </span>
             <h3 className="text-sm font-bold text-foreground">
@@ -63,9 +64,9 @@ export function EditTargetModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={15} />
           </button>
         </div>
 
@@ -81,14 +82,14 @@ export function EditTargetModal({
               required
               value={target}
               onChange={(e) => setTarget(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-surface-raised px-4 py-3 text-lg font-black text-foreground focus:border-primary focus:outline-none"
+              className="field text-lg font-bold tabular-nums"
             />
           </div>
 
-          <div className="rounded-2xl border border-border/80 bg-surface-raised/60 p-3 space-y-1.5 text-xs">
+          <div className="rounded-xl border border-border bg-surface-raised p-3 space-y-1.5 text-xs">
             <div className="text-muted flex justify-between">
               <span>Hane Fit Önerisi:</span>
-              <span className="font-bold text-foreground">{suggestedTarget} kcal</span>
+              <span className="font-bold text-foreground tabular-nums">{suggestedTarget} kcal</span>
             </div>
             <button
               type="button"
@@ -99,17 +100,17 @@ export function EditTargetModal({
             </button>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/70">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-2 text-xs font-semibold text-muted hover:text-foreground cursor-pointer"
+              className="secondary-button px-4 py-2 text-xs"
             >
               İptal
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-primary-hover cursor-pointer"
+              className="primary-button px-5 py-2 text-xs"
             >
               Kaydet
             </button>

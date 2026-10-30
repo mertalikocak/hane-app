@@ -7,7 +7,6 @@ import type { TaksitKarti, TaksitKalemi } from "@/domain/taksitTypes";
 import {
   ayAnahtariOlustur,
   ayAnahtariParcala,
-  kayitliAyAnahtarlariniListele,
   taksitleriAyaAktar,
   ayVerisiTaksitYedegiVarMi,
   ayVerisiTaksitYedegindenGeriAl,
@@ -184,15 +183,15 @@ export function TaksitAktarimModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-xl max-h-[92vh] flex flex-col rounded-3xl border border-border/80 bg-surface shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="w-full max-w-xl max-h-[92vh] flex flex-col rounded-2xl border border-border bg-surface shadow-lg overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border/70 bg-surface/90 backdrop-blur-md shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-border bg-surface shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white font-bold text-lg shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-lavender border border-border-lavender text-lg">
               📥
             </div>
             <div>
@@ -212,7 +211,8 @@ export function TaksitAktarimModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-surface-raised text-muted hover:text-foreground transition cursor-pointer"
+            className="icon-button"
+            aria-label="Kapat"
           >
             <CloseIcon className="w-4 h-4" />
           </button>
@@ -222,14 +222,14 @@ export function TaksitAktarimModal({
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Başarı Bildirimi */}
           {isDone && (
-            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-3 animate-in fade-in duration-150">
+            <div className="p-4 rounded-xl bg-success-soft border border-success/30 flex items-center justify-between gap-3 animate-in fade-in duration-150">
               <div className="flex items-center gap-2.5">
                 <span className="text-2xl">✅</span>
                 <div>
                   <span className="text-xs font-bold text-foreground block">
                     Taksitler {formatAyLabel(hedefAy)} Tablosuna Aktarıldı!
                   </span>
-                  <span className="text-[11px] text-muted block">
+                  <span className="text-[11px] text-foreground-secondary block">
                     Ev Giderleri sekmesinde ekstreleri ve kişi paylarını görüntüleyebilirsiniz.
                   </span>
                 </div>
@@ -237,7 +237,7 @@ export function TaksitAktarimModal({
               <button
                 type="button"
                 onClick={handleGeriAl}
-                className="px-3 py-1.5 rounded-xl bg-surface border border-border text-xs font-bold text-amber-400 hover:text-amber-300 transition cursor-pointer shrink-0"
+                className="px-3 py-1.5 rounded-xl bg-surface border border-border text-xs font-bold text-warning hover:bg-surface-raised transition cursor-pointer shrink-0"
               >
                 ↩️ Geri Al
               </button>
@@ -246,17 +246,17 @@ export function TaksitAktarimModal({
 
           {/* Geri Alınabilir Yedek Uyarısı */}
           {!isDone && hasBackup && (
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between gap-3 text-xs">
+            <div className="p-3.5 rounded-xl bg-warning-soft border border-warning/25 flex items-center justify-between gap-3 text-xs">
               <div className="flex items-center gap-2">
                 <span>ℹ️</span>
-                <span className="text-muted">
+                <span className="text-foreground-secondary">
                   Bu ay için önceden aktarılmış bir taksit yedeği bulunuyor.
                 </span>
               </div>
               <button
                 type="button"
                 onClick={handleGeriAl}
-                className="px-2.5 py-1 rounded-lg bg-surface border border-border font-bold text-amber-400 hover:bg-surface-raised transition cursor-pointer shrink-0"
+                className="px-2.5 py-1 rounded-lg bg-surface border border-border font-bold text-warning hover:bg-surface-raised transition cursor-pointer shrink-0"
               >
                 Son Aktarımı Geri Al
               </button>
@@ -264,7 +264,7 @@ export function TaksitAktarimModal({
           )}
 
           {/* 1. Aktarılacak Kart Kapsamı (Toplu mu, Tek Kart mı?) */}
-          <div className="p-4 rounded-2xl bg-surface-raised/60 border border-border/70 space-y-2.5">
+          <div className="p-4 rounded-xl bg-surface-raised border border-border space-y-2.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-foreground block">
                 1. Hangi Kartlar Aktarılsın?
@@ -287,14 +287,18 @@ export function TaksitAktarimModal({
                 className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer flex items-center justify-between ${
                   seciliKartId === "tum"
                     ? "bg-primary text-white border-primary shadow-xs"
-                    : "bg-surface border-border text-foreground hover:bg-border/30"
+                    : "bg-surface border-border text-foreground hover:bg-background-subtle"
                 }`}
               >
                 <span className="flex items-center gap-1.5">
                   <span>💳</span>
                   <span>Tüm Aktif Kartlar (Toplu)</span>
                 </span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/20 font-mono">
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+                    seciliKartId === "tum" ? "bg-white/20 text-white" : "bg-surface-raised text-muted"
+                  }`}
+                >
                   {kartlar.filter((k) => k.aktif !== false).length} Kart
                 </span>
               </button>
@@ -309,14 +313,18 @@ export function TaksitAktarimModal({
                     className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer flex items-center justify-between truncate ${
                       seciliKartId === k.id
                         ? "bg-primary text-white border-primary shadow-xs"
-                        : "bg-surface border-border text-foreground hover:bg-border/30"
+                        : "bg-surface border-border text-foreground hover:bg-background-subtle"
                     }`}
                   >
                     <span className="flex items-center gap-1.5 truncate">
                       <span>💳</span>
                       <span className="truncate">{k.ad}</span>
                     </span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-black/20 shrink-0 font-mono">
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-full shrink-0 font-mono ${
+                        seciliKartId === k.id ? "bg-white/20 text-white" : "bg-surface-raised text-muted"
+                      }`}
+                    >
                       {k.kartSahibi.toUpperCase()}
                     </span>
                   </button>
@@ -325,7 +333,7 @@ export function TaksitAktarimModal({
           </div>
 
           {/* 2. Hedef Ay Seçimi */}
-          <div className="p-4 rounded-2xl bg-surface-raised/60 border border-border/70 space-y-2.5">
+          <div className="p-4 rounded-xl bg-surface-raised border border-border space-y-2.5">
             <label className="text-xs font-bold text-foreground block">
               2. Hangi Ayın Gider Tablosuna Aktarılsın?
             </label>
@@ -336,7 +344,7 @@ export function TaksitAktarimModal({
                 className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer text-left ${
                   hedefAy === simdikiAy
                     ? "bg-primary text-white border-primary shadow-xs"
-                    : "bg-surface border-border text-foreground hover:bg-border/30"
+                    : "bg-surface border-border text-foreground hover:bg-background-subtle"
                 }`}
               >
                 <span>📅 Bu Ay ({formatAyLabel(simdikiAy)})</span>
@@ -347,7 +355,7 @@ export function TaksitAktarimModal({
                 className={`py-2 px-3 rounded-xl text-xs font-bold border transition cursor-pointer text-left ${
                   hedefAy === gelecekAy
                     ? "bg-primary text-white border-primary shadow-xs"
-                    : "bg-surface border-border text-foreground hover:bg-border/30"
+                    : "bg-surface border-border text-foreground hover:bg-background-subtle"
                 }`}
               >
                 <span>🔜 Gelecek Ay ({formatAyLabel(gelecekAy)})</span>
@@ -356,7 +364,7 @@ export function TaksitAktarimModal({
           </div>
 
           {/* 3. Aktarım Modu Seçimi */}
-          <div className="p-4 rounded-2xl bg-surface-raised/60 border border-border/70 space-y-2.5">
+          <div className="p-4 rounded-xl bg-surface-raised border border-border space-y-2.5">
             <label className="text-xs font-bold text-foreground block">
               3. Aktarım Şekli
             </label>
@@ -365,8 +373,8 @@ export function TaksitAktarimModal({
                 onClick={() => setAktarimModu("birlestir")}
                 className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
                   aktarimModu === "birlestir"
-                    ? "bg-surface border-primary/60 ring-1 ring-primary/40"
-                    : "bg-surface/50 border-border hover:bg-surface"
+                    ? "bg-surface border-primary ring-1 ring-primary/30"
+                    : "bg-surface border-border hover:bg-background-subtle"
                 }`}
               >
                 <input
@@ -377,9 +385,9 @@ export function TaksitAktarimModal({
                   className="mt-0.5 accent-primary cursor-pointer"
                 />
                 <div className="text-xs">
-                  <span className="font-bold text-foreground block flex items-center gap-1.5">
+                  <span className="font-bold text-foreground flex items-center gap-1.5">
                     <span>Mevcut Kartlarla Eşleştir & Güncelle</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-extrabold uppercase">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-success-soft text-success font-bold uppercase">
                       Önerilen
                     </span>
                   </span>
@@ -396,8 +404,8 @@ export function TaksitAktarimModal({
                 }}
                 className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition ${
                   aktarimModu === "arti_bir"
-                    ? "bg-surface border-primary/60 ring-1 ring-primary/40"
-                    : "bg-surface/50 border-border hover:bg-surface"
+                    ? "bg-surface border-primary ring-1 ring-primary/30"
+                    : "bg-surface border-border hover:bg-background-subtle"
                 }`}
               >
                 <input
@@ -411,9 +419,9 @@ export function TaksitAktarimModal({
                   className="mt-0.5 accent-primary cursor-pointer"
                 />
                 <div className="text-xs">
-                  <span className="font-bold text-foreground block flex items-center gap-1.5">
+                  <span className="font-bold text-foreground flex items-center gap-1.5">
                     <span>Taksitleri +1 Arttırarak Ekle</span>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-primary/20 text-primary font-extrabold uppercase">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-lavender text-primary font-bold uppercase border border-border-lavender">
                       Gelecek Ay İçin
                     </span>
                   </span>
@@ -432,7 +440,7 @@ export function TaksitAktarimModal({
             </span>
 
             {previewData.kartDetaylari.length === 0 ? (
-              <div className="p-4 text-center rounded-xl bg-surface border border-dashed border-border/80 text-muted text-xs">
+              <div className="p-4 text-center rounded-xl bg-surface border border-dashed border-border text-muted text-xs">
                 Seçilen kriterlere uygun aktarılacak taksit bulunamadı.
               </div>
             ) : (
@@ -440,17 +448,17 @@ export function TaksitAktarimModal({
                 {previewData.kartDetaylari.map(({ kart, toplam, mertBireysel, havsaBireysel, ortak }) => (
                   <div
                     key={kart.id}
-                    className="p-3 rounded-xl bg-surface border border-border/80 flex items-center justify-between text-xs"
+                    className="p-3 rounded-xl bg-surface border border-border flex items-center justify-between text-xs"
                   >
                     <div>
                       <span className="font-bold text-foreground block">
                         💳 {kart.ad}
                       </span>
-                      <span className="text-[11px] text-muted block mt-0.5">
+                      <span className="text-[11px] text-muted block mt-0.5 tabular-nums">
                         Mert: {paraFormat(mertBireysel)} • Havsa: {paraFormat(havsaBireysel)} • Ortak: {paraFormat(ortak)}
                       </span>
                     </div>
-                    <span className="font-black text-foreground text-sm">
+                    <span className="font-bold text-foreground text-sm tabular-nums">
                       {paraFormat(toplam)}
                     </span>
                   </div>
@@ -460,18 +468,18 @@ export function TaksitAktarimModal({
 
             {/* Toplam Bütçe Yansıması */}
             {previewData.kartDetaylari.length > 0 && (
-              <div className="p-3.5 rounded-xl bg-surface-raised border border-border/80 text-xs space-y-1.5">
+              <div className="p-3.5 rounded-xl bg-surface-raised border border-border text-xs space-y-1.5">
                 <div className="flex items-center justify-between text-muted">
                   <span>Toplam Ev Gideri:</span>
-                  <span className="font-bold text-foreground">{paraFormat(previewData.toplamAylik)}</span>
+                  <span className="font-bold text-foreground tabular-nums">{paraFormat(previewData.toplamAylik)}</span>
                 </div>
                 <div className="flex items-center justify-between text-muted">
                   <span>Mert'in Bütçesine Yansıyacak Borç:</span>
-                  <span className="font-bold text-primary">{paraFormat(previewData.mertToplamPay)}</span>
+                  <span className="font-bold text-primary tabular-nums">{paraFormat(previewData.mertToplamPay)}</span>
                 </div>
                 <div className="flex items-center justify-between text-muted">
                   <span>Havsa'nın Bütçesine Yansıyacak Borç:</span>
-                  <span className="font-bold text-primary">{paraFormat(previewData.havsaToplamPay)}</span>
+                  <span className="font-bold text-primary tabular-nums">{paraFormat(previewData.havsaToplamPay)}</span>
                 </div>
               </div>
             )}
@@ -479,11 +487,11 @@ export function TaksitAktarimModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border/70 flex items-center justify-between gap-3 bg-surface/90 shrink-0">
+        <div className="p-4 border-t border-border flex items-center justify-between gap-3 bg-surface shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="secondary-button px-4 text-xs font-bold cursor-pointer"
+            className="secondary-button px-4 text-xs font-semibold"
           >
             Vazgeç
           </button>
@@ -492,7 +500,7 @@ export function TaksitAktarimModal({
             type="button"
             onClick={handleAktar}
             disabled={previewData.kartDetaylari.length === 0}
-            className="primary-button px-5 py-2.5 text-xs font-bold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            className="primary-button px-5 py-2.5 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span>📥</span>
             <span>

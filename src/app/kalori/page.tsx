@@ -14,6 +14,8 @@ import {
   getSavedFoods,
   toggleSavedFood,
   syncExistingRecordsToHistory,
+  getSharedMeals,
+  shareMeal,
 } from "@/storage/calorieStorage";
 import {
   DailyCalorieRecord,
@@ -21,6 +23,7 @@ import {
   MealType,
   SavedMealTemplate,
   SavedFoodItem,
+  SharedMeal,
 } from "@/domain/calorieTypes";
 import { CalorieHeader } from "@/components/calorie/CalorieHeader";
 import { CalorieSummaryCards } from "@/components/calorie/CalorieSummaryCards";
@@ -61,6 +64,7 @@ export default function KaloriPage() {
   const [hasApiKey, setHasApiKey] = useState(false);
   const [savedTemplates, setSavedTemplates] = useState<SavedMealTemplate[]>([]);
   const [savedFoods, setSavedFoods] = useState<SavedFoodItem[]>([]);
+  const [sharedMeals, setSharedMeals] = useState<SharedMeal[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Check API key presence
@@ -69,10 +73,11 @@ export default function KaloriPage() {
     setHasApiKey(Boolean(key && key.trim().length > 0));
   }, []);
 
-  // Refresh saved templates and foods
+  // Refresh saved templates, foods and shared meals
   const refreshSavedData = useCallback(() => {
     setSavedTemplates(getSavedTemplates());
     setSavedFoods(getSavedFoods());
+    setSharedMeals(getSharedMeals());
   }, []);
 
   // Compute profile metadata from Hane Fit
@@ -158,6 +163,22 @@ export default function KaloriPage() {
     setIsSaveTemplateOpen(true);
   };
 
+  const handleShareMeal = (mealType: MealType, items: FoodItem[]) => {
+    const profileId = activeProfileId || "default";
+    const profileName = activeProfile ? `${activeProfile.firstName}`.trim() : "Hane Sakini";
+    shareMeal({
+      mealType,
+      date: selectedDate,
+      sharedByProfileId: profileId,
+      sharedByName: profileName,
+      items,
+    });
+    refreshSavedData();
+    queueLocalChangePush();
+    setToastMessage(`🤝 "${profileName}" olarak bu öğün hane ile paylaşıldı!`);
+    setTimeout(() => setToastMessage(null), 2500);
+  };
+
   const handleToggleSaveFood = (item: FoodItem) => {
     const res = toggleSavedFood({
       name: item.name,
@@ -184,64 +205,67 @@ export default function KaloriPage() {
   const targetCalories = dailyRecord?.targetCalories || profileMeta.suggestedCalories;
 
   return (
-    <div className="min-h-screen bg-background pb-20 relative">
+    <div className="space-y-6 pb-8 relative">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 rounded-2xl bg-foreground text-background px-4 py-2.5 text-xs font-bold shadow-2xl animate-in fade-in slide-in-from-bottom-2">
+        <div className="fixed bottom-6 right-6 z-50 rounded-xl bg-foreground text-surface px-4 py-2.5 text-xs font-semibold shadow-lg animate-in fade-in slide-in-from-bottom-2">
           {toastMessage}
         </div>
       )}
 
-      <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 space-y-6">
-        {/* Header & Controls */}
-        <CalorieHeader
-          selectedDate={selectedDate}
-          onDateChange={setSelectedDate}
-          profileMeta={profileMeta}
-          targetCalories={targetCalories}
-          hasApiKey={hasApiKey}
-          onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
-          onOpenAddModal={() => {
-            setAddModalInitialMeal("lunch");
-            setIsAddModalOpen(true);
-          }}
-          onOpenEditTargetModal={() => setIsEditTargetModalOpen(true)}
-        />
+      {/* Header & Controls */}
+      <CalorieHeader
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        profileMeta={profileMeta}
+        targetCalories={targetCalories}
+        hasApiKey={hasApiKey}
+        onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}
+        onOpenAddModal={() => {
+          setAddModalInitialMeal("lunch");
+          setIsAddModalOpen(true);
+        }}
+        onOpenEditTargetModal={() => setIsEditTargetModalOpen(true)}
+      />
 
-        {/* Big Summary & Macro Cards */}
-        <CalorieSummaryCards
-          targetCalories={targetCalories}
-          macros={macros}
-        />
+      {/* Big Summary & Macro Cards */}
+      <CalorieSummaryCards
+        targetCalories={targetCalories}
+        macros={macros}
+      />
 
-        {/* 4 Meal Sections */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-foreground">
-              Günün Öğünleri
-            </h2>
-            <span className="text-xs text-muted">
-              {dailyRecord?.items.length || 0} kayıtlı yiyecek
-            </span>
-          </div>
-
-          <MealSection
-            items={dailyRecord?.items || []}
-            savedTemplates={savedTemplates}
-            savedFoods={savedFoods}
-            onRemoveItem={handleRemoveItem}
-            onOpenAddModalForMeal={handleOpenAddForMeal}
-            onOpenFetchDinnerModal={() => setIsFetchDinnerOpen(true)}
-            onOpenSaveTemplateModal={handleOpenSaveTemplate}
-            onToggleSaveFood={handleToggleSaveFood}
-          />
+      {/* 4 Meal Sections */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-foreground">
+            Günün Öğünleri
+          </h2>
+          <span className="ds-badge ds-badge-neutral">
+            {dailyRecord?.items.length || 0} kayıtlı yiyecek
+          </span>
         </div>
+
+        <MealSection
+          items={dailyRecord?.items || []}
+          savedTemplates={savedTemplates}
+          savedFoods={savedFoods}
+          sharedMeals={sharedMeals}
+          selectedDate={selectedDate}
+          activeProfileId={activeProfileId}
+          onRemoveItem={handleRemoveItem}
+          onOpenAddModalForMeal={handleOpenAddForMeal}
+          onOpenFetchDinnerModal={() => setIsFetchDinnerOpen(true)}
+          onOpenSaveTemplateModal={handleOpenSaveTemplate}
+          onShareMeal={handleShareMeal}
+          onToggleSaveFood={handleToggleSaveFood}
+        />
       </div>
 
-      {/* Add Meal Modal (AI / Saved / Manual) */}
+      {/* Add Meal Modal (AI / Saved / Manual / Shared) */}
       <AddMealModal
         isOpen={isAddModalOpen}
         initialMealType={addModalInitialMeal}
+        selectedDate={selectedDate}
         onClose={() => setIsAddModalOpen(false)}
         onAddItems={handleAddItems}
         onOpenApiKeyModal={() => setIsApiKeyModalOpen(true)}

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { addCleaningRoom } from "@/storage/cleaningStorage";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface AddRoomModalProps {
   isOpen: boolean;
@@ -32,14 +33,16 @@ export function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
-        className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-2xl space-y-5"
+        className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-lg space-y-5"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
-        <div className="flex items-center justify-between border-b border-border/80 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-xl text-primary">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-xl text-primary">
               🏠
             </span>
             <div>
@@ -50,9 +53,9 @@ export function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-raised text-muted hover:text-foreground text-sm font-bold"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
@@ -84,8 +87,8 @@ export function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
                   onClick={() => setIcon(ic)}
                   className={`flex h-10 w-10 items-center justify-center rounded-xl border text-xl transition cursor-pointer ${
                     icon === ic
-                      ? "border-primary bg-primary/15 ring-2 ring-primary/20 scale-105"
-                      : "border-border/70 bg-surface-raised hover:bg-border/30"
+                      ? "border-primary bg-accent/70 ring-2 ring-primary/20"
+                      : "border-border bg-surface-raised hover:bg-background-subtle"
                   }`}
                 >
                   {ic}
@@ -112,11 +115,11 @@ export function AddRoomModal({ isOpen, onClose }: AddRoomModalProps) {
             </select>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
-            <button type="button" onClick={onClose} className="secondary-button text-xs px-4">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+            <button type="button" onClick={onClose} className="secondary-button text-xs px-4 py-2">
               Vazgeç
             </button>
-            <button type="submit" className="primary-button text-xs px-5">
+            <button type="submit" className="primary-button text-xs px-5 py-2">
               Odayı Ekle
             </button>
           </div>

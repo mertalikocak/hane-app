@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, type Firestore } from "firebase/firestore";
 
 export interface FirebaseConfigOptions {
   apiKey: string;
@@ -13,20 +13,20 @@ export interface FirebaseConfigOptions {
 const STORAGE_KEY_FIREBASE_CONFIG = "hane_firebase_custom_config";
 
 /**
- * Retrieves Firebase config from environment variables or custom UI storage
+  Retrieves Firebase config from environment variables or custom UI storage
  */
 export function getFirebaseConfig(): FirebaseConfigOptions | null {
   if (typeof window !== "undefined") {
-    const custom = localStorage.getItem(STORAGE_KEY_FIREBASE_CONFIG);
-    if (custom) {
-      try {
+    try {
+      const custom = localStorage.getItem(STORAGE_KEY_FIREBASE_CONFIG);
+      if (custom) {
         const parsed = JSON.parse(custom) as FirebaseConfigOptions;
         if (parsed.apiKey && parsed.projectId && parsed.appId) {
           return parsed;
         }
-      } catch {
-        // ignore JSON parse error
       }
+    } catch {
+      // ignore JSON parse or storage access error
     }
   }
 
@@ -48,14 +48,22 @@ export function getFirebaseConfig(): FirebaseConfigOptions | null {
 
 export function saveFirebaseCustomConfig(config: FirebaseConfigOptions): void {
   if (typeof window !== "undefined") {
-    localStorage.setItem(STORAGE_KEY_FIREBASE_CONFIG, JSON.stringify(config));
+    try {
+      localStorage.setItem(STORAGE_KEY_FIREBASE_CONFIG, JSON.stringify(config));
+    } catch {
+      // ignore storage errors
+    }
     window.dispatchEvent(new Event("hane_firebase_config_updated"));
   }
 }
 
 export function removeFirebaseCustomConfig(): void {
   if (typeof window !== "undefined") {
-    localStorage.removeItem(STORAGE_KEY_FIREBASE_CONFIG);
+    try {
+      localStorage.removeItem(STORAGE_KEY_FIREBASE_CONFIG);
+    } catch {
+      // ignore storage errors
+    }
     window.dispatchEvent(new Event("hane_firebase_config_updated"));
   }
 }
@@ -90,7 +98,14 @@ export function getFirebaseDb(): Firestore | null {
 
   try {
     if (!dbInstance) {
-      dbInstance = getFirestore(app);
+      try {
+        // Enable automatic long-polling detection for iOS Safari / Cellular Carrier CGNAT compatibility
+        dbInstance = initializeFirestore(app, {
+          experimentalAutoDetectLongPolling: true,
+        });
+      } catch {
+        dbInstance = getFirestore(app);
+      }
     }
     return dbInstance;
   } catch (err) {

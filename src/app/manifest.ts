@@ -2,22 +2,35 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Hane App - Ev & Yaşam",
+    name: "Hane App — Ev & Yaşam Yönetim Sistemi",
     short_name: "Hane App",
-    description: "Hane Car, Hane Dinner, Hane Gider ve Hane Fit tek çatı altında.",
+    description:
+      "Hane Gider, Hane Yemek, Hane Takvim, Alışveriş, Hane Temizlik, Hane Kalori, Hane Fit, Düğün & Çeyiz, İstek Listesi ve Hane Araç tek çatı altında.",
     start_url: "/",
     scope: "/",
     display: "standalone",
     orientation: "portrait-primary",
-    background_color: "#090d16",
-    theme_color: "#090d16",
+    background_color: "#F5F0E8",
+    theme_color: "#F5F0E8",
     categories: ["lifestyle", "finance", "productivity", "utilities"],
     icons: [
       {
         src: "/icon-192.png",
         sizes: "192x192",
         type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
         purpose: "maskable",
+      },
+      {
+        src: "/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
       },
       {
         src: "/icon-512.png",

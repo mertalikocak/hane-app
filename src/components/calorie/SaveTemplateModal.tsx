@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { FoodItem, MealType } from "@/domain/calorieTypes";
 import { saveMealTemplate } from "@/storage/calorieStorage";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface SaveTemplateModalProps {
   isOpen: boolean;
@@ -42,15 +43,15 @@ export function SaveTemplateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
-        className="w-full max-w-sm rounded-3xl border border-border bg-surface p-5 shadow-2xl space-y-4"
+        className="w-full max-w-sm rounded-2xl border border-border bg-surface p-5 shadow-lg space-y-4"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between border-b border-border/70 pb-3">
+        <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500 text-base">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 text-base">
               💾
             </span>
             <div>
@@ -65,9 +66,9 @@ export function SaveTemplateModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-muted hover:text-foreground hover:bg-surface-raised cursor-pointer"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={15} />
           </button>
         </div>
 
@@ -82,19 +83,19 @@ export function SaveTemplateModal({
               placeholder="Örn: Klasik Kahvaltım"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-surface-raised px-3.5 py-2.5 text-xs font-bold text-foreground focus:border-primary focus:outline-none"
+              className="field text-xs font-bold"
             />
           </div>
 
           {/* Items Preview */}
-          <div className="rounded-2xl border border-border/80 bg-surface-raised/50 p-3 space-y-1.5 text-xs">
-            <div className="flex items-center justify-between text-muted text-[11px] font-semibold border-b border-border/50 pb-1">
+          <div className="rounded-xl border border-border bg-surface-raised p-3 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between text-muted text-[11px] font-semibold border-b border-border pb-1 tabular-nums">
               <span>{items.length} Yiyecek</span>
               <span className="text-foreground font-bold">{totalCalories} kcal</span>
             </div>
             <div className="max-h-36 overflow-y-auto space-y-1 pr-1 text-[11px]">
               {items.map((item, idx) => (
-                <div key={idx} className="flex justify-between text-muted">
+                <div key={idx} className="flex justify-between text-muted tabular-nums">
                   <span className="truncate pr-2">{item.name} ({item.portion})</span>
                   <span className="font-semibold text-foreground shrink-0">{item.calories} kcal</span>
                 </div>
@@ -102,17 +103,17 @@ export function SaveTemplateModal({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/70">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-2 text-xs font-semibold text-muted hover:text-foreground cursor-pointer"
+              className="secondary-button px-4 py-2 text-xs"
             >
               İptal
             </button>
             <button
               type="submit"
-              className="rounded-xl bg-primary px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-primary-hover cursor-pointer"
+              className="primary-button px-5 py-2 text-xs"
             >
               Şablonu Kaydet
             </button>

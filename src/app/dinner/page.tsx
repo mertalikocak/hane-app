@@ -22,8 +22,11 @@ import {
   ChevronRightIcon,
   CalendarIcon,
   UtensilsIcon,
+  PlusIcon,
+  ClockIcon,
 } from "@/components/ui/Icons";
 import { TodayMealBanner } from "@/components/dinner/TodayMealBanner";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 const EMPTY_MEALS: LocalMeal[] = [];
 const EMPTY_PLANS: Record<string, LocalPlanEntry[]> = {};
@@ -70,7 +73,6 @@ function DinnerContent() {
 
   const isShortcut = searchParams.get("shortcut") === "today";
 
-  // Calculate today's DayOfWeek (1: Pazartesi ... 7: Pazar)
   const todayDayOfWeek = useMemo<DayOfWeek>(() => {
     const jsDay = new Date().getDay();
     return (jsDay === 0 ? 7 : jsDay) as DayOfWeek;
@@ -172,8 +174,8 @@ function DinnerContent() {
   if (!mealsReady || !plansReady || !shoppingReady) {
     return (
       <div className="space-y-6">
-        <div className="h-16 animate-pulse rounded-2xl bg-surface-raised" />
-        <div className="h-96 animate-pulse rounded-2xl bg-surface-raised" />
+        <div className="h-24 animate-pulse rounded-[18px] bg-background-subtle" />
+        <div className="h-96 animate-pulse rounded-[18px] bg-background-subtle" />
       </div>
     );
   }
@@ -181,51 +183,98 @@ function DinnerContent() {
   const weekEnd = getDateForDay(weekStart, 7);
 
   return (
-    <div className="space-y-8">
-      {/* Top Week Navigation Bar */}
-      <nav
-        className="flex items-center justify-between rounded-2xl border border-border/80 bg-surface/80 p-2 sm:p-3 shadow-xs backdrop-blur-sm"
-        aria-label="Hafta navigasyonu"
-      >
-        <Link
-          href={`/dinner?week=${addWeeks(weekStart, -1)}`}
-          className="secondary-button h-9 px-3 text-xs sm:text-sm"
-          title="Önceki hafta"
-        >
-          <ChevronLeftIcon className="h-4 w-4" />
-          <span className="hidden sm:inline">Önceki Hafta</span>
-        </Link>
-
-        <div className="flex flex-col items-center text-center">
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 text-primary" />
-            <h1 className="text-sm font-bold tracking-tight text-foreground sm:text-base">
-              {formatDisplayDate(weekStart)} – {formatDisplayDate(weekEnd)}
-            </h1>
-          </div>
-          {!isCurrentWeek ? (
-            <Link
-              href="/dinner"
-              className="mt-0.5 text-xs font-semibold text-primary hover:underline"
+    <div className="space-y-6 pb-8">
+      {/* Unified Page Header + Week Selector */}
+      <PageHeader
+        icon={<UtensilsIcon className="h-5 w-5" />}
+        badge={`${plannedDaysCount} / 7 Gün Planlı`}
+        title="Hane Yemek Planı"
+        subtitle="Haftalık akşam yemeği menünüzü oluşturun; gereken malzemeler alışveriş listenize otomatik eklensin."
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsReminderOpen(true)}
+              className="secondary-button min-h-[38px] px-3 py-1.5 text-xs"
+              title="Akşam yemeği bildirimi saatini ayarla"
             >
-              Şimdiki Haftaya Dön
-            </Link>
-          ) : (
-            <span className="mt-0.5 text-[11px] font-medium text-muted">
-              Mevcut Hafta
-            </span>
-          )}
-        </div>
+              <ClockIcon className="h-3.5 w-3.5 text-primary" />
+              <span>Hatırlatıcı</span>
+            </button>
 
-        <Link
-          href={`/dinner?week=${addWeeks(weekStart, 1)}`}
-          className="secondary-button h-9 px-3 text-xs sm:text-sm"
-          title="Sonraki hafta"
+            <button
+              type="button"
+              onClick={fillWeek}
+              disabled={meals.length === 0}
+              className="accent-button min-h-[38px] px-3.5 py-1.5 text-xs"
+              title="Tüm haftaya rastgele yemekler ata"
+            >
+              <SparklesIcon className="h-3.5 w-3.5 text-primary" />
+              <span>Haftayı Doldur</span>
+            </button>
+
+            <Link
+              href="/dinner/meals"
+              className="secondary-button min-h-[38px] px-3.5 py-1.5 text-xs"
+            >
+              <UtensilsIcon className="h-3.5 w-3.5 text-foreground-secondary" />
+              <span>Yemek Kataloğu ({meals.length})</span>
+            </Link>
+
+            <Link
+              href="/dinner/meals/new"
+              className="primary-button min-h-[38px] px-3.5 py-1.5 text-xs"
+            >
+              <PlusIcon className="h-3.5 w-3.5" />
+              <span>Yeni Tarif</span>
+            </Link>
+          </>
+        }
+      >
+        <nav
+          className="flex items-center justify-between gap-2"
+          aria-label="Hafta navigasyonu"
         >
-          <span className="hidden sm:inline">Sonraki Hafta</span>
-          <ChevronRightIcon className="h-4 w-4" />
-        </Link>
-      </nav>
+          <Link
+            href={`/dinner?week=${addWeeks(weekStart, -1)}`}
+            className="secondary-button min-h-[36px] px-3 py-1 text-xs"
+            title="Önceki hafta"
+          >
+            <ChevronLeftIcon className="h-4 w-4" />
+            <span className="hidden sm:inline">Önceki Hafta</span>
+          </Link>
+
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2.5 text-center">
+            <div className="flex items-center gap-1.5">
+              <CalendarIcon className="h-4 w-4 text-primary" />
+              <span className="text-xs sm:text-sm font-semibold text-foreground tabular-nums">
+                {formatDisplayDate(weekStart)} – {formatDisplayDate(weekEnd)}
+              </span>
+            </div>
+            {!isCurrentWeek ? (
+              <Link
+                href="/dinner"
+                className="rounded-md bg-accent border border-border-lavender px-2 py-0.5 text-[11px] font-semibold text-primary hover:bg-accent-hover transition-colors"
+              >
+                Bu Haftaya Dön
+              </Link>
+            ) : (
+              <span className="rounded-md bg-background border border-border px-2 py-0.5 text-[11px] font-medium text-muted">
+                Mevcut Hafta
+              </span>
+            )}
+          </div>
+
+          <Link
+            href={`/dinner?week=${addWeeks(weekStart, 1)}`}
+            className="secondary-button min-h-[36px] px-3 py-1 text-xs"
+            title="Sonraki hafta"
+          >
+            <span className="hidden sm:inline">Sonraki Hafta</span>
+            <ChevronRightIcon className="h-4 w-4" />
+          </Link>
+        </nav>
+      </PageHeader>
 
       {/* Today's Meal Hero Banner */}
       {isCurrentWeek && (
@@ -243,56 +292,20 @@ function DinnerContent() {
 
       {/* Main Weekly Plan Section */}
       <section className="space-y-4" aria-labelledby="weekly-plan-heading">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-6 items-center rounded-full bg-primary/10 px-2.5 text-xs font-semibold text-primary">
-                  {plannedDaysCount} / 7 gün planlandı
-                </span>
-              </div>
-              <h2
-                id="weekly-plan-heading"
-                className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-2xl"
-              >
-                7 Günlük Yemek Planı
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setIsReminderOpen(true)}
-              className="secondary-button text-xs sm:text-sm flex items-center gap-1.5"
-              title="Akşam yemeği bildirimi saatini ayarla"
+        <div className="flex items-center justify-between">
+          <div>
+            <h2
+              id="weekly-plan-heading"
+              className="text-lg font-semibold tracking-tight text-foreground"
             >
-              <span>🔔</span>
-              <span className="hidden sm:inline">Yemek Bildirimi</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={fillWeek}
-              disabled={meals.length === 0}
-              className="primary-button text-xs sm:text-sm"
-              title="Tüm haftaya rastgele yemekler ata"
-            >
-              <SparklesIcon className="h-4 w-4" />
-              <span>Haftayı doldur</span>
-            </button>
-
-            <Link
-              href="/dinner/meals"
-              className="secondary-button text-xs sm:text-sm"
-            >
-              <UtensilsIcon className="h-4 w-4 text-muted" />
-              <span>Yemekler ({meals.length})</span>
-            </Link>
+              7 Günlük Yemek Planı
+            </h2>
+            <p className="text-xs text-muted">
+              Gün kartlarından yemek seçebilir, değiştirebilir veya birden fazla çeşit ekleyebilirsiniz
+            </p>
           </div>
         </div>
 
-        {/* 7 Days Plan Component */}
         <WeekPlan
           weekStart={weekStart}
           meals={meals}
@@ -305,9 +318,7 @@ function DinnerContent() {
       </section>
 
       {/* Shopping List Section */}
-      <div className="pt-2">
-        <ShoppingList items={currentShopping} onToggle={toggleShoppingItem} />
-      </div>
+      <ShoppingList items={currentShopping} onToggle={toggleShoppingItem} />
 
       {/* Meal Reminder Modal */}
       <MealReminderModal
@@ -320,7 +331,7 @@ function DinnerContent() {
 
 export default function DinnerPage() {
   return (
-    <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-surface-raised" />}>
+    <Suspense fallback={<div className="h-64 animate-pulse rounded-[18px] bg-background-subtle" />}>
       <DinnerContent />
     </Suspense>
   );

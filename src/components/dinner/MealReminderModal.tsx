@@ -11,8 +11,8 @@ import {
 import {
   getNotificationPermission,
   requestNotificationPermission,
-  isNotificationSupported,
 } from "@/lib/notifications/notificationService";
+import { ClockIcon, CloseIcon, UtensilsIcon } from "@/components/ui/Icons";
 
 interface MealReminderModalProps {
   isOpen: boolean;
@@ -58,13 +58,13 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
       setStatusMessage({
         type: "success",
         text: config.enabled
-          ? `✓ Akşam yemeği bildirimi her gün saat ${config.time}'a ayarlandı!`
+          ? `✓ Akşam yemeği bildirimi her gün saat ${config.time} için ayarlandı.`
           : "✓ Akşam yemeği bildirimi kapatıldı.",
       });
 
       setTimeout(() => {
         onClose();
-      }, 1200);
+      }, 1000);
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
       if (success) {
         setStatusMessage({
           type: "success",
-          text: "📲 Bugünkü akşam yemeği menüsü bildirim olarak telefonunuza gönderildi!",
+          text: "Bugünkü akşam yemeği menüsü bildirim olarak gönderildi.",
         });
       } else {
         setStatusMessage({
@@ -107,58 +107,66 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+        className="fixed inset-0 bg-[#30263A]/45 backdrop-blur-[2px]"
         onClick={onClose}
       />
 
-      {/* Modal Dialog */}
-      <div className="relative w-full max-w-md rounded-3xl bg-surface border border-border shadow-2xl p-6 text-foreground animate-in zoom-in-95 duration-200 z-10">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-border/70">
+      <div
+        className="relative w-full max-w-md rounded-[18px] bg-surface border border-border shadow-[var(--shadow-lg)] p-6 text-foreground z-10"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="flex items-center justify-between pb-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 text-xl border border-amber-500/20">
-              🔔
+            <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+              <ClockIcon className="h-5 w-5" />
             </span>
             <div>
-              <h3 className="font-extrabold text-base tracking-tight">Akşam Yemeği Bildirimi</h3>
-              <p className="text-xs text-muted">Belirlediğiniz saatte o günün menüsünü bildirir</p>
+              <h3 className="font-semibold text-base tracking-tight text-foreground">
+                Akşam Yemeği Bildirimi
+              </h3>
+              <p className="text-xs text-muted">
+                Belirlediğiniz saatte o günün menüsünü bildirir
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised border border-border/80 text-muted hover:text-foreground text-sm cursor-pointer"
+            className="icon-button h-8 w-8"
+            aria-label="Kapat"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="py-5 space-y-5">
-          {/* Today's Menu Preview */}
-          <div className="p-3.5 rounded-2xl bg-surface-raised border border-border/70">
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="font-bold text-foreground flex items-center gap-1.5">
-                <span>🍽️</span> Bugünkü Menü:
+        <div className="py-5 space-y-4">
+          <div className="p-3.5 rounded-[12px] bg-background border border-border">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                <UtensilsIcon className="h-3.5 w-3.5 text-primary" />
+                <span>Bugünkü Menü:</span>
               </span>
-              <span className="text-[11px] text-muted">
+              <span className="text-[11px] font-medium text-muted">
                 {todayMeals.length > 0 ? `${todayMeals.length} Yemek Planlandı` : "Henüz Boş"}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground font-medium">
+            <p className="text-xs text-foreground-secondary">
               {todayMeals.length > 0
                 ? todayMeals.map((m) => m.name).join(", ")
                 : "Bugün için menü seçilmemiş. Bildirim geldiğinde menü boş uyarısı iletilir."}
             </p>
           </div>
 
-          {/* Toggle Switch */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-raised border border-border/70">
+          <div className="flex items-center justify-between p-3.5 rounded-[12px] bg-background border border-border">
             <div>
-              <div className="font-bold text-sm">Yemek Bildirimlerini Etkinleştir</div>
-              <div className="text-xs text-muted">Her gün belirlenen saatte Android bildirimi gelir</div>
+              <div className="font-semibold text-xs sm:text-sm text-foreground">
+                Yemek Bildirimlerini Etkinleştir
+              </div>
+              <div className="text-xs text-muted">
+                Her gün belirlenen saatte hatırlatma gönderilir
+              </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -167,36 +175,32 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
                 onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-border peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+              <div className="w-11 h-6 bg-border-strong peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
             </label>
           </div>
 
-          {/* Time Picker */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-foreground block">
+            <label className="text-xs font-semibold text-foreground block">
               Bildirim Saati
             </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="time"
-                value={config.time}
-                onChange={(e) => setConfig({ ...config, time: e.target.value })}
-                className="w-full px-4 py-2.5 rounded-2xl bg-surface-raised border border-border font-bold text-base text-foreground focus:ring-2 focus:ring-amber-500/30 focus:outline-hidden"
-              />
-            </div>
+            <input
+              type="time"
+              value={config.time}
+              onChange={(e) => setConfig({ ...config, time: e.target.value })}
+              className="field font-semibold tabular-nums"
+            />
 
-            {/* Quick Preset Buttons */}
-            <div className="flex items-center gap-1.5 pt-1 overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1.5 pt-1 overflow-x-auto">
               <span className="text-[11px] text-muted mr-1">Hazır:</span>
               {PRESET_TIMES.map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setConfig({ ...config, time: t })}
-                  className={`px-2.5 py-1 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer tabular-nums ${
                     config.time === t
-                      ? "bg-amber-500/15 border-amber-500/40 text-amber-500 font-bold"
-                      : "bg-surface-raised border-border/70 text-muted hover:text-foreground"
+                      ? "bg-accent border-border-lavender text-primary"
+                      : "bg-background border-border text-foreground-secondary hover:text-foreground"
                   }`}
                 >
                   {t}
@@ -205,13 +209,12 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
             </div>
           </div>
 
-          {/* Status Message */}
           {statusMessage && (
             <div
-              className={`p-3 rounded-2xl text-xs font-medium border animate-in fade-in duration-150 ${
+              className={`p-3 rounded-[10px] text-xs font-medium border ${
                 statusMessage.type === "success"
-                  ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-600 dark:text-emerald-400"
-                  : "bg-rose-500/10 border-rose-500/25 text-rose-600 dark:text-rose-400"
+                  ? "bg-success-bg border-success-border text-success"
+                  : "bg-danger-bg border-danger-border text-danger"
               }`}
             >
               {statusMessage.text}
@@ -219,16 +222,13 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-border/70">
+        <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-2.5 border-t border-border">
           <button
             type="button"
             onClick={handleSendInstantTest}
             disabled={loading}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl border border-border bg-surface-raised hover:bg-border/40 text-xs font-bold text-foreground transition cursor-pointer flex items-center justify-center gap-1.5"
-            title="Bugünün akşam yemeği menüsünü anında telefonunuza gönderin"
+            className="w-full sm:w-auto secondary-button text-xs py-2 px-3.5"
           >
-            <span>📲</span>
             <span>Şimdi Test Et</span>
           </button>
 
@@ -236,7 +236,7 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="w-1/2 sm:w-auto px-4 py-2.5 rounded-2xl border border-border bg-surface hover:bg-surface-raised text-xs font-bold text-foreground transition cursor-pointer"
+              className="w-1/2 sm:w-auto secondary-button text-xs py-2 px-4"
             >
               Vazgeç
             </button>
@@ -244,7 +244,7 @@ export function MealReminderModal({ isOpen, onClose }: MealReminderModalProps) {
               type="button"
               onClick={handleSave}
               disabled={loading}
-              className="w-1/2 sm:w-auto px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-amber-500/20 transition cursor-pointer disabled:opacity-50"
+              className="w-1/2 sm:w-auto primary-button text-xs py-2 px-5"
             >
               {loading ? "Kaydediliyor..." : "Kaydet"}
             </button>

@@ -9,6 +9,7 @@ import {
 } from "@/domain/calendarTypes";
 import { saveCalendarEvent, deleteCalendarEvent } from "@/storage/calendarStorage";
 import { useProfile } from "@/context/ProfileContext";
+import { CalendarIcon, CloseIcon, TrashIcon } from "@/components/ui/Icons";
 
 interface CalendarEventModalProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function CalendarEventModal({
   const [scope, setScope] = useState<CalendarScope>("common");
   const [category, setCategory] = useState<CalendarCategory>("default");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,6 +69,7 @@ export function CalendarEventModal({
       setCategory("default");
     }
     setErrors({});
+    setConfirmDelete(false);
   }, [isOpen, initialEvent, initialDate]);
 
   if (!isOpen) return null;
@@ -90,7 +93,6 @@ export function CalendarEventModal({
       return;
     }
 
-    // Determine target profile name & id if personal (always use active profile)
     let targetId: string | undefined = undefined;
     let targetName: string | undefined = undefined;
     if (scope === "personal") {
@@ -125,29 +127,32 @@ export function CalendarEventModal({
     onClose();
   };
 
-  const handleDelete = () => {
+  const executeDelete = () => {
     if (!initialEvent?.id) return;
-    if (confirm(`"${initialEvent.title}" etkinliğini silmek istediğinize emin misiniz?`)) {
-      deleteCalendarEvent(initialEvent.id);
-      onSaved?.();
-      onClose();
-    }
+    deleteCalendarEvent(initialEvent.id);
+    onSaved?.();
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150"
+      onClick={onClose}
+    >
       <div
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-border/80 bg-surface/95 backdrop-blur-xl p-6 sm:p-7 shadow-2xl space-y-5"
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-lg space-y-5 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border/60 pb-3.5">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 text-xl shadow-xs">
-              📅
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-lavender border border-border-lavender text-primary">
+              <CalendarIcon className="h-5 w-5" />
             </span>
             <div>
-              <h3 className="text-lg font-extrabold text-foreground leading-tight">
+              <h3 className="text-base font-bold text-foreground leading-tight">
                 {initialEvent ? "Etkinliği Düzenle" : "Yeni Etkinlik Ekle"}
               </h3>
               <p className="text-xs text-muted">
@@ -159,16 +164,17 @@ export function CalendarEventModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised border border-border/60 text-muted hover:text-foreground text-xs cursor-pointer transition"
+            className="icon-button h-9 w-9"
+            aria-label="Kapat"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Başlık (Zorunlu) */}
           <div>
-            <label className="block text-xs font-bold text-foreground mb-1">
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
               Etkinlik Başlığı *
             </label>
             <input
@@ -177,10 +183,10 @@ export function CalendarEventModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Örn: Diş Randevusu / Sinema Gecesi"
-              className="field w-full font-medium"
+              className="field w-full"
             />
             {errors.title && (
-              <span className="text-[11px] text-rose-500 mt-1 block">
+              <span className="text-xs text-danger mt-1 block">
                 {errors.title}
               </span>
             )}
@@ -188,49 +194,47 @@ export function CalendarEventModal({
 
           {/* Scope (Ortak vs Kişisel) */}
           <div>
-            <label className="block text-xs font-bold text-foreground mb-1.5">
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
               Etkinlik Kapsamı *
             </label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setScope("common")}
-                className={`flex items-center justify-center gap-2 p-2.5 rounded-2xl border text-xs font-bold transition cursor-pointer ${
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                   scope === "common"
-                    ? "border-indigo-500 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                    : "border-border/80 bg-surface hover:bg-surface-raised text-muted"
+                    ? "border-primary bg-surface-lavender text-primary shadow-2xs"
+                    : "border-border bg-surface hover:bg-surface-raised text-foreground-secondary"
                 }`}
               >
-                <span>👥</span>
                 <span>Ortak (Tüm Hane)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setScope("personal")}
-                className={`flex items-center justify-center gap-2 p-2.5 rounded-2xl border text-xs font-bold transition cursor-pointer ${
+                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                   scope === "personal"
-                    ? "border-indigo-500 bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-xs"
-                    : "border-border/80 bg-surface hover:bg-surface-raised text-muted"
+                    ? "border-primary bg-surface-lavender text-primary shadow-2xs"
+                    : "border-border bg-surface hover:bg-surface-raised text-foreground-secondary"
                 }`}
               >
-                <span>👤</span>
                 <span>Kişisel</span>
               </button>
             </div>
 
             <span className="text-[11px] text-muted block mt-1.5">
               {scope === "common"
-                ? "👥 Tüm hane üyeleri bu ortak etkinliği takvimlerinde görür."
-                : `👤 Kişisel etkinlik (${activeProfile ? `${activeProfile.firstName} ${activeProfile.lastName}` : "Aktif Profil"}) adına kaydedilecektir.`}
+                ? "Tüm hane üyeleri bu ortak etkinliği takvimlerinde görür."
+                : `Kişisel etkinlik (${activeProfile ? `${activeProfile.firstName} ${activeProfile.lastName}` : "Aktif Profil"}) adına kaydedilecektir.`}
             </span>
           </div>
 
           {/* Tarih Seçimi */}
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-foreground mb-1">
+                <label className="block text-xs font-semibold text-foreground mb-1.5">
                   Tarih *
                 </label>
                 <input
@@ -241,7 +245,7 @@ export function CalendarEventModal({
                   className="field w-full text-xs font-semibold"
                 />
                 {errors.date && (
-                  <span className="text-[11px] text-rose-500 mt-1 block">
+                  <span className="text-xs text-danger mt-1 block">
                     {errors.date}
                   </span>
                 )}
@@ -249,7 +253,7 @@ export function CalendarEventModal({
 
               {hasEndDate && (
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
+                  <label className="block text-xs font-semibold text-foreground mb-1.5">
                     Bitiş Tarihi
                   </label>
                   <input
@@ -260,7 +264,7 @@ export function CalendarEventModal({
                     className="field w-full text-xs font-semibold"
                   />
                   {errors.endDate && (
-                    <span className="text-[11px] text-rose-500 mt-1 block">
+                    <span className="text-xs text-danger mt-1 block">
                       {errors.endDate}
                     </span>
                   )}
@@ -268,7 +272,7 @@ export function CalendarEventModal({
               )}
             </div>
 
-            <label className="flex items-center gap-2 text-xs font-medium text-muted cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs font-medium text-foreground-secondary cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={hasEndDate}
@@ -276,7 +280,7 @@ export function CalendarEventModal({
                   setHasEndDate(e.target.checked);
                   if (e.target.checked && !endDate) setEndDate(date);
                 }}
-                className="rounded border-border text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                className="rounded border-border-strong text-primary focus:ring-primary/20 h-4 w-4"
               />
               <span>Çok günlük etkinlik (Bitiş tarihi ekle)</span>
             </label>
@@ -284,20 +288,20 @@ export function CalendarEventModal({
 
           {/* Saat & Tüm Gün */}
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs font-semibold text-foreground cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={isAllDay}
                 onChange={(e) => setIsAllDay(e.target.checked)}
-                className="rounded border-border text-indigo-600 focus:ring-indigo-500 h-4 w-4"
+                className="rounded border-border-strong text-primary focus:ring-primary/20 h-4 w-4"
               />
-              <span className="font-bold">Tüm Gün Etkinliği</span>
+              <span>Tüm Gün Etkinliği</span>
             </label>
 
             {!isAllDay && (
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
+                  <label className="block text-xs font-semibold text-foreground mb-1">
                     Başlangıç Saati
                   </label>
                   <input
@@ -308,7 +312,7 @@ export function CalendarEventModal({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
+                  <label className="block text-xs font-semibold text-foreground mb-1">
                     Bitiş Saati
                   </label>
                   <input
@@ -324,7 +328,7 @@ export function CalendarEventModal({
 
           {/* Kategori Seçimi */}
           <div>
-            <label className="block text-xs font-bold text-foreground mb-1.5">
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
               Etkinlik Türü / Kategori
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -343,7 +347,7 @@ export function CalendarEventModal({
                     className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                       isSelected
                         ? `${cat.bgClass} ${cat.textClass} ${cat.borderClass} ring-1 ring-primary/30`
-                        : "border-border/60 bg-surface hover:bg-surface-raised text-muted"
+                        : "border-border bg-surface hover:bg-surface-raised text-foreground-secondary"
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -356,7 +360,7 @@ export function CalendarEventModal({
 
           {/* Açıklama (Opsiyonel) */}
           <div>
-            <label className="block text-xs font-bold text-foreground mb-1">
+            <label className="block text-xs font-semibold text-foreground mb-1.5">
               Açıklama (Opsiyonel)
             </label>
             <textarea
@@ -364,33 +368,56 @@ export function CalendarEventModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Notlar, adres, hatırlatmalar vb."
-              className="field w-full text-xs"
+              className="field w-full text-xs py-2.5 h-auto"
             />
           </div>
 
           {/* Buttons */}
-          <div className="pt-2 flex items-center justify-between gap-3 border-t border-border/60">
+          <div className="pt-3 flex items-center justify-between gap-3 border-t border-border">
             {initialEvent ? (
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="px-3.5 py-2.5 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition cursor-pointer"
-              >
-                Sil
-              </button>
-            ) : <div />}
+              confirmDelete ? (
+                <div className="inline-flex items-center gap-1.5 rounded-xl border border-danger/30 bg-danger-soft px-2.5 py-1">
+                  <span className="text-xs font-semibold text-danger">Silinsin mi?</span>
+                  <button
+                    type="button"
+                    onClick={executeDelete}
+                    className="rounded-lg bg-danger px-2 py-1 text-xs font-bold text-white cursor-pointer"
+                  >
+                    Evet
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="rounded-lg px-2 py-1 text-xs font-semibold text-foreground-secondary hover:bg-surface cursor-pointer"
+                  >
+                    İptal
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="danger-button h-10 px-3.5 text-xs"
+                >
+                  <TrashIcon className="h-3.5 w-3.5" />
+                  <span>Sil</span>
+                </button>
+              )
+            ) : (
+              <div />
+            )}
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-2xl border border-border bg-surface hover:bg-surface-raised text-xs font-bold text-foreground transition cursor-pointer"
+                className="secondary-button h-10 px-4 text-xs"
               >
                 İptal
               </button>
               <button
                 type="submit"
-                className="primary-button bg-indigo-600 hover:bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-indigo-600/20 cursor-pointer"
+                className="primary-button h-10 px-5 text-xs"
               >
                 {initialEvent ? "Güncelle" : "Etkinliği Kaydet"}
               </button>

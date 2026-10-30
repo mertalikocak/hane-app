@@ -12,6 +12,15 @@ import {
 } from "@/storage/wishlistStorage";
 import { WishlistModal } from "./WishlistModal";
 import { useProfile } from "@/context/ProfileContext";
+import { PageHeader } from "@/components/ui/PageHeader";
+import {
+  WishlistIcon,
+  PlusIcon,
+  SearchIcon,
+  EditIcon,
+  TrashIcon,
+  CheckIcon,
+} from "@/components/ui/Icons";
 
 const para = (n: number) =>
   new Intl.NumberFormat("tr-TR", {
@@ -26,6 +35,7 @@ export function WishlistView() {
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,9 +70,6 @@ export function WishlistView() {
         title: "Hane (Ortak)",
         subtitle: "Tüm aile için ortak istekler",
         icon: "🏠",
-        gradient: "from-amber-500/10 via-orange-500/5 to-transparent",
-        badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
-        headerBorder: "border-amber-500/30",
       },
     ];
 
@@ -79,9 +86,6 @@ export function WishlistView() {
         title: `${p.firstName} ${p.lastName}`.trim(),
         subtitle: `${p.firstName}'in kişisel istek listesi`,
         icon: p.gender === "male" ? "👨" : "👩",
-        gradient: "from-rose-500/10 via-pink-500/5 to-transparent",
-        badgeColor: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
-        headerBorder: "border-rose-500/30",
       });
     });
 
@@ -105,11 +109,10 @@ export function WishlistView() {
     loadItems();
   };
 
-  const handleDelete = (id: string, title: string) => {
-    if (confirm(`"${title}" isteğini silmek istediğinize emin misiniz?`)) {
-      deleteWishlistItem(id);
-      loadItems();
-    }
+  const handleConfirmDelete = (id: string) => {
+    deleteWishlistItem(id);
+    setConfirmDeleteId(null);
+    loadItems();
   };
 
   // Helper to filter and sort items for a specific section
@@ -138,71 +141,63 @@ export function WishlistView() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-500 via-pink-600 to-amber-600 p-6 sm:p-8 text-white shadow-lg">
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-md mb-3">
-              <span>✨</span> Hayaller & İstek Listesi
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
-              Hane Wish List
-            </h1>
-            <p className="mt-2 text-sm sm:text-base text-white/90 font-medium">
-              Ortak ev istekleri ve aile bireylerinin kişisel dilek listeleri yan yana.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => handleOpenCreate()}
-              className="inline-flex items-center gap-2 px-5 py-3.5 rounded-2xl bg-white text-rose-600 font-extrabold text-xs sm:text-sm shadow-lg hover:bg-white/95 active:scale-98 transition cursor-pointer"
-            >
-              <span>+</span>
-              <span>Yeni İstek Ekle</span>
-            </button>
-          </div>
-        </div>
-        <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-        <div className="absolute right-32 -top-12 h-48 w-48 rounded-full bg-rose-300/20 blur-xl pointer-events-none" />
-      </section>
+      <PageHeader
+        title="Hane Wish List"
+        subtitle="Ortak ev istekleri ve aile bireylerinin kişisel dilek listeleri yan yana."
+        icon={<WishlistIcon size={20} />}
+        badge={
+          <span className="ds-badge ds-badge-primary">
+            ✨ Hayaller & İstek Listesi
+          </span>
+        }
+        actions={
+          <button
+            type="button"
+            onClick={() => handleOpenCreate()}
+            className="primary-button px-4 py-2 text-xs"
+          >
+            <PlusIcon size={15} />
+            <span>Yeni İstek Ekle</span>
+          </button>
+        }
+      />
 
       {/* Overview Stats & Filter Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-surface/90 border border-border/80 rounded-3xl p-4 sm:p-5 backdrop-blur-md shadow-xs">
+      <div className="ds-card flex flex-col md:flex-row md:items-center justify-between gap-4 p-4">
         {/* Quick count chips */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs text-muted font-bold mr-1">Özet:</span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-surface-raised border border-border/60 text-xs font-bold text-foreground">
+          <span className="ds-badge ds-badge-neutral py-1 px-2.5 text-xs tabular-nums">
             <span>🎁</span> {totalCount} Toplam İstek
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-600 dark:text-amber-400">
+          <span className="ds-badge ds-badge-warning py-1 px-2.5 text-xs tabular-nums">
             <span>⏳</span> {pendingCount} Bekleyen
           </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+          <span className="ds-badge ds-badge-success py-1 px-2.5 text-xs tabular-nums">
             <span>✅</span> {completedCount} Alınan / Biten
           </span>
         </div>
 
         {/* Search & Category Filter */}
-        <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-xs">
-              🔍
-            </span>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto">
+          <div className="relative flex-1 sm:flex-initial">
+            <SearchIcon
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="İsteklerde ara..."
-              className="field w-40 sm:w-52 pl-8 py-1.5 text-xs font-medium"
+              className="field w-full sm:w-52 !pl-9 py-1.5 text-xs h-9"
             />
           </div>
 
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="field text-xs font-semibold py-1.5"
+            className="field text-xs font-semibold py-1.5 h-9 w-full sm:w-auto"
           >
             <option value="all">Tüm Kategoriler</option>
             {Object.values(WISHLIST_CATEGORIES).map((c) => (
@@ -234,28 +229,26 @@ export function WishlistView() {
           return (
             <div
               key={sec.id}
-              className="flex flex-col rounded-3xl border border-border/80 bg-surface shadow-xs hover:shadow-md transition-all overflow-hidden"
+              className="ds-card flex flex-col overflow-hidden"
             >
               {/* Box Header */}
-              <div
-                className={`p-4 sm:p-5 border-b border-border/70 bg-gradient-to-b ${sec.gradient} flex items-center justify-between gap-3`}
-              >
+              <div className="p-4 border-b border-border bg-surface-raised flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface border border-border/70 text-2xl shadow-xs">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface border border-border text-xl shadow-2xs">
                     {sec.icon}
                   </span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-base font-extrabold text-foreground truncate leading-tight">
+                      <h2 className="text-sm font-bold text-foreground truncate leading-tight">
                         {sec.title}
                       </h2>
                       {sec.id === activeProfile?.id && (
-                        <span className="px-1.5 py-0.2 rounded-md bg-rose-500/15 text-rose-600 dark:text-rose-400 font-bold text-[10px]">
+                        <span className="ds-badge ds-badge-primary text-[10px] px-1.5 py-0">
                           Sen
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-muted truncate block mt-0.5">
+                    <span className="text-[11px] text-muted truncate block mt-0.5 tabular-nums">
                       {secPending} bekleyen • {secCompleted} tamamlandı
                     </span>
                   </div>
@@ -266,19 +259,19 @@ export function WishlistView() {
                   <button
                     type="button"
                     onClick={() => handleOpenCreate(sec.id)}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-surface border border-border/80 text-foreground hover:bg-surface-raised hover:text-rose-600 text-sm font-bold shadow-xs transition cursor-pointer"
+                    className="icon-button h-8 w-8 shrink-0"
                     title={`${sec.title} listesine ekle`}
                   >
-                    +
+                    <PlusIcon size={15} />
                   </button>
                 )}
               </div>
 
-              {/* Items List Inside Box (Alt Alta) */}
+              {/* Items List Inside Box */}
               <div className="p-3 sm:p-4 flex-1 space-y-2.5 overflow-y-auto max-h-[600px]">
                 {secItems.length === 0 ? (
-                  <div className="py-10 px-4 text-center space-y-2.5 rounded-2xl border border-dashed border-border/60 bg-surface-raised/30">
-                    <span className="text-3xl opacity-70">🎁</span>
+                  <div className="py-10 px-4 text-center space-y-2.5 rounded-xl border border-dashed border-border bg-surface-raised/50">
+                    <span className="text-3xl opacity-80 block">🎁</span>
                     <p className="text-xs font-semibold text-foreground">
                       {searchQuery || filterCategory !== "all"
                         ? "Filtreye uygun istek bulunamadı"
@@ -288,9 +281,9 @@ export function WishlistView() {
                       <button
                         type="button"
                         onClick={() => handleOpenCreate(sec.id)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition cursor-pointer"
+                        className="accent-button px-3 py-1.5 text-xs h-8 min-h-0"
                       >
-                        <span>+</span>
+                        <PlusIcon size={13} />
                         <span>İstek Ekle</span>
                       </button>
                     )}
@@ -303,10 +296,10 @@ export function WishlistView() {
                     return (
                       <div
                         key={item.id}
-                        className={`rounded-2xl border p-3.5 transition-all shadow-2xs group flex flex-col justify-between gap-2.5 ${
+                        className={`rounded-xl border p-3.5 transition-all group flex flex-col justify-between gap-2.5 ${
                           isCompleted
-                            ? "bg-emerald-500/5 border-emerald-500/30 opacity-70"
-                            : "bg-surface-raised/70 border-border/70 hover:border-rose-500/40 hover:bg-surface-raised hover:shadow-xs"
+                            ? "bg-emerald-500/5 border-emerald-500/25 opacity-75"
+                            : "bg-surface-raised border-border hover:border-border-strong"
                         }`}
                       >
                         {/* Top: Checkbox, Title & Category */}
@@ -315,27 +308,27 @@ export function WishlistView() {
                           <button
                             type="button"
                             onClick={() => handleToggle(item.id)}
-                            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition cursor-pointer ${
+                            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-xs font-bold transition cursor-pointer ${
                               isCompleted
-                                ? "bg-emerald-600 border-emerald-600 text-white shadow-2xs"
-                                : "border-border bg-surface hover:border-emerald-500 text-transparent"
+                                ? "bg-emerald-600 border-emerald-600 text-white"
+                                : "border-border-strong bg-surface hover:border-primary text-transparent"
                             }`}
                             title={isCompleted ? "Alınmadı olarak işaretle" : "Alındı / Tamamlandı olarak işaretle"}
                           >
-                            ✓
+                            <CheckIcon size={12} />
                           </button>
 
                           {/* Title & Notes */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap mb-1">
                               <span
-                                className={`px-2 py-0.2 rounded-md text-[10px] font-bold border ${cat.bgClass} ${cat.textClass} ${cat.borderClass}`}
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${cat.bgClass} ${cat.textClass} ${cat.borderClass}`}
                               >
                                 {cat.icon} {cat.label}
                               </span>
 
                               {item.priority === "high" && (
-                                <span className="px-1.5 py-0.2 rounded-md text-[9px] font-black bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                                <span className="ds-badge ds-badge-danger text-[9px] px-1.5 py-0">
                                   🔥 Yüksek
                                 </span>
                               )}
@@ -360,10 +353,10 @@ export function WishlistView() {
                         </div>
 
                         {/* Bottom: Price, Link & Action buttons */}
-                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/40 text-xs">
+                        <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs">
                           <div className="flex items-center gap-2 flex-wrap">
                             {item.price !== undefined && item.price > 0 && (
-                              <span className="font-bold text-blue-600 dark:text-blue-400 text-[11px]">
+                              <span className="font-bold text-primary text-[11px] tabular-nums">
                                 {para(item.price)}
                               </span>
                             )}
@@ -373,7 +366,7 @@ export function WishlistView() {
                                 href={item.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
                               >
                                 <span>🔗 Link</span>
                               </a>
@@ -381,23 +374,44 @@ export function WishlistView() {
                           </div>
 
                           {canManage && (
-                            <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenEdit(item)}
-                                className="h-6 w-6 rounded-lg bg-surface border border-border/60 text-muted hover:text-foreground text-[10px] flex items-center justify-center transition cursor-pointer"
-                                title="Düzenle"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(item.id, item.title)}
-                                className="h-6 w-6 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 text-[10px] flex items-center justify-center transition cursor-pointer"
-                                title="Sil"
-                              >
-                                🗑️
-                              </button>
+                            <div className="flex items-center gap-1">
+                              {confirmDeleteId === item.id ? (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleConfirmDelete(item.id)}
+                                    className="danger-button px-2 py-0.5 text-[10px] h-6 min-h-0 bg-rose-600 text-white hover:bg-rose-700"
+                                  >
+                                    Sil
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDeleteId(null)}
+                                    className="secondary-button px-2 py-0.5 text-[10px] h-6 min-h-0"
+                                  >
+                                    İptal
+                                  </button>
+                                </div>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEdit(item)}
+                                    className="h-7 w-7 rounded-lg bg-surface border border-border text-muted hover:text-foreground flex items-center justify-center transition cursor-pointer"
+                                    title="Düzenle"
+                                  >
+                                    <EditIcon size={12} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDeleteId(item.id)}
+                                    className="h-7 w-7 rounded-lg bg-surface border border-border text-muted hover:text-rose-600 hover:border-rose-500/30 flex items-center justify-center transition cursor-pointer"
+                                    title="Sil"
+                                  >
+                                    <TrashIcon size={12} />
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>

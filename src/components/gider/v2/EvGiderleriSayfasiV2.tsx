@@ -67,7 +67,12 @@ function ayKaydir(anahtar: string, delta: number): string {
 
 export function EvGiderleriSayfasiV2() {
   const [anahtar, setAnahtar] = useState(simdikiAyAnahtari);
-  const [veri, setVeri] = useState<AyHaneGiderVerisi>(() => ayVerisiOku(simdikiAyAnahtari()));
+  const [veri, setVeri] = useState<AyHaneGiderVerisi>({
+    krediKartlari: [],
+    bireyselAyriHarcamalar: [],
+    bireyselGelirKalemleri: [],
+    transferler: [],
+  });
   const [activeView, setActiveView] = useState<GiderV2ViewMode>("ozet");
 
   // Bildirim Toast State
@@ -223,7 +228,6 @@ export function EvGiderleriSayfasiV2() {
     kayitTipi?: "kart" | "harcama";
   }) => {
     if (kayit.id) {
-      // Güncelle
       setVeri((v) => ({
         ...v,
         krediKartlari: v.krediKartlari.map((k) =>
@@ -243,7 +247,6 @@ export function EvGiderleriSayfasiV2() {
       }));
       showToast("Kayıt başarıyla güncellendi.");
     } else {
-      // Yeni Ekle
       const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "k-" + Date.now();
       const yeni: KrediKartiEkstresi = {
         id,
@@ -528,11 +531,11 @@ export function EvGiderleriSayfasiV2() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-150">
       {/* Toast Bildirim */}
       {toastMesaj && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-foreground text-background shadow-xl text-xs font-black animate-in fade-in slide-in-from-bottom-3 duration-200">
-          <span>✨</span>
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-foreground text-surface shadow-lg text-xs font-bold animate-in fade-in slide-in-from-bottom-3 duration-200">
+          <span>✓</span>
           <span>{toastMesaj}</span>
         </div>
       )}
@@ -546,7 +549,7 @@ export function EvGiderleriSayfasiV2() {
         onChange={handleIceAktarDosyaSecildi}
       />
 
-      {/* 📅 Başlık, Dönem Seçici ve Görünüm Sekmeleri */}
+      {/* Başlık, Dönem Seçici ve Görünüm Sekmeleri */}
       <GiderV2Header
         anahtar={anahtar}
         onAnahtarDegis={setAnahtar}
@@ -585,30 +588,30 @@ export function EvGiderleriSayfasiV2() {
           />
 
           {/* Hızlı İnceleme Önizlemesi (Mini Kartlar & Denetime Yönlendirme) */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-surface border border-border/80 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="ds-card p-5 sm:p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-base font-black text-foreground tracking-tight flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground tracking-tight flex items-center gap-2">
                   <span>💳</span>
                   <span>Öne Çıkan Kartlar & Harcamalar ({veri.krediKartlari.length})</span>
                 </h3>
-                <p className="text-xs text-muted">
+                <p className="text-xs text-muted mt-0.5">
                   En son eklenen harcamalarınız. Tüm detayları tablo halinde görmek için Denetim sekmesine geçebilirsiniz.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setActiveView("denetim")}
-                  className="secondary-button h-8 px-3 text-xs font-bold text-purple-400 border-purple-500/30 hover:bg-purple-500/10 cursor-pointer"
+                  className="accent-button h-9 px-3 text-xs"
                 >
                   🔍 Tümünü Tabloda Denetle
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveView("kartlar")}
-                  className="secondary-button h-8 px-3 text-xs font-bold text-foreground cursor-pointer"
+                  className="secondary-button h-9 px-3 text-xs"
                 >
                   Kartları Yönet →
                 </button>
@@ -616,35 +619,35 @@ export function EvGiderleriSayfasiV2() {
             </div>
 
             {veri.krediKartlari.length === 0 ? (
-              <div className="py-8 text-center text-muted text-xs border border-dashed border-border/70 rounded-2xl">
+              <div className="py-8 text-center text-muted text-xs border border-dashed border-border rounded-xl bg-surface-raised/50">
                 Bu ay için henüz kredi kartı veya fatura kaydı bulunmuyor.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {veri.krediKartlari.slice(0, 6).map((k) => {
                   const h = tekKartHesabi(k);
                   const odeyen = k.odenenKisi ?? "mert";
                   return (
                     <div
                       key={k.id}
-                      className="p-3.5 rounded-2xl bg-surface-raised border border-border/70 space-y-2 hover:border-primary/40 transition"
+                      className="p-3.5 rounded-xl bg-surface-raised border border-border space-y-2 hover:border-border-lavender transition"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-foreground truncate max-w-[150px]">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-bold text-xs text-foreground truncate">
                           {k.ad}
                         </span>
-                        <span className="font-mono font-black text-xs text-foreground">
+                        <span className="font-mono font-bold text-xs text-foreground shrink-0">
                           {para(k.toplamEkstre)}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-muted pt-1 border-t border-border/50">
+                      <div className="flex items-center justify-between text-[11px] text-muted pt-1.5 border-t border-border">
                         <span>Ödeyen: <strong className="text-foreground">{odeyen === "mert" ? "Mert" : "Havsa"}</strong></span>
                         {k.kimeAit === "mert" ? (
-                          <span className="text-sky-400 font-bold">👤 Bireysel (Mert)</span>
+                          <span className="text-sky-700 font-semibold">👤 Bireysel (Mert)</span>
                         ) : k.kimeAit === "havsa" ? (
-                          <span className="text-pink-400 font-bold">👤 Bireysel (Havsa)</span>
+                          <span className="text-pink-700 font-semibold">👤 Bireysel (Havsa)</span>
                         ) : (
-                          <span>Ortak: <strong className="text-purple-400">{para(h.ortakTaban / 2)}</strong></span>
+                          <span>Ortak: <strong className="text-primary">{para(h.ortakTaban / 2)}</strong></span>
                         )}
                       </div>
                     </div>
@@ -680,7 +683,7 @@ export function EvGiderleriSayfasiV2() {
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* GÖRÜNÜM 3: HESAP İNCELEME & DENETİM TABLOSU (KILLER FEATURE)  */}
+      {/* GÖRÜNÜM 3: HESAP İNCELEME & DENETİM TABLOSU                   */}
       {/* ------------------------------------------------------------- */}
       {activeView === "denetim" && (
         <GiderV2LedgerTable
@@ -726,7 +729,6 @@ export function EvGiderleriSayfasiV2() {
       {/* TÜM MODALLAR                                                   */}
       {/* ------------------------------------------------------------- */}
 
-      {/* Kart Ekleme / Düzenleme Modalı */}
       <KartEkleDuzenleModal
         isOpen={isKartModalOpen}
         onClose={() => setIsKartModalOpen(false)}
@@ -734,7 +736,6 @@ export function EvGiderleriSayfasiV2() {
         initialData={editingKart}
       />
 
-      {/* Para Transferi Modalı */}
       <ParaTransferiModalV2
         isOpen={isTransferModalOpen}
         onClose={() => setIsTransferModalOpen(false)}
@@ -743,7 +744,6 @@ export function EvGiderleriSayfasiV2() {
         onerilenTutar={calc.mahsuplasma.transferTutari}
       />
 
-      {/* Önceki Aydan Giderleri Kopyalama Onay Modalı */}
       <OnayModal
         isOpen={copyConfirmType === "gider"}
         onClose={() => setCopyConfirmType(null)}
@@ -753,7 +753,6 @@ export function EvGiderleriSayfasiV2() {
         confirmText="Evet, Giderleri Kopyala"
       />
 
-      {/* Önceki Aydan Gelirleri Kopyalama Onay Modalı */}
       <OnayModal
         isOpen={copyConfirmType === "gelir"}
         onClose={() => setCopyConfirmType(null)}
@@ -763,7 +762,6 @@ export function EvGiderleriSayfasiV2() {
         confirmText="Evet, Gelirleri Kopyala"
       />
 
-      {/* Ayı Sıfırlama Onay Modalı */}
       <OnayModal
         isOpen={isResetConfirmOpen}
         onClose={() => setIsResetConfirmOpen(false)}
@@ -774,7 +772,6 @@ export function EvGiderleriSayfasiV2() {
         isDanger
       />
 
-      {/* Aylık Özet WhatsApp Rapor Modalı */}
       <OzetRaporModalV2
         isOpen={isOzetModalOpen}
         onClose={() => setIsOzetModalOpen(false)}
@@ -784,7 +781,6 @@ export function EvGiderleriSayfasiV2() {
         onCopySuccess={() => showToast("📋 Rapor panoya kopyalandı!")}
       />
 
-      {/* Kart Altı Bireysel Kalem Düzenleme Modalı */}
       <BireyselKayitModal
         isOpen={Boolean(editingBireyselKalem)}
         onClose={() => setEditingBireyselKalem(null)}
@@ -806,7 +802,6 @@ export function EvGiderleriSayfasiV2() {
         }}
       />
 
-      {/* Ayrı Bireysel Harcama Düzenleme Modalı */}
       <BireyselKayitModal
         isOpen={Boolean(editingAyriHarcama)}
         onClose={() => setEditingAyriHarcama(null)}
@@ -824,7 +819,6 @@ export function EvGiderleriSayfasiV2() {
         }}
       />
 
-      {/* Bireysel Gelir Kalemi Düzenleme Modalı */}
       <BireyselKayitModal
         isOpen={Boolean(editingGelir)}
         onClose={() => setEditingGelir(null)}

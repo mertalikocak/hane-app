@@ -2,6 +2,7 @@
 
 import React from "react";
 import { CalendarEvent, CALENDAR_CATEGORIES } from "@/domain/calendarTypes";
+import { CalendarIcon, PlusIcon, ArrowRightIcon, ClockIcon } from "@/components/ui/Icons";
 
 interface TodayEventBannerProps {
   todayEvents: CalendarEvent[];
@@ -29,36 +30,35 @@ export function TodayEventBanner({
   const hasEvents = todayEvents.length > 0;
 
   return (
-    <section className="relative overflow-hidden rounded-3xl border border-indigo-500/30 bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-pink-500/5 p-5 sm:p-7 shadow-lg backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
-      {/* Decorative ambient light */}
-      <div className="absolute -top-12 -right-12 h-44 w-44 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 blur-2xl pointer-events-none" />
-
-      <div className="relative z-10 flex flex-col gap-4">
+    <section className="ds-card-lavender p-5 sm:p-6">
+      <div className="flex flex-col gap-4">
         {/* Header Tags */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/15 px-3 py-1 text-xs font-bold text-indigo-400">
-              <span className="text-sm">📅</span> GÜNÜN ETKİNLİKLERİ
+            <span className="inline-flex items-center gap-1.5 rounded-lg border border-border-lavender bg-accent px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-primary">
+              <CalendarIcon className="h-3.5 w-3.5" />
+              Günün Etkinlikleri
             </span>
             {isShortcutOpen && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-indigo-500/40 bg-indigo-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-300 animate-pulse">
-                ⚡ Kısayol
+              <span className="inline-flex items-center gap-1 rounded-md border border-border-lavender bg-surface px-2 py-0.5 text-[11px] font-semibold text-primary">
+                Kısayol
               </span>
             )}
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-surface/70 text-foreground/80 border border-border/60">
+            <span className="text-xs font-bold px-2.5 py-0.5 rounded-md bg-surface text-foreground border border-border">
               {todayEvents.length} Plan
             </span>
           </div>
 
-          <span className="text-xs font-medium text-muted flex items-center gap-1">
-            <span>🗓️</span> {todayFormatted}
+          <span className="text-xs font-semibold text-foreground-secondary flex items-center gap-1.5">
+            <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+            {todayFormatted}
           </span>
         </div>
 
         {/* Content Area */}
         {hasEvents ? (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
               {todayEvents.map((evt) => {
                 const cat = CALENDAR_CATEGORIES[evt.category] || CALENDAR_CATEGORIES.default;
 
@@ -66,25 +66,26 @@ export function TodayEventBanner({
                   <div
                     key={evt.id}
                     onClick={() => onEditEvent(evt)}
-                    className="group relative flex flex-col justify-between p-3.5 rounded-2xl border border-border/80 bg-surface/80 hover:bg-surface hover:border-indigo-500/50 hover:shadow-md transition-all duration-200 cursor-pointer text-left"
+                    className="group flex flex-col justify-between p-4 rounded-xl border border-border bg-surface hover:border-border-lavender hover:shadow-sm transition-all duration-150 cursor-pointer text-left"
                   >
                     <div>
                       {/* Category & Time Row */}
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <span
-                          className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-semibold border ${cat.bgClass} ${cat.textClass} ${cat.borderClass}`}
+                          className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold border ${cat.bgClass} ${cat.textClass} ${cat.borderClass}`}
                         >
                           <span>{cat.icon}</span>
                           <span>{cat.label}</span>
                         </span>
 
-                        <span className="text-[11px] font-semibold text-muted bg-surface-raised px-2 py-0.5 rounded-md border border-border/60">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-muted bg-surface-raised px-2 py-0.5 rounded-md border border-border">
+                          <ClockIcon className="h-3 w-3" />
                           {evt.isAllDay ? "Tüm Gün" : evt.time || "Saat belirtilmedi"}
                         </span>
                       </div>
 
                       {/* Title */}
-                      <h4 className="font-bold text-sm sm:text-base text-foreground group-hover:text-indigo-400 transition-colors line-clamp-2">
+                      <h4 className="font-bold text-sm sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-2">
                         {evt.title}
                       </h4>
 
@@ -97,19 +98,20 @@ export function TodayEventBanner({
                     </div>
 
                     {/* Footer: Scope & Profile Info */}
-                    <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-border/50 text-[11px]">
+                    <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-border text-[11px]">
                       <span className="text-muted truncate">
                         {evt.scope === "common" ? (
-                          <span className="text-amber-500 font-semibold">🏠 Tüm Hane</span>
+                          <span className="text-primary font-semibold">Ortak Hane</span>
                         ) : (
-                          <span className="text-foreground/80 font-medium">
-                            👤 {evt.targetProfileName || evt.createdByName || "Kişisel"}
+                          <span className="text-foreground-secondary font-medium">
+                            {evt.targetProfileName || evt.createdByName || "Kişisel"}
                           </span>
                         )}
                       </span>
 
-                      <span className="text-[10px] text-indigo-400 font-semibold group-hover:underline">
-                        Detay →
+                      <span className="inline-flex items-center gap-1 text-[11px] text-primary font-semibold group-hover:underline">
+                        <span>Düzenle</span>
+                        <ArrowRightIcon className="h-3 w-3" />
                       </span>
                     </div>
                   </div>
@@ -122,31 +124,31 @@ export function TodayEventBanner({
               <button
                 type="button"
                 onClick={() => onAddNew(todayStr)}
-                className="primary-button text-xs font-bold py-2 px-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-md cursor-pointer"
+                className="primary-button h-9 px-3.5 text-xs"
               >
-                <span>+ Bugün İçin Plan Ekle</span>
+                <PlusIcon className="h-3.5 w-3.5" />
+                <span>Bugün İçin Plan Ekle</span>
               </button>
 
               {onScrollToCalendar && (
                 <button
                   type="button"
                   onClick={onScrollToCalendar}
-                  className="secondary-button text-xs font-semibold py-2 px-3 cursor-pointer"
+                  className="secondary-button h-9 px-3.5 text-xs"
                 >
                   <span>Aylık Takvimde Gör</span>
-                  <span>↓</span>
                 </button>
               )}
             </div>
           </div>
         ) : (
           /* Empty Today State */
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-1">
             <div className="space-y-1">
-              <h3 className="text-lg sm:text-xl font-bold text-foreground">
+              <h3 className="text-base sm:text-lg font-bold text-foreground">
                 Bugün için planlanmış bir etkinlik bulunmuyor
               </h3>
-              <p className="text-xs sm:text-sm text-muted">
+              <p className="text-xs sm:text-sm text-foreground-secondary">
                 Bugün için randevu, doktor kontrolü, nöbet veya ortak aile planı ekleyebilirsiniz.
               </p>
             </div>
@@ -155,16 +157,17 @@ export function TodayEventBanner({
               <button
                 type="button"
                 onClick={() => onAddNew(todayStr)}
-                className="primary-button text-xs sm:text-sm py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-md font-bold cursor-pointer"
+                className="primary-button h-10 px-4 text-xs sm:text-sm"
               >
-                <span>+ Etkinlik Planla</span>
+                <PlusIcon className="h-4 w-4" />
+                <span>Etkinlik Planla</span>
               </button>
 
               {onScrollToCalendar && (
                 <button
                   type="button"
                   onClick={onScrollToCalendar}
-                  className="secondary-button text-xs py-2 px-3 cursor-pointer"
+                  className="secondary-button h-10 px-3.5 text-xs"
                 >
                   Takvimi İncele
                 </button>

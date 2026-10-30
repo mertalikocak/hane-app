@@ -12,6 +12,7 @@ import {
   MeasurementService,
   MeasurementValidationErrors,
 } from "@/services/measurementService";
+import { CloseIcon, ChevronDownIcon } from "@/components/ui/Icons";
 
 interface MeasurementModalProps {
   isOpen: boolean;
@@ -146,7 +147,6 @@ export function MeasurementModal({
     }
   }, [isOpen, initialRecord]);
 
-  // Numeric parsers for live preview (handles decimal dot or comma)
   const parseDecimalInput = (val: string): number | null => {
     if (!val || val.trim() === "") return null;
     const clean = val.trim().replace(",", ".");
@@ -159,7 +159,6 @@ export function MeasurementModal({
   const parsedWaist = parseDecimalInput(waist);
   const parsedHip = parseDecimalInput(hip);
 
-  // Live Body Fat Calculation via calculateBodyFat utility (exact same logic used on save)
   const liveBodyFat = useMemo(() => {
     return calculateBodyFat({
       gender: profile.gender,
@@ -170,7 +169,6 @@ export function MeasurementModal({
     });
   }, [profile.gender, profile.height, parsedNeck, parsedWaist, parsedHip]);
 
-  // Live BMI Calculation
   const liveBMI = useMemo(() => {
     if (!parsedWeight || parsedWeight <= 0) return null;
     return calculateBMI(parsedWeight, profile.height);
@@ -180,7 +178,6 @@ export function MeasurementModal({
   const bodyFatCategory =
     liveBodyFat !== null ? getBodyFatCategory(profile.gender, liveBodyFat) : null;
 
-  // Feedback helper text when bodyFat cannot yet be calculated
   const missingMeasurementText = useMemo(() => {
     if (liveBodyFat !== null) return null;
 
@@ -198,7 +195,6 @@ export function MeasurementModal({
         return "Bel ölçüsü boyun ölçüsünden büyük olmalıdır";
       }
     } else {
-      // female
       const missing: string[] = [];
       if (!parsedNeck) missing.push("boyun");
       if (!parsedWaist) missing.push("bel");
@@ -273,7 +269,7 @@ export function MeasurementModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-xs p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/30 backdrop-blur-[2px] p-4 animate-in fade-in duration-150"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -281,15 +277,15 @@ export function MeasurementModal({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-3xl border border-border/80 bg-surface shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+      <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-2xl border border-border bg-surface shadow-lg animate-in zoom-in-95 duration-150 overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border/70 bg-surface/90 backdrop-blur-md shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-border bg-surface shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xl font-bold shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-lavender border border-border-lavender text-lg">
               ⚖️
             </div>
             <div>
-              <h2 id="modal-title" className="text-lg font-black tracking-tight text-foreground">
+              <h2 id="modal-title" className="text-base font-bold tracking-tight text-foreground">
                 {isEditMode ? "Ölçümü Düzenle" : "Yeni Ölçüm Ekle"}
               </h2>
               <p className="text-xs text-muted">
@@ -302,33 +298,32 @@ export function MeasurementModal({
             type="button"
             onClick={onClose}
             aria-label="Kapat"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-surface-raised text-muted hover:text-foreground hover:border-border transition cursor-pointer"
+            className="icon-button"
           >
-            ✕
+            <CloseIcon className="w-4 h-4" />
           </button>
         </div>
 
         {/* Modal Scrollable Form Body */}
-        <form onSubmit={handleSubmit} noValidate className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Section 1: Mandatory Fields (Tarih & Kilo) */}
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted">
                 Zorunlu Bilgiler
               </span>
-              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span className="text-[11px] text-primary font-semibold">
                 * Sadece Tarih + Kilo yeterlidir
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Tarih */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="meas-date"
                   className="block text-xs font-bold text-foreground"
                 >
-                  Ölçüm Tarihi <span className="text-emerald-500">*</span>
+                  Ölçüm Tarihi <span className="text-primary">*</span>
                 </label>
                 <input
                   id="meas-date"
@@ -342,23 +337,22 @@ export function MeasurementModal({
                     }
                   }}
                   className={`field font-medium ${
-                    touched.date && errors.date ? "border-rose-500/80 bg-rose-500/5" : ""
+                    touched.date && errors.date ? "field-error" : ""
                   }`}
                 />
                 {touched.date && errors.date && (
-                  <p className="text-[11px] font-semibold text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-semibold text-danger">
                     {errors.date}
                   </p>
                 )}
               </div>
 
-              {/* Kilo */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="meas-weight"
                   className="block text-xs font-bold text-foreground"
                 >
-                  Kilo <span className="text-emerald-500">*</span>
+                  Kilo <span className="text-primary">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -375,7 +369,7 @@ export function MeasurementModal({
                     }}
                     placeholder="Örn: 99.2"
                     className={`field pr-12 font-bold ${
-                      touched.weight && errors.weight ? "border-rose-500/80 bg-rose-500/5" : ""
+                      touched.weight && errors.weight ? "field-error" : ""
                     }`}
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted pointer-events-none">
@@ -383,7 +377,7 @@ export function MeasurementModal({
                   </span>
                 </div>
                 {touched.weight && errors.weight && (
-                  <p className="text-[11px] font-semibold text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-semibold text-danger">
                     {errors.weight}
                   </p>
                 )}
@@ -391,8 +385,8 @@ export function MeasurementModal({
             </div>
           </div>
 
-          {/* Section 2: Optional Body Measurements (Boyun / Bel / Kalça) */}
-          <div className="space-y-3.5 pt-2 border-t border-border/70">
+          {/* Section 2: Optional Body Measurements */}
+          <div className="space-y-3.5 pt-2 border-t border-border">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted">
                 Çevre Ölçüleri (Opsiyonel)
@@ -407,7 +401,6 @@ export function MeasurementModal({
                 profile.gender === "female" ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"
               }`}
             >
-              {/* Boyun */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="meas-neck"
@@ -429,7 +422,7 @@ export function MeasurementModal({
                     }}
                     placeholder="Örn: 42"
                     className={`field pr-12 font-semibold ${
-                      touched.neck && errors.neck ? "border-rose-500/80 bg-rose-500/5" : ""
+                      touched.neck && errors.neck ? "field-error" : ""
                     }`}
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted pointer-events-none">
@@ -437,13 +430,12 @@ export function MeasurementModal({
                   </span>
                 </div>
                 {touched.neck && errors.neck && (
-                  <p className="text-[11px] font-semibold text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-semibold text-danger">
                     {errors.neck}
                   </p>
                 )}
               </div>
 
-              {/* Bel */}
               <div className="space-y-1.5">
                 <label
                   htmlFor="meas-waist"
@@ -465,7 +457,7 @@ export function MeasurementModal({
                     }}
                     placeholder="Örn: 105"
                     className={`field pr-12 font-semibold ${
-                      touched.waist && errors.waist ? "border-rose-500/80 bg-rose-500/5" : ""
+                      touched.waist && errors.waist ? "field-error" : ""
                     }`}
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted pointer-events-none">
@@ -473,13 +465,12 @@ export function MeasurementModal({
                   </span>
                 </div>
                 {touched.waist && errors.waist && (
-                  <p className="text-[11px] font-semibold text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-semibold text-danger">
                     {errors.waist}
                   </p>
                 )}
               </div>
 
-              {/* Kalça (Female Only) */}
               {profile.gender === "female" && (
                 <div className="space-y-1.5">
                   <label
@@ -502,7 +493,7 @@ export function MeasurementModal({
                       }}
                       placeholder="Örn: 100"
                       className={`field pr-12 font-semibold ${
-                        touched.hip && errors.hip ? "border-rose-500/80 bg-rose-500/5" : ""
+                        touched.hip && errors.hip ? "field-error" : ""
                       }`}
                     />
                     <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted pointer-events-none">
@@ -510,7 +501,7 @@ export function MeasurementModal({
                     </span>
                   </div>
                   {touched.hip && errors.hip && (
-                    <p className="text-[11px] font-semibold text-rose-500 animate-in fade-in duration-150">
+                    <p className="text-[11px] font-semibold text-danger">
                       {errors.hip}
                     </p>
                   )}
@@ -519,21 +510,20 @@ export function MeasurementModal({
             </div>
           </div>
 
-          {/* Section 3: DISTINCT LIVE BODY FAT PREVIEW CARD */}
+          {/* Section 3: LIVE BODY FAT PREVIEW CARD */}
           <div
-            className={`rounded-2xl p-4 transition-all duration-200 ${
+            className={`rounded-xl p-4 transition-all duration-150 ${
               liveBodyFat !== null
-                ? "bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-surface-raised border border-emerald-500/30 ring-1 ring-emerald-500/15 shadow-sm"
-                : "bg-surface-raised/70 border border-border/70"
+                ? "bg-surface-lavender border border-border-lavender"
+                : "bg-surface-raised border border-border"
             }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              {/* Body Fat Preview Area */}
               <div className="flex items-center gap-3">
                 <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-base font-black transition-all ${
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-bold ${
                     liveBodyFat !== null
-                      ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                      ? "bg-surface text-primary border border-border-lavender shadow-xs"
                       : "bg-surface border border-border text-muted"
                   }`}
                 >
@@ -547,12 +537,12 @@ export function MeasurementModal({
 
                   {liveBodyFat !== null ? (
                     <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-foreground tracking-tight">
+                      <span className="text-2xl font-bold text-foreground tracking-tight tabular-nums">
                         {liveBodyFat}%
                       </span>
                       {bodyFatCategory && (
                         <span
-                          className={`rounded-lg px-2 py-0.5 text-xs font-bold bg-surface border border-border/60 ${bodyFatCategory.color}`}
+                          className={`rounded-lg px-2 py-0.5 text-xs font-bold bg-surface border border-border ${bodyFatCategory.color}`}
                         >
                           {bodyFatCategory.label}
                         </span>
@@ -566,15 +556,14 @@ export function MeasurementModal({
                 </div>
               </div>
 
-              {/* BMI Pill */}
               {liveBMI !== null && (
-                <div className="flex items-center gap-2 border-t sm:border-t-0 sm:border-l border-border/60 pt-2 sm:pt-0 sm:pl-3.5 self-start sm:self-center">
+                <div className="flex items-center gap-2 border-t sm:border-t-0 sm:border-l border-border pt-2 sm:pt-0 sm:pl-3.5 self-start sm:self-center">
                   <div className="text-left sm:text-right">
                     <span className="text-[10px] text-muted font-bold block uppercase">
                       BMI
                     </span>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-sm font-black text-foreground">
+                      <span className="text-sm font-bold text-foreground tabular-nums">
                         {liveBMI}
                       </span>
                       {bmiCategory && (
@@ -589,9 +578,9 @@ export function MeasurementModal({
             </div>
 
             {liveBodyFat !== null && (
-              <div className="mt-2.5 pt-2 border-t border-emerald-500/20 flex items-center justify-between text-[11px] text-muted">
+              <div className="mt-2.5 pt-2 border-t border-border-lavender flex items-center justify-between text-[11px] text-muted">
                 <span>U.S. Navy Circumference Metodu</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold text-primary">
                   Kaydedilmeye Hazır ✓
                 </span>
               </div>
@@ -599,17 +588,17 @@ export function MeasurementModal({
           </div>
 
           {/* Section 4: ACCORDION SECTION FOR MUSCLE MEASUREMENTS */}
-          <div className="pt-1 border-t border-border/70">
+          <div className="pt-1 border-t border-border">
             <button
               type="button"
               onClick={() => setIsMuscleOpen(!isMuscleOpen)}
-              className="w-full flex items-center justify-between p-3 rounded-2xl bg-surface-raised/60 hover:bg-surface-raised border border-border/60 transition cursor-pointer select-none group"
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-surface-raised hover:bg-background-subtle border border-border transition cursor-pointer select-none group"
             >
               <div className="flex items-center gap-2.5">
-                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-surface border border-border text-xs font-bold">
                   💪
                 </span>
-                <span className="text-xs sm:text-sm font-bold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                <span className="text-xs sm:text-sm font-bold text-foreground">
                   Kas Ölçümleri
                 </span>
                 <span className="text-[10px] text-muted font-normal">
@@ -621,23 +610,20 @@ export function MeasurementModal({
                 <span className="text-xs font-medium hidden sm:inline">
                   {isMuscleOpen ? "Gizle" : "Genişlet"}
                 </span>
-                <span
-                  className={`text-sm font-bold transition-transform duration-200 inline-block ${
+                <ChevronDownIcon
+                  className={`w-4 h-4 transition-transform duration-200 ${
                     isMuscleOpen ? "rotate-180" : "rotate-0"
                   }`}
-                >
-                  ⌄
-                </span>
+                />
               </div>
             </button>
 
-            {/* Accordion Collapsible Content */}
             <div
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${
+              className={`transition-all duration-200 ease-in-out overflow-hidden ${
                 isMuscleOpen ? "max-h-[600px] opacity-100 mt-3.5" : "max-h-0 opacity-0"
               }`}
             >
-              <div className="rounded-2xl border border-border/70 bg-surface-raised/40 p-4 space-y-4">
+              <div className="rounded-xl border border-border bg-surface-raised/60 p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-muted">
                     Bölgesel Kas Çevreleri (cm)
@@ -647,7 +633,7 @@ export function MeasurementModal({
                   </span>
                 </div>
 
-                {/* Upper Body (Omuz, Göğüs, Sırt) */}
+                {/* Upper Body */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[11px] font-semibold text-muted">
@@ -707,7 +693,7 @@ export function MeasurementModal({
                   </div>
                 </div>
 
-                {/* Arms (Sağ Kol, Sol Kol) */}
+                {/* Arms */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[11px] font-semibold text-muted">
@@ -748,7 +734,7 @@ export function MeasurementModal({
                   </div>
                 </div>
 
-                {/* Thighs (Sağ Bacak, Sol Bacak) */}
+                {/* Thighs */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[11px] font-semibold text-muted">
@@ -789,7 +775,7 @@ export function MeasurementModal({
                   </div>
                 </div>
 
-                {/* Calves (Sağ Baldır, Sol Baldır) */}
+                {/* Calves */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[11px] font-semibold text-muted">
@@ -834,12 +820,12 @@ export function MeasurementModal({
           </div>
         </form>
 
-        {/* Modal Footer / Action Buttons */}
-        <div className="flex items-center justify-end gap-2.5 p-4 sm:p-5 border-t border-border/70 bg-surface/90 backdrop-blur-md shrink-0">
+        {/* Modal Footer */}
+        <div className="flex items-center justify-end gap-2.5 p-4 border-t border-border bg-surface shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="secondary-button min-w-24 cursor-pointer"
+            className="secondary-button min-w-24"
           >
             İptal
           </button>
@@ -848,7 +834,7 @@ export function MeasurementModal({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="primary-button bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 min-w-36 font-bold shadow-md shadow-emerald-600/20 cursor-pointer disabled:opacity-50"
+            className="primary-button min-w-36 font-semibold"
           >
             {isEditMode ? "Değişiklikleri Kaydet" : "Ölçümü Kaydet"}
           </button>

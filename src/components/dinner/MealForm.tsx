@@ -10,6 +10,7 @@ import {
   type LocalMeal,
 } from "@/lib/local-storage/store";
 import type { MeasurementUnit } from "@/types/common";
+import { CloseIcon, PlusIcon } from "@/components/ui/Icons";
 
 const UNITS: readonly MeasurementUnit[] = [
   "gram",
@@ -106,55 +107,68 @@ export function MealForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {error && (
+        <p
+          role="alert"
+          className="rounded-[10px] border border-danger-border bg-danger-bg p-3 text-xs font-medium text-danger"
+        >
+          {error}
+        </p>
+      )}
       {mealId && <input type="hidden" name="id" value={mealId} />}
-      <div className="space-y-2">
-        <label htmlFor="name" className="text-sm font-medium">
-          Yemek adı
+
+      <div className="space-y-1.5">
+        <label htmlFor="name" className="block text-xs font-semibold text-foreground">
+          Yemek Adı *
         </label>
         <input
           id="name"
           name="name"
           required
           defaultValue={initialName}
-          placeholder="Örn. Tavuklu Makarna"
+          placeholder="Örn: Tavuklu Makarna"
           className="field"
         />
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="description" className="text-sm font-medium">
-          Açıklama <span className="text-muted">(isteğe bağlı)</span>
+      <div className="space-y-1.5">
+        <label htmlFor="description" className="block text-xs font-semibold text-foreground">
+          Açıklama / Hazırlanış Notu <span className="font-normal text-muted">(isteğe bağlı)</span>
         </label>
         <textarea
           id="description"
           name="description"
           rows={3}
           defaultValue={initialDescription}
-          placeholder="Yemek hakkında kısa bir not"
+          placeholder="Yemek hakkında kısa bir not veya püf noktası..."
           className="field resize-y"
         />
       </div>
 
       <fieldset className="space-y-3">
-        <legend className="text-sm font-medium">Malzemeler</legend>
+        <legend className="text-xs font-semibold text-foreground">
+          Malzemeler ({ingredients.length})
+        </legend>
         <input
           type="hidden"
           name="ingredients"
           value={JSON.stringify(ingredients)}
           readOnly
         />
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {ingredients.map((ingredient, index) => (
-            <div key={index} className="rounded-xl border border-border p-3">
-              <div className="grid grid-cols-[1fr_auto] gap-2">
+            <div
+              key={index}
+              className="rounded-[12px] border border-border bg-background/60 p-3.5 space-y-2.5"
+            >
+              <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
                 <input
                   required
                   aria-label={`Malzeme ${index + 1}`}
                   value={ingredient.name}
                   onChange={(event) => updateIngredient(index, "name", event.target.value)}
-                  placeholder="Malzeme adı"
+                  placeholder="Malzeme adı (örn: Domates)"
                   className="field"
                 />
                 <button
@@ -165,13 +179,13 @@ export function MealForm({
                     )
                   }
                   disabled={ingredients.length === 1}
-                  className="icon-button"
+                  className="icon-button h-10 w-10 hover:border-danger-border hover:bg-danger-bg hover:text-danger"
                   aria-label="Malzemeyi sil"
                 >
-                  ×
+                  <CloseIcon className="h-4 w-4" />
                 </button>
               </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <input
                   required
                   min="0.001"
@@ -183,7 +197,7 @@ export function MealForm({
                     updateIngredient(index, "quantity", event.target.value)
                   }
                   placeholder="Miktar"
-                  className="field"
+                  className="field tabular-nums"
                 />
                 <select
                   required
@@ -210,15 +224,18 @@ export function MealForm({
               { name: "", quantity: 1, unit: "gram" },
             ])
           }
-          className="secondary-button w-full"
+          className="accent-button w-full text-xs"
         >
-          + Malzeme ekle
+          <PlusIcon className="h-4 w-4 text-primary" />
+          <span>Malzeme Ekle</span>
         </button>
       </fieldset>
 
-      <button type="submit" className="primary-button w-full">
-        {mealId ? "Değişiklikleri kaydet" : "Yemeği kaydet"}
-      </button>
+      <div className="pt-2">
+        <button type="submit" className="primary-button w-full py-2.5">
+          {mealId ? "Değişiklikleri Kaydet" : "Yemeği Kaydet"}
+        </button>
+      </div>
     </form>
   );
 }

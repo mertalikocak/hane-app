@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import styles from "./CarDo.module.css";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { CarIcon, EditIcon, TrashIcon, CloseIcon, PlusIcon } from "@/components/ui/Icons";
 
 export interface Expense {
   id: number;
@@ -29,23 +31,34 @@ export function CarDoModule() {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
 
-  // Edit modal state
+  // Edit & Delete state
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   // Load from local storage
   useEffect(() => {
-    try {
-      const data = localStorage.getItem(STORAGE_KEY);
-      if (data) {
-        setExpenses(JSON.parse(data));
+    const loadFromStorage = () => {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          setExpenses(JSON.parse(data));
+        }
+      } catch (e) {
+        console.error("Failed to load car expenses", e);
+      } finally {
+        setIsLoaded(true);
       }
-    } catch (e) {
-      console.error("Failed to load car expenses", e);
-    } finally {
-      setIsLoaded(true);
-    }
+    };
+
+    loadFromStorage();
+    window.addEventListener("cardo:expenses-updated", loadFromStorage);
+    window.addEventListener("storage", loadFromStorage);
+    return () => {
+      window.removeEventListener("cardo:expenses-updated", loadFromStorage);
+      window.removeEventListener("storage", loadFromStorage);
+    };
   }, []);
 
   // Save to local storage
@@ -79,10 +92,9 @@ export function CarDoModule() {
     setPrice("");
   };
 
-  const handleDeleteExpense = (id: number) => {
-    if (window.confirm("Bu masrafı silmek istediğinize emin misiniz?")) {
-      saveExpenses(expenses.filter((item) => item.id !== id));
-    }
+  const handleConfirmDeleteExpense = (id: number) => {
+    saveExpenses(expenses.filter((item) => item.id !== id));
+    setConfirmDeleteId(null);
   };
 
   const handleToggleCompleted = (id: number) => {
@@ -153,14 +165,47 @@ export function CarDoModule() {
 
   return (
     <div className={styles.cardoContainer}>
-      <header className={styles.pageHeader}>
-        <div className={styles.pageHeaderTitles}>
-          <h1>🚗 Hane Car</h1>
-          <p className={styles.subtitle}>
-            Araç bakım, yakıt, sigorta ve diğer masraflarınızı kolayca yönetin.
-          </p>
+      <div className="mb-6">
+        <PageHeader
+          title="Hane Car"
+          subtitle="Araç bakım, yakıt, sigorta ve diğer masraflarınızı kolayca yönetin."
+          icon={<CarIcon size={20} />}
+          badge={
+            <span className="ds-badge ds-badge-primary">
+              Araç Masraf Takibi
+            </span>
+          }
+        />
+      </div>
+
+      {/* Summary Cards */}
+      <section className={`${styles.summarySection} mb-6`}>
+        <div className={`${styles.summaryCard} ${styles.summaryTotal}`}>
+          <div className={styles.summaryIcon}>💰</div>
+          <div className={styles.summaryContent}>
+            <span className={styles.summaryLabel}>Toplam Masraf</span>
+            <span className={styles.summaryValue}>{formatCurrency(totalAmount)}</span>
+          </div>
         </div>
-      </header>
+        <div className={`${styles.summaryCard} ${styles.summarySpent}`}>
+          <div className={styles.summaryIcon}>✅</div>
+          <div className={styles.summaryContent}>
+            <span className={styles.summaryLabel}>Ödenen / Harcanan</span>
+            <span className={`${styles.summaryValue} text-emerald-700`}>
+              {formatCurrency(spentAmount)}
+            </span>
+          </div>
+        </div>
+        <div className={`${styles.summaryCard} ${styles.summaryRemaining}`}>
+          <div className={styles.summaryIcon}>⏳</div>
+          <div className={styles.summaryContent}>
+            <span className={styles.summaryLabel}>Kalan Masraf</span>
+            <span className={`${styles.summaryValue} text-amber-700`}>
+              {formatCurrency(remainingAmount)}
+            </span>
+          </div>
+        </div>
+      </section>
 
       {/* Add Expense Form */}
       <section className={styles.addExpenseSection}>
@@ -191,7 +236,7 @@ export function CarDoModule() {
             />
           </div>
           <button type="submit" className={styles.btnPrimary}>
-            <span>+</span> Masraf Ekle
+            <PlusIcon size={15} /> Masraf Ekle
           </button>
         </form>
       </section>
@@ -202,7 +247,7 @@ export function CarDoModule() {
           <h2 className={styles.sectionTitle} style={{ marginBottom: 0 }}>
             Masraf Listesi
           </h2>
-          <span className="text-xs font-semibold text-muted">
+          <span className="ds-badge ds-badge-neutral tabular-nums">
             {expenses.length} kayıt
           </span>
         </div>
@@ -210,7 +255,7 @@ export function CarDoModule() {
         {expenses.length === 0 ? (
           <div className={styles.emptyState}>
             <span className={styles.emptyIcon}>📋</span>
-            <p className="font-semibold text-foreground">Henüz masraf eklenmedi</p>
+            <p className="font-semibold text-foreground text-sm">Henüz masraf eklenmedi</p>
             <p className="text-xs text-muted mt-1">
               Yukarıdaki formu kullanarak ilk araç masrafınızı kaydedin.
             </p>
@@ -242,22 +287,43 @@ export function CarDoModule() {
                   </div>
                 </div>
                 <div className={styles.expenseActions}>
-                  <button
-                    type="button"
-                    className={`${styles.actionBtn} ${styles.editBtn}`}
-                    onClick={() => handleOpenEdit(expense)}
-                    title="Düzenle"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    type="button"
-                    className={`${styles.actionBtn} ${styles.deleteBtn}`}
-                    onClick={() => handleDeleteExpense(expense.id)}
-                    title="Sil"
-                  >
-                    🗑️
-                  </button>
+                  {confirmDeleteId === expense.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleConfirmDeleteExpense(expense.id)}
+                        className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-2.5 py-1 text-xs h-7 min-h-0"
+                      >
+                        Sil
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="secondary-button px-2.5 py-1 text-xs h-7 min-h-0"
+                      >
+                        İptal
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className={`${styles.actionBtn} ${styles.editBtn}`}
+                        onClick={() => handleOpenEdit(expense)}
+                        title="Düzenle"
+                      >
+                        <EditIcon size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.actionBtn} ${styles.deleteBtn}`}
+                        onClick={() => setConfirmDeleteId(expense.id)}
+                        title="Sil"
+                      >
+                        <TrashIcon size={14} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -265,37 +331,10 @@ export function CarDoModule() {
         )}
       </section>
 
-      {/* Summary Cards */}
-      <section className={styles.summarySection}>
-        <div className={`${styles.summaryCard} ${styles.summaryTotal}`}>
-          <div className={styles.summaryIcon}>💰</div>
-          <div className={styles.summaryContent}>
-            <span className={styles.summaryLabel}>Toplam Masraf</span>
-            <span className={styles.summaryValue}>{formatCurrency(totalAmount)}</span>
-          </div>
-        </div>
-        <div className={`${styles.summaryCard} ${styles.summarySpent}`}>
-          <div className={styles.summaryIcon}>✅</div>
-          <div className={styles.summaryContent}>
-            <span className={styles.summaryLabel}>Ödenen / Harcanan</span>
-            <span className={styles.summaryValue}>{formatCurrency(spentAmount)}</span>
-          </div>
-        </div>
-        <div className={`${styles.summaryCard} ${styles.summaryRemaining}`}>
-          <div className={styles.summaryIcon}>⏳</div>
-          <div className={styles.summaryContent}>
-            <span className={styles.summaryLabel}>Kalan Masraf</span>
-            <span className={styles.summaryValue}>
-              {formatCurrency(remainingAmount)}
-            </span>
-          </div>
-        </div>
-      </section>
-
       {/* Edit Modal */}
       {editingExpense && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
+          <div className={styles.modalContent} role="dialog" aria-modal="true">
             <div className={styles.modalHeader}>
               <h3>Masrafı Düzenle</h3>
               <button
@@ -303,7 +342,7 @@ export function CarDoModule() {
                 className={styles.modalClose}
                 onClick={() => setEditingExpense(null)}
               >
-                &times;
+                <CloseIcon size={15} />
               </button>
             </div>
             <form onSubmit={handleSaveEdit} className={styles.modalBody}>

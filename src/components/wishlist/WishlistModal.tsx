@@ -9,6 +9,7 @@ import {
 } from "@/domain/wishlistTypes";
 import { saveWishlistItem, deleteWishlistItem } from "@/storage/wishlistStorage";
 import { useProfile } from "@/context/ProfileContext";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface WishlistModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export function WishlistModal({
   const [priority, setPriority] = useState<WishlistPriority>("medium");
   const [category, setCategory] = useState<WishlistCategory>("home");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -57,6 +59,7 @@ export function WishlistModal({
       setCategory("home");
     }
     setErrors({});
+    setConfirmDelete(false);
   }, [isOpen, initialItem, defaultSection, activeProfile]);
 
   if (!isOpen) return null;
@@ -107,29 +110,30 @@ export function WishlistModal({
     onClose();
   };
 
-  const handleDelete = () => {
+  const handleConfirmDelete = () => {
     if (!initialItem?.id) return;
-    if (confirm(`"${initialItem.title}" isteğini silmek istediğinize emin misiniz?`)) {
-      deleteWishlistItem(initialItem.id);
-      onSaved?.();
-      onClose();
-    }
+    deleteWishlistItem(initialItem.id);
+    setConfirmDelete(false);
+    onSaved?.();
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-border/80 bg-surface/95 backdrop-blur-xl p-6 sm:p-7 shadow-2xl space-y-5"
+        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-border bg-surface p-6 shadow-lg space-y-5"
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-border/60 pb-3.5">
+        <div className="flex items-center justify-between border-b border-border pb-3.5">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-500/15 text-rose-600 dark:text-rose-400 text-xl shadow-xs">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary text-xl">
               🎁
             </span>
             <div>
-              <h3 className="text-lg font-extrabold text-foreground leading-tight">
+              <h3 className="text-base font-bold text-foreground leading-tight">
                 {initialItem ? "İsteği Düzenle" : "Yeni İstek Ekle"}
               </h3>
               <p className="text-xs text-muted">
@@ -141,9 +145,9 @@ export function WishlistModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-surface-raised border border-border/60 text-muted hover:text-foreground text-xs cursor-pointer transition"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
@@ -157,10 +161,10 @@ export function WishlistModal({
               <button
                 type="button"
                 onClick={() => setTargetSection("hane")}
-                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-2xl border text-xs font-bold transition cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
                   targetSection === "hane"
-                    ? "border-rose-500 bg-rose-500/15 text-rose-600 dark:text-rose-400 shadow-xs ring-1 ring-rose-500/30"
-                    : "border-border/80 bg-surface hover:bg-surface-raised text-muted"
+                    ? "border-primary bg-accent/60 text-primary"
+                    : "border-border bg-surface-raised hover:bg-background-subtle text-muted"
                 }`}
               >
                 <span>🏠</span>
@@ -170,10 +174,10 @@ export function WishlistModal({
               <button
                 type="button"
                 onClick={() => setTargetSection(activeProfile ? activeProfile.id : (profiles[0]?.id || "prof_default"))}
-                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-2xl border text-xs font-bold transition cursor-pointer ${
+                className={`flex items-center justify-center gap-1.5 p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
                   targetSection !== "hane"
-                    ? "border-rose-500 bg-rose-500/15 text-rose-600 dark:text-rose-400 shadow-xs ring-1 ring-rose-500/30"
-                    : "border-border/80 bg-surface hover:bg-surface-raised text-muted"
+                    ? "border-primary bg-accent/60 text-primary"
+                    : "border-border bg-surface-raised hover:bg-background-subtle text-muted"
                 }`}
               >
                 <span>👤</span>
@@ -199,10 +203,10 @@ export function WishlistModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Örn: Robot Süpürge, Koşu Ayakkabısı, Kahve Makinesi..."
-              className="field w-full font-medium text-xs sm:text-sm"
+              className={`field text-xs sm:text-sm ${errors.title ? "field-error" : ""}`}
             />
             {errors.title && (
-              <span className="text-[11px] text-rose-500 mt-1 block">
+              <span className="text-[11px] text-rose-600 mt-1 block">
                 {errors.title}
               </span>
             )}
@@ -221,10 +225,10 @@ export function WishlistModal({
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="0.00"
-                className="field w-full font-medium text-xs sm:text-sm"
+                className={`field text-xs sm:text-sm tabular-nums ${errors.price ? "field-error" : ""}`}
               />
               {errors.price && (
-                <span className="text-[11px] text-rose-500 mt-1 block">
+                <span className="text-[11px] text-rose-600 mt-1 block">
                   {errors.price}
                 </span>
               )}
@@ -237,7 +241,7 @@ export function WishlistModal({
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as WishlistPriority)}
-                className="field w-full font-medium text-xs sm:text-sm"
+                className="field text-xs sm:text-sm"
               >
                 <option value="low">🟢 Düşük Öncelik</option>
                 <option value="medium">🟡 Normal / Orta</option>
@@ -261,8 +265,8 @@ export function WishlistModal({
                     onClick={() => setCategory(cat.id)}
                     className={`flex items-center gap-1.5 p-2 rounded-xl border text-xs font-semibold transition cursor-pointer ${
                       isSelected
-                        ? `${cat.bgClass} ${cat.textClass} ${cat.borderClass} ring-1 ring-rose-500/30`
-                        : "border-border/60 bg-surface hover:bg-surface-raised text-muted"
+                        ? `${cat.bgClass} ${cat.textClass} ${cat.borderClass} ring-1 ring-primary/30`
+                        : "border-border bg-surface-raised hover:bg-background-subtle text-muted"
                     }`}
                   >
                     <span>{cat.icon}</span>
@@ -283,7 +287,7 @@ export function WishlistModal({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://www.hepsiburada.com/..."
-              className="field w-full font-medium text-xs"
+              className="field text-xs"
             />
           </div>
 
@@ -297,33 +301,54 @@ export function WishlistModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Beden, renk, model no veya alınacak yer gibi detaylar..."
-              className="field w-full text-xs"
+              className="field min-h-[64px] py-2 text-xs resize-none"
             />
           </div>
 
           {/* Modal Actions */}
-          <div className="pt-2 flex items-center justify-between gap-3 border-t border-border/60">
+          <div className="pt-2 flex items-center justify-between gap-3 border-t border-border">
             {initialItem ? (
-              <button
-                type="button"
-                onClick={handleDelete}
-                className="px-3.5 py-2.5 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition cursor-pointer"
-              >
-                Sil
-              </button>
-            ) : <div />}
+              confirmDelete ? (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleConfirmDelete}
+                    className="danger-button bg-rose-600 text-white hover:bg-rose-700 px-3 py-1.5 text-xs"
+                  >
+                    Silmeyi Onayla
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="secondary-button px-2.5 py-1.5 text-xs"
+                  >
+                    Vazgeç
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(true)}
+                  className="danger-button px-3.5 py-2 text-xs"
+                >
+                  Sil
+                </button>
+              )
+            ) : (
+              <div />
+            )}
 
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-2xl border border-border bg-surface hover:bg-surface-raised text-xs font-bold text-foreground transition cursor-pointer"
+                className="secondary-button px-4 py-2 text-xs"
               >
                 İptal
               </button>
               <button
                 type="submit"
-                className="primary-button bg-rose-600 hover:bg-rose-700 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-600/20 cursor-pointer"
+                className="primary-button px-5 py-2 text-xs"
               >
                 {initialItem ? "Güncelle" : "İsteği Ekle"}
               </button>

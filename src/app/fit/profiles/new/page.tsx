@@ -9,6 +9,7 @@ import {
   ProfileValidationErrors,
   validateProfileInput,
 } from "@/services/profileService";
+import { ArrowRightIcon } from "@/components/ui/Icons";
 
 export default function NewProfilePage() {
   const router = useRouter();
@@ -45,7 +46,6 @@ export default function NewProfilePage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validate all fields
     const validation = validateProfileInput({
       firstName,
       lastName,
@@ -65,7 +65,6 @@ export default function NewProfilePage() {
       return;
     }
 
-    // Create profile via Service
     const result = ProfileService.create({
       firstName,
       lastName,
@@ -79,36 +78,32 @@ export default function NewProfilePage() {
       return;
     }
 
-    // Automatically navigate to dashboard
     router.push("/fit/dashboard");
   };
 
   return (
-    <div className="relative min-h-[75vh] flex flex-col items-center justify-center py-6 px-4">
-      {/* Background Ambience */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-[480px] h-80 sm:h-[480px] bg-emerald-500/10 blur-[130px] rounded-full pointer-events-none -z-10" />
-
+    <div className="min-h-[70vh] flex flex-col items-center justify-center py-6 px-4">
       <div className="w-full max-w-xl space-y-6">
         {/* Back navigation */}
         <div className="flex items-center justify-between">
           <Link
-            href="/fit"
-            className="inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold text-muted hover:text-foreground hover:bg-surface-raised transition group cursor-pointer"
+            href="/fit/dashboard"
+            className="secondary-button h-9 px-3 text-xs font-semibold"
           >
-            <span className="transition-transform group-hover:-translate-x-1">←</span>
-            <span>Profil Seçimine Dön</span>
+            <span>←</span>
+            <span>Geri Dön</span>
           </Link>
 
-          <span className="text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+          <span className="text-xs font-bold uppercase tracking-wider text-primary bg-surface-lavender px-3 py-1 rounded-full border border-border-lavender">
             Adım 1: Profil Oluştur
           </span>
         </div>
 
         {/* Card Container */}
-        <div className="rounded-3xl border border-border/80 bg-surface/90 backdrop-blur-md p-6 sm:p-8 shadow-xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
+        <div className="ds-card p-6 sm:p-8 space-y-6 animate-in fade-in duration-200">
           {/* Header & Live Avatar Preview */}
-          <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-border/70 text-center sm:text-left">
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-600 to-slate-800 text-white font-black text-2xl shadow-md ring-4 ring-emerald-500/20 transition-all">
+          <div className="flex flex-col sm:flex-row items-center gap-5 pb-6 border-b border-border text-center sm:text-left">
+            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground font-bold text-2xl shadow-xs">
               {initials}
               <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-surface border border-border text-xs shadow-xs">
                 {gender === "male" ? "👨" : "👩"}
@@ -116,7 +111,7 @@ export default function NewProfilePage() {
             </div>
 
             <div>
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                 Yeni Profil Oluştur
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-muted">
@@ -137,7 +132,7 @@ export default function NewProfilePage() {
                   htmlFor="firstName"
                   className="block text-xs font-bold text-foreground"
                 >
-                  İsim <span className="text-emerald-500">*</span>
+                  İsim <span className="text-primary">*</span>
                 </label>
                 <input
                   id="firstName"
@@ -152,14 +147,12 @@ export default function NewProfilePage() {
                   }}
                   onBlur={() => handleBlur("firstName")}
                   placeholder="Örn: Mert"
-                  className={`w-full min-h-11 rounded-xl border bg-background/80 px-3.5 py-2 text-sm text-foreground outline-none transition-all placeholder:text-muted/60 ${
-                    touched.firstName && errors.firstName
-                      ? "border-rose-500/80 bg-rose-500/5 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                      : "border-border hover:border-emerald-500/40 focus:border-emerald-500 focus:bg-background focus:ring-2 focus:ring-emerald-500/25"
+                  className={`field ${
+                    touched.firstName && errors.firstName ? "field-error" : ""
                   }`}
                 />
                 {touched.firstName && errors.firstName && (
-                  <p className="text-[11px] font-medium text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-medium text-danger">
                     {errors.firstName}
                   </p>
                 )}
@@ -171,7 +164,7 @@ export default function NewProfilePage() {
                   htmlFor="lastName"
                   className="block text-xs font-bold text-foreground"
                 >
-                  Soyisim <span className="text-emerald-500">*</span>
+                  Soyisim <span className="text-primary">*</span>
                 </label>
                 <input
                   id="lastName"
@@ -186,14 +179,12 @@ export default function NewProfilePage() {
                   }}
                   onBlur={() => handleBlur("lastName")}
                   placeholder="Örn: Yılmaz"
-                  className={`w-full min-h-11 rounded-xl border bg-background/80 px-3.5 py-2 text-sm text-foreground outline-none transition-all placeholder:text-muted/60 ${
-                    touched.lastName && errors.lastName
-                      ? "border-rose-500/80 bg-rose-500/5 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                      : "border-border hover:border-emerald-500/40 focus:border-emerald-500 focus:bg-background focus:ring-2 focus:ring-emerald-500/25"
+                  className={`field ${
+                    touched.lastName && errors.lastName ? "field-error" : ""
                   }`}
                 />
                 {touched.lastName && errors.lastName && (
-                  <p className="text-[11px] font-medium text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-medium text-danger">
                     {errors.lastName}
                   </p>
                 )}
@@ -209,7 +200,7 @@ export default function NewProfilePage() {
                     htmlFor="height"
                     className="block text-xs font-bold text-foreground"
                   >
-                    Boy (cm) <span className="text-emerald-500">*</span>
+                    Boy (cm) <span className="text-primary">*</span>
                   </label>
                   <span className="text-[10px] text-muted font-medium">
                     80 - 250 cm
@@ -232,10 +223,8 @@ export default function NewProfilePage() {
                     }}
                     onBlur={() => handleBlur("height")}
                     placeholder="180"
-                    className={`w-full min-h-11 rounded-xl border bg-background/80 px-3.5 py-2 pr-12 text-sm text-foreground outline-none transition-all placeholder:text-muted/60 ${
-                      touched.height && errors.height
-                        ? "border-rose-500/80 bg-rose-500/5 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20"
-                        : "border-border hover:border-emerald-500/40 focus:border-emerald-500 focus:bg-background focus:ring-2 focus:ring-emerald-500/25"
+                    className={`field pr-12 ${
+                      touched.height && errors.height ? "field-error" : ""
                     }`}
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted pointer-events-none">
@@ -243,7 +232,7 @@ export default function NewProfilePage() {
                   </span>
                 </div>
                 {touched.height && errors.height && (
-                  <p className="text-[11px] font-medium text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-medium text-danger">
                     {errors.height}
                   </p>
                 )}
@@ -252,7 +241,7 @@ export default function NewProfilePage() {
               {/* Gender Segmented Selection */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-bold text-foreground">
-                  Cinsiyet <span className="text-emerald-500">*</span>
+                  Cinsiyet <span className="text-primary">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-2 h-11">
                   <button
@@ -260,8 +249,8 @@ export default function NewProfilePage() {
                     onClick={() => setGender("male")}
                     className={`flex items-center justify-center gap-2 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                       gender === "male"
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 ring-2 ring-emerald-500/20 shadow-xs"
-                        : "border-border bg-background/60 text-muted hover:border-border/80 hover:text-foreground hover:bg-surface-raised"
+                        ? "border-primary bg-surface-lavender text-primary ring-2 ring-primary/15 shadow-xs"
+                        : "border-border bg-surface-raised text-muted hover:text-foreground"
                     }`}
                   >
                     <span>👨</span>
@@ -273,8 +262,8 @@ export default function NewProfilePage() {
                     onClick={() => setGender("female")}
                     className={`flex items-center justify-center gap-2 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                       gender === "female"
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 ring-2 ring-emerald-500/20 shadow-xs"
-                        : "border-border bg-background/60 text-muted hover:border-border/80 hover:text-foreground hover:bg-surface-raised"
+                        ? "border-primary bg-surface-lavender text-primary ring-2 ring-primary/15 shadow-xs"
+                        : "border-border bg-surface-raised text-muted hover:text-foreground"
                     }`}
                   >
                     <span>👩</span>
@@ -282,7 +271,7 @@ export default function NewProfilePage() {
                   </button>
                 </div>
                 {touched.gender && errors.gender && (
-                  <p className="text-[11px] font-medium text-rose-500 animate-in fade-in duration-150">
+                  <p className="text-[11px] font-medium text-danger">
                     {errors.gender}
                   </p>
                 )}
@@ -290,20 +279,18 @@ export default function NewProfilePage() {
             </div>
 
             {/* Informational Callout */}
-            <div className="rounded-2xl bg-surface-raised/70 border border-border/60 p-3.5 text-xs text-muted flex items-start gap-2.5">
-              <span className="text-base text-emerald-600 dark:text-emerald-400 mt-0.5">
-                💡
-              </span>
+            <div className="rounded-xl bg-surface-raised border border-border p-3.5 text-xs text-muted flex items-start gap-2.5">
+              <span className="text-base mt-0.5">💡</span>
               <p className="leading-relaxed">
                 Boy ve cinsiyet bilgisi, <strong>U.S. Navy Vücut Yağ Oranı</strong> ve <strong>Vücut Kitle İndeksi (BMI)</strong> algoritmalarında bilimsel hesaplama için kullanılır.
               </p>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-border/70">
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-border">
               <Link
-                href="/fit"
-                className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 py-2 text-sm font-medium text-foreground hover:bg-surface-raised transition text-center cursor-pointer"
+                href="/fit/dashboard"
+                className="secondary-button w-full sm:w-auto px-5"
               >
                 İptal
               </Link>
@@ -311,10 +298,10 @@ export default function NewProfilePage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full sm:w-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-7 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-600/25 hover:from-emerald-500 hover:to-teal-500 hover:shadow-lg hover:shadow-emerald-600/30 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+                className="primary-button w-full sm:w-auto px-6 font-semibold"
               >
                 <span>Profili Kaydet & Başla</span>
-                <span>→</span>
+                <ArrowRightIcon className="w-4 h-4" />
               </button>
             </div>
           </form>

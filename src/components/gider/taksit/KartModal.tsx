@@ -111,15 +111,15 @@ export function KartModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150"
       role="dialog"
       aria-modal="true"
     >
-      <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-3xl border border-border/80 bg-surface shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+      <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-2xl border border-border bg-surface shadow-lg overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-border/70 bg-surface/90 backdrop-blur-md shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-border bg-surface shrink-0">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-white font-bold text-lg shadow-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-lavender border border-border-lavender text-lg">
               💳
             </div>
             <div>
@@ -135,7 +135,8 @@ export function KartModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/60 bg-surface-raised text-muted hover:text-foreground transition cursor-pointer"
+            className="icon-button"
+            aria-label="Kapat"
           >
             <CloseIcon className="w-4 h-4" />
           </button>
@@ -143,7 +144,7 @@ export function KartModal({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <label className="text-xs font-bold text-foreground block">
               Kart Adı *
             </label>
@@ -158,7 +159,7 @@ export function KartModal({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="text-xs font-bold text-foreground block">
                 Banka (İsteğe bağlı)
               </label>
@@ -171,7 +172,7 @@ export function KartModal({
               />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="text-xs font-bold text-foreground block">
                 Son 4 Hane (İsteğe bağlı)
               </label>
@@ -185,7 +186,7 @@ export function KartModal({
               />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <label className="text-xs font-bold text-foreground block">
                 Kart Limiti (Opsiyonel)
               </label>
@@ -207,8 +208,8 @@ export function KartModal({
           </div>
 
           {/* Tarihler: Ekstre Günü & Son Ödeme Günü */}
-          <div className="p-3.5 rounded-2xl bg-surface-raised/70 border border-border/70 space-y-3">
-            <span className="text-xs font-bold text-foreground block flex items-center gap-1.5">
+          <div className="p-3.5 rounded-xl bg-surface-raised border border-border space-y-3">
+            <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
               <span>📅</span> Ekstre & Son Ödeme Takvimi
             </span>
 
@@ -258,7 +259,7 @@ export function KartModal({
           </div>
 
           {/* Kart Kapsamı: Ortak mı Bireysel mi? */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <label className="text-xs font-bold text-foreground block">
               Kart Kapsamı (Ortak mı, Bireysel mi?) *
             </label>
@@ -268,12 +269,12 @@ export function KartModal({
                 onClick={() => setKartSahibi("ortak")}
                 className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
                   kartSahibi === "ortak"
-                    ? "bg-purple-600 text-white border-purple-600 shadow-xs"
-                    : "bg-surface-raised border-border text-foreground hover:bg-border/30"
+                    ? "bg-primary text-white border-primary shadow-xs"
+                    : "bg-surface-raised border-border text-foreground hover:bg-background-subtle"
                 }`}
               >
                 <span>👥 Ortak</span>
-                <span className="text-[10px] opacity-80">Hane Kartı</span>
+                <span className="text-[10px] opacity-85">Hane Kartı</span>
               </button>
               <button
                 type="button"
@@ -281,11 +282,11 @@ export function KartModal({
                 className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
                   kartSahibi === "mert"
                     ? "bg-sky-600 text-white border-sky-600 shadow-xs"
-                    : "bg-surface-raised border-border text-foreground hover:bg-border/30"
+                    : "bg-surface-raised border-border text-foreground hover:bg-background-subtle"
                 }`}
               >
                 <span>👤 Bireysel</span>
-                <span className="text-[10px] opacity-80">Mert</span>
+                <span className="text-[10px] opacity-85">Mert</span>
               </button>
               <button
                 type="button"
@@ -293,11 +294,11 @@ export function KartModal({
                 className={`py-2 px-2 rounded-xl text-xs font-bold border transition cursor-pointer flex flex-col items-center gap-0.5 ${
                   kartSahibi === "havsa"
                     ? "bg-pink-600 text-white border-pink-600 shadow-xs"
-                    : "bg-surface-raised border-border text-foreground hover:bg-border/30"
+                    : "bg-surface-raised border-border text-foreground hover:bg-background-subtle"
                 }`}
               >
                 <span>👤 Bireysel</span>
-                <span className="text-[10px] opacity-80">Havsa</span>
+                <span className="text-[10px] opacity-85">Havsa</span>
               </button>
             </div>
             <p className="text-[11px] text-muted">
@@ -329,7 +330,7 @@ export function KartModal({
 
           {/* Aktiflik Durumu */}
           <div className="pt-1">
-            <label className="flex items-center gap-2 p-2.5 rounded-2xl bg-surface-raised border border-border/70 cursor-pointer select-none hover:bg-border/20 transition">
+            <label className="flex items-center gap-2.5 p-3 rounded-xl bg-surface-raised border border-border cursor-pointer select-none hover:bg-background-subtle transition">
               <input
                 type="checkbox"
                 checked={aktif}
@@ -348,7 +349,7 @@ export function KartModal({
           </div>
 
           {/* Footer buttons */}
-          <div className="pt-3 border-t border-border/70 flex items-center gap-2.5">
+          <div className="pt-3 border-t border-border flex items-center gap-2.5">
             <button
               type="button"
               onClick={onClose}

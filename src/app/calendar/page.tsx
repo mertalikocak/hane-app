@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
 import { CalendarView } from "@/components/calendar/CalendarView";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { CalendarIcon } from "@/components/ui/Icons";
 
 export const metadata: Metadata = {
   title: "Hane Calendar - Aile & Kişisel Ortak Takvim",
@@ -9,31 +11,16 @@ export const metadata: Metadata = {
 
 export default function CalendarPage() {
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/80 pb-5">
-        <div className="flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-700 text-2xl shadow-md text-white">
-            📅
-          </span>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                Hane Calendar
-              </h1>
-              <span className="rounded-full bg-indigo-500/10 px-2.5 py-0.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                Takvim
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-muted">
-              Ortak aile planları, randevular ve kişisel etkinlikler
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="space-y-6 pb-12">
+      <PageHeader
+        badge="Hane Takvim"
+        icon={<CalendarIcon className="h-3.5 w-3.5" />}
+        title="Ortak Aile & Kişisel Takvim"
+        subtitle="Ortak aile planları, randevular, nöbetler ve kişisel etkinlikleri tek takvimde yönetin."
+      />
 
       {/* Main Calendar Component */}
-      <Suspense fallback={<div className="h-96 animate-pulse rounded-3xl bg-surface-raised" />}>
+      <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-surface-raised border border-border" />}>
         <CalendarView />
       </Suspense>
     </div>

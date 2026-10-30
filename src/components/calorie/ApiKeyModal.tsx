@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { getStoredGeminiApiKey, setStoredGeminiApiKey } from "@/storage/calorieStorage";
+import { CloseIcon } from "@/components/ui/Icons";
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -39,15 +40,15 @@ export function ApiKeyModal({ isOpen, onClose, onSaved }: ApiKeyModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in duration-150">
       <div
-        className="w-full max-w-md rounded-3xl border border-border bg-surface p-6 shadow-2xl space-y-5"
+        className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-lg space-y-5"
         role="dialog"
         aria-modal="true"
       >
-        <div className="flex items-center justify-between border-b border-border/70 pb-4">
+        <div className="flex items-center justify-between border-b border-border pb-4">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary text-lg font-bold">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent/70 border border-border-lavender text-primary text-lg font-bold">
               🔑
             </span>
             <div>
@@ -62,14 +63,14 @@ export function ApiKeyModal({ isOpen, onClose, onSaved }: ApiKeyModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-muted hover:text-foreground hover:bg-surface-raised transition cursor-pointer"
+            className="icon-button h-8 w-8"
           >
-            ✕
+            <CloseIcon size={16} />
           </button>
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-3.5 text-xs text-foreground/90 space-y-1.5 leading-relaxed">
+          <div className="ds-card-lavender p-3.5 text-xs text-foreground-secondary space-y-1.5 leading-relaxed">
             <div className="font-semibold text-primary flex items-center gap-1.5">
               <span>💡</span> Nasıl ücretsiz anahtar alırım?
             </div>
@@ -102,7 +103,7 @@ export function ApiKeyModal({ isOpen, onClose, onSaved }: ApiKeyModalProps) {
               placeholder="AIzaSy..."
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              className="w-full rounded-2xl border border-border bg-surface-raised px-4 py-3 text-sm text-foreground focus:border-primary focus:outline-none transition font-mono"
+              className="field font-mono text-sm"
             />
             <p className="text-[11px] text-muted">
               Bu anahtar yalnızca sizin tarayıcınızda saklanır ve doğrudan Gemini API ile iletişim kurmak için kullanılır.
@@ -110,18 +111,18 @@ export function ApiKeyModal({ isOpen, onClose, onSaved }: ApiKeyModalProps) {
           </div>
 
           {savedSuccess && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 text-xs font-semibold text-emerald-500 text-center">
+            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2 text-xs font-semibold text-emerald-700 text-center">
               ✓ API Anahtarı başarıyla kaydedildi!
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-border/70">
+        <div className="flex items-center justify-between pt-2 border-t border-border">
           {apiKey ? (
             <button
               type="button"
               onClick={handleClear}
-              className="text-xs text-rose-500 hover:text-rose-600 font-medium px-2 py-1.5 rounded-xl hover:bg-rose-500/10 transition cursor-pointer"
+              className="danger-button px-3 py-1.5 text-xs"
             >
               Anahtarı Temizle
             </button>
@@ -133,14 +134,14 @@ export function ApiKeyModal({ isOpen, onClose, onSaved }: ApiKeyModalProps) {
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl px-4 py-2.5 text-xs font-semibold text-muted hover:text-foreground hover:bg-surface-raised transition cursor-pointer"
+              className="secondary-button px-4 py-2 text-xs"
             >
               Kapat
             </button>
             <button
               type="button"
               onClick={handleSave}
-              className="rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-primary-hover transition cursor-pointer"
+              className="primary-button px-5 py-2 text-xs"
             >
               Kaydet
             </button>

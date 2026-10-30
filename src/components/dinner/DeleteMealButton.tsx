@@ -8,22 +8,41 @@ interface DeleteMealButtonProps {
 }
 
 export function DeleteMealButton({ mealName, onDelete }: DeleteMealButtonProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
-  function handleDelete() {
-    if (!window.confirm(`“${mealName}” yemeğini silmek istediğinize emin misiniz?`)) return;
-    setIsSubmitting(true);
-    onDelete();
+  if (isConfirming) {
+    return (
+      <div className="inline-flex items-center gap-1 rounded-lg border border-danger-border bg-danger-bg px-2 py-0.5">
+        <button
+          type="button"
+          onClick={() => {
+            setIsConfirming(false);
+            onDelete();
+          }}
+          className="text-[11px] font-semibold text-danger hover:underline cursor-pointer"
+          aria-label={`${mealName} yemeğini silmeyi onayla`}
+        >
+          Sil
+        </button>
+        <span className="text-danger/40 text-[10px]">|</span>
+        <button
+          type="button"
+          onClick={() => setIsConfirming(false)}
+          className="text-[11px] font-medium text-foreground-secondary hover:text-foreground cursor-pointer"
+        >
+          Vazgeç
+        </button>
+      </div>
+    );
   }
 
   return (
     <button
       type="button"
-      onClick={handleDelete}
-      disabled={isSubmitting}
-      className="text-xs font-medium text-red-600 hover:text-red-700 transition"
+      onClick={() => setIsConfirming(true)}
+      className="rounded-lg border border-transparent px-2 py-1 text-xs font-medium text-danger hover:border-danger-border hover:bg-danger-bg transition-colors cursor-pointer"
     >
-      {isSubmitting ? "Siliniyor..." : "Sil"}
+      Sil
     </button>
   );
 }

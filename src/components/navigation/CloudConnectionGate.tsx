@@ -79,139 +79,131 @@ export function CloudConnectionGate({ onConnected, onSkipToLocal }: CloudConnect
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-zinc-950 to-slate-900 text-foreground flex items-center justify-center p-4 sm:p-6 select-none animate-in fade-in duration-300">
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 sm:p-6 select-none">
       <div className="w-full max-w-xl space-y-6">
-        {/* Branding & Welcome Header */}
         <div className="text-center space-y-3">
           <img
             src="/logo.png"
             alt="Hane App Logo"
-            className="mx-auto h-24 w-24 rounded-3xl object-cover shadow-2xl shadow-orange-500/25 border border-zinc-700/60"
+            className="mx-auto h-16 w-16 rounded-[14px] object-cover shadow-[var(--shadow-sm)] border border-border"
           />
           <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               Hane App Bulut Bağlantısı
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto">
-              Telefon ve bilgisayarınız arasında anlık senkronizasyon için Firebase veritabanınızı bağlayın.
+            <p className="text-sm text-foreground-secondary max-w-md mx-auto">
+              Cihazlarınız arasında senkronizasyon için Firebase veritabanınızı bağlayın veya yerel modda devam edin.
             </p>
           </div>
         </div>
 
-        {/* Setup Card */}
-        <div className="rounded-3xl border border-zinc-800 bg-zinc-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-2xl space-y-6">
-          {/* 3 Step Guide */}
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 space-y-2">
-            <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
-              ⚡ 2 Dakikalık Hızlı Kurulum:
+        <div className="rounded-[18px] border border-border bg-surface p-6 sm:p-7 shadow-[var(--shadow-md)] space-y-5">
+          <div className="rounded-[10px] border border-border-lavender bg-surface-lavender p-4 space-y-2">
+            <span className="text-xs font-semibold text-primary uppercase tracking-wider block">
+              2 Dakikalık Hızlı Kurulum
             </span>
-            <ol className="text-xs text-zinc-300 space-y-1.5 list-decimal list-inside">
+            <ol className="text-xs text-foreground-secondary space-y-1.5 list-decimal list-inside">
               <li>
                 <a
                   href="https://console.firebase.google.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-amber-400 font-bold underline hover:text-amber-300"
+                  className="text-primary font-semibold underline hover:text-primary-hover"
                 >
                   console.firebase.google.com
                 </a>{" "}
-                adresinden ücretsiz proje açın.
+                adresinden proje açın.
               </li>
               <li>
-                <strong>Build &gt; Firestore Database</strong> oluşturun (Test modunda).
+                <strong>Build &gt; Firestore Database</strong> oluşturun.
               </li>
               <li>
-                <strong>Proje Ayarları (⚙️) &gt; Web App</strong> ekleyip verilen kod bloğunu kopyalayın.
+                <strong>Proje Ayarları &gt; Web App</strong> ekleyip verilen kod bloğunu aşağıya yapıştırın.
               </li>
             </ol>
           </div>
 
           <form onSubmit={handleConnect} className="space-y-4">
-            {/* Quick paste textarea */}
             <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-zinc-200">
-                Firebase Kod Bloğunu Yapıştırın:
+              <label className="block text-xs font-medium text-foreground">
+                Firebase Kod Bloğunu Yapıştırın
               </label>
               <textarea
                 rows={3}
                 value={rawSnippet}
                 onChange={(e) => handleParseSnippet(e.target.value)}
                 placeholder="const firebaseConfig = { apiKey: 'AIzaSy...', projectId: '...', appId: '...' };"
-                className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 p-3.5 text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="field font-mono text-xs"
               />
             </div>
 
-            {/* Form Fields Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold text-zinc-400">API Key</label>
+                <label className="block text-xs font-medium text-foreground-secondary">API Key</label>
                 <input
                   type="text"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="AIzaSy..."
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none"
+                  className="field font-mono text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold text-zinc-400">Project ID</label>
+                <label className="block text-xs font-medium text-foreground-secondary">Project ID</label>
                 <input
                   type="text"
                   value={projectId}
                   onChange={(e) => setProjectId(e.target.value)}
                   placeholder="hane-app-..."
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none"
+                  className="field font-mono text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold text-zinc-400">App ID</label>
+                <label className="block text-xs font-medium text-foreground-secondary">App ID</label>
                 <input
                   type="text"
                   value={appId}
                   onChange={(e) => setAppId(e.target.value)}
                   placeholder="1:123456:web:..."
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none"
+                  className="field font-mono text-xs"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-[11px] font-bold text-zinc-400">Auth Domain (Opsiyonel)</label>
+                <label className="block text-xs font-medium text-foreground-secondary">Auth Domain (Opsiyonel)</label>
                 <input
                   type="text"
                   value={authDomain}
                   onChange={(e) => setAuthDomain(e.target.value)}
                   placeholder="hane-app.firebaseapp.com"
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none"
+                  className="field font-mono text-xs"
                 />
               </div>
             </div>
 
-            {/* Error Message */}
             {errorMessage && (
-              <div className="rounded-2xl bg-rose-500/15 border border-rose-500/30 p-3 text-xs font-bold text-rose-400 animate-in fade-in">
-                ⚠️ {errorMessage}
+              <div className="rounded-[10px] bg-danger-bg border border-danger-border p-3 text-xs font-medium text-danger">
+                {errorMessage}
               </div>
             )}
 
-            {/* Submit Button */}
-            <div className="pt-3 space-y-3">
+            <div className="pt-2 space-y-2.5">
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 via-orange-500 to-red-600 p-4 text-sm font-black text-white shadow-lg shadow-orange-500/25 hover:from-amber-400 hover:to-orange-500 active:scale-98 transition cursor-pointer disabled:opacity-50"
+                className="w-full primary-button py-2.5"
               >
-                <span>🔥</span>
                 <span>Bağlan ve Hane App&apos;i Başlat</span>
               </button>
 
               <button
                 type="button"
                 onClick={onSkipToLocal}
-                className="w-full text-center text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition py-1 cursor-pointer"
+                className="w-full secondary-button py-2.5 text-xs"
               >
-                veya Şimdilik Yerel / Çevrimdışı Modda Aç →
+                <span>Şimdilik Yerel Modda Devam Et</span>
               </button>
             </div>
           </form>

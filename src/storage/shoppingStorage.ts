@@ -1,42 +1,65 @@
 "use client";
 
-import { ShoppingCustomItem } from "@/domain/shoppingTypes";
+import { ShoppingCustomItem, ShoppingCategory } from "@/domain/shoppingTypes";
 import { createId } from "@/lib/local-storage/store";
 
 export const STORAGE_KEY_CUSTOM_SHOPPING = "hane-shopping:custom_items";
 
-export function getAllCustomShopping(): Record<string, ShoppingCustomItem[]> {
-  if (typeof window === "undefined") return {};
+/**
+ * Reads all custom shopping items as a single flat list.
+ * Automatically migrates legacy week-keyed objects: { "2026-W44": [...] } -> [...]
+ */
+export function getCustomShoppingList(): ShoppingCustomItem[] {
+  if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY_CUSTOM_SHOPPING);
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+
+    // If it's already an array, return it
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+
+    // Migration: Legacy object with week keys { [weekStart]: items[] }
+    if (parsed && typeof parsed === "object") {
+      const allItems: ShoppingCustomItem[] = [];
+      const seenIds = new Set<string>();
+
+      for (const weekItems of Object.values(parsed)) {
+        if (Array.isArray(weekItems)) {
+          for (const item of weekItems) {
+            if (item && item.id && !seenIds.has(item.id)) {
+              seenIds.add(item.id);
+              allItems.push(item);
+            }
+          }
+        }
+      }
+
+      // Save migrated flat array back to storage
+      localStorage.setItem(STORAGE_KEY_CUSTOM_SHOPPING, JSON.stringify(allItems));
+      return allItems;
+    }
+
+    return [];
   } catch {
-    return {};
+    return [];
   }
 }
 
-export function saveAllCustomShopping(data: Record<string, ShoppingCustomItem[]>): void {
+export function saveCustomShoppingList(items: ShoppingCustomItem[]): void {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_KEY_CUSTOM_SHOPPING, JSON.stringify(data));
+  localStorage.setItem(STORAGE_KEY_CUSTOM_SHOPPING, JSON.stringify(items));
   window.dispatchEvent(new CustomEvent("hane-shopping:updated"));
 }
 
-export function getWeekCustomShopping(weekStart: string): ShoppingCustomItem[] {
-  const all = getAllCustomShopping();
-  return all[weekStart] || [];
-}
-
-export function saveWeekCustomShopping(weekStart: string, items: ShoppingCustomItem[]): void {
-  const all = getAllCustomShopping();
-  all[weekStart] = items;
-  saveAllCustomShopping(all);
-}
-
 export function addCustomShoppingItem(
-  weekStart: string,
-  data: { title: string; quantity?: string; category?: ShoppingCustomItem["category"]; note?: string }
+  firstArg: string | { title: string; quantity?: string; category?: ShoppingCategory; note?: string },
+  secondArg?: { title: string; quantity?: string; category?: ShoppingCategory; note?: string }
 ): ShoppingCustomItem {
-  const items = getWeekCustomShopping(weekStart);
+  const data = typeof firstArg === "object" ? firstArg : (secondArg || { title: "" });
+  const items = getCustomShoppingList();
   const newItem: ShoppingCustomItem = {
     id: createId(),
     title: data.title.trim(),
@@ -47,67 +70,68 @@ export function addCustomShoppingItem(
     createdAt: new Date().toISOString(),
   };
 
-  saveWeekCustomShopping(weekStart, [newItem, ...items]);
+  saveCustomShoppingList([newItem, ...items]);
   return newItem;
 }
 
-export function toggleCustomShoppingItem(weekStart: string, id: string): void {
-  const items = getWeekCustomShopping(weekStart);
+export function toggleCustomShoppingItem(firstArg: string, secondArg?: string): void {
+  // Support both toggleCustomShoppingItem(id) and toggleCustomShoppingItem(weekStart, id)
+  const id = secondArg ? secondArg : firstArg;
+  const items = getCustomShoppingList();
   const updated = items.map((item) =>
     item.id === id ? { ...item, isCompleted: !item.isCompleted } : item
   );
-  saveWeekCustomShopping(weekStart, updated);
+  saveCustomShoppingList(updated);
 }
 
-export function deleteCustomShoppingItem(weekStart: string, id: string): void {
-  const items = getWeekCustomShopping(weekStart);
+export function deleteCustomShoppingItem(firstArg: string, secondArg?: string): void {
+  // Support both deleteCustomShoppingItem(id) and deleteCustomShoppingItem(weekStart, id)
+  const id = secondArg ? secondArg : firstArg;
+  const items = getCustomShoppingList();
   const updated = items.filter((item) => item.id !== id);
-  saveWeekCustomShopping(weekStart, updated);
+  saveCustomShoppingList(updated);
 }
 
-/**
- * Transfers all uncompleted items from current week to next week
- */
-export function carryUncompletedToNextWeek(
-  currentWeekStart: string,
-  nextWeekStart: string
-): { count: number; transferred: ShoppingCustomItem[] } {
-  const currentItems = getWeekCustomShopping(currentWeekStart);
-  const uncompleted = currentItems.filter((item) => !item.isCompleted);
-
-  if (uncompleted.length === 0) {
-    return { count: 0, transferred: [] };
-  }
-
-  const nextItems = getWeekCustomShopping(nextWeekStart);
-  const nextItemTitles = new Set(nextItems.map((i) => i.title.toLowerCase().trim()));
-
-  const toAdd: ShoppingCustomItem[] = [];
-
-  for (const item of uncompleted) {
-    // Avoid exact duplicate title in next week
-    if (!nextItemTitles.has(item.title.toLowerCase().trim())) {
-      toAdd.push({
-        ...item,
-        id: createId(),
-        createdAt: new Date().toISOString(),
-      });
-    }
-  }
-
-  if (toAdd.length > 0) {
-    saveWeekCustomShopping(nextWeekStart, [...toAdd, ...nextItems]);
-  }
-
-  return { count: toAdd.length, transferred: toAdd };
+export function clearCompletedCustomShopping(): void {
+  const items = getCustomShoppingList();
+  const remaining = items.filter((item) => !item.isCompleted);
+  saveCustomShoppingList(remaining);
 }
 
-export function clearWeekShopping(weekStart: string, onlyCompleted: boolean = false): void {
-  const items = getWeekCustomShopping(weekStart);
+export function clearAllCustomShopping(): void {
+  saveCustomShoppingList([]);
+}
+
+// ================= BACKWARD COMPATIBILITY WRAPPERS =================
+export function getAllCustomShopping(): Record<string, ShoppingCustomItem[]> {
+  const items = getCustomShoppingList();
+  return { current: items };
+}
+
+export function saveAllCustomShopping(data: Record<string, ShoppingCustomItem[]>): void {
+  const first = Object.values(data)[0] || [];
+  saveCustomShoppingList(first);
+}
+
+export function getWeekCustomShopping(_weekStart?: string): ShoppingCustomItem[] {
+  return getCustomShoppingList();
+}
+
+export function saveWeekCustomShopping(_weekStart: string, items: ShoppingCustomItem[]): void {
+  saveCustomShoppingList(items);
+}
+
+export function clearWeekShopping(_weekStart?: string, onlyCompleted: boolean = false): void {
   if (onlyCompleted) {
-    const remaining = items.filter((item) => !item.isCompleted);
-    saveWeekCustomShopping(weekStart, remaining);
+    clearCompletedCustomShopping();
   } else {
-    saveWeekCustomShopping(weekStart, []);
+    clearAllCustomShopping();
   }
+}
+
+export function carryUncompletedToNextWeek(
+  _currentWeekStart?: string,
+  _nextWeekStart?: string
+): { count: number; transferred: ShoppingCustomItem[] } {
+  return { count: 0, transferred: [] };
 }

@@ -3,32 +3,20 @@
 import React, { useState } from "react";
 import { useProfile } from "@/context/ProfileContext";
 import { Gender } from "@/domain/bodyTrackingTypes";
-import { getProfileStats } from "@/storage/bodyStorage";
-
-const AVATAR_GRADIENTS = [
-  "from-emerald-500 to-teal-700",
-  "from-blue-500 to-indigo-700",
-  "from-violet-500 to-purple-800",
-  "from-amber-500 to-orange-600",
-  "from-rose-500 to-pink-700",
-  "from-cyan-500 to-teal-600",
-];
+import { CloseIcon, PlusIcon, UserIcon } from "@/components/ui/Icons";
 
 export function GlobalProfileModal() {
   const {
     profiles,
-    activeProfileId,
     isLoaded,
     isModalOpen,
     modalView,
-    isSessionTimedOut,
     setActiveProfileId,
     createProfile,
     closeProfileModal,
     openProfileModal,
   } = useProfile();
 
-  // Form State
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [height, setHeight] = useState<string | number>("");
@@ -41,7 +29,7 @@ export function GlobalProfileModal() {
   const getInitials = (first: string, last?: string) => {
     const f = first ? first[0].toUpperCase() : "";
     const l = last ? last[0].toUpperCase() : "";
-    return `${f}${l}` || "👤";
+    return `${f}${l}` || "K";
   };
 
   const handleSelect = (id: string) => {
@@ -66,7 +54,6 @@ export function GlobalProfileModal() {
       return;
     }
 
-    // Reset form
     setFirstName("");
     setLastName("");
     setHeight("");
@@ -78,46 +65,43 @@ export function GlobalProfileModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#30263A]/45 backdrop-blur-[2px] transition-opacity duration-200"
       onClick={() => {
         if (isClosable) closeProfileModal();
       }}
     >
       <div
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border/80 bg-surface/95 backdrop-blur-xl p-6 sm:p-8 shadow-2xl space-y-6"
+        className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-[18px] border border-border bg-surface p-6 sm:p-8 shadow-[var(--shadow-lg)] space-y-6"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button if closable */}
         {isClosable && (
           <button
             type="button"
             onClick={closeProfileModal}
-            className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-2xl bg-surface-raised border border-border/60 text-muted hover:text-foreground text-sm cursor-pointer transition"
+            className="absolute top-5 right-5 icon-button"
             aria-label="Kapat"
           >
-            ✕
+            <CloseIcon className="h-4 w-4" />
           </button>
         )}
 
-        {/* VIEW 1: SELECT PROFILE */}
         {modalView === "select" && profiles.length > 0 ? (
-          <div className="space-y-6 text-center animate-in fade-in zoom-in-95 duration-200">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-0.5 text-xs font-bold text-primary">
-                <span>👤</span> HANE KULLANICI PROFİLİ
+          <div className="space-y-6 text-center">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 rounded-lg border border-border-lavender bg-accent px-2.5 py-1 text-xs font-semibold text-foreground">
+                <UserIcon className="h-3.5 w-3.5 text-primary" />
+                <span>Hane Kullanıcı Profili</span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
                 Kim Kullanıyor?
               </h2>
-              <p className="text-xs sm:text-sm text-muted max-w-md mx-auto">
-                Harcamalarınız, yemek planlarınız ve fit ölçümleriniz için profilinizi seçin.
+              <p className="text-sm text-foreground-secondary max-w-md mx-auto">
+                Harcamalarınız, yemek planlarınız ve kişisel ölçümleriniz için profilinizi seçin.
               </p>
             </div>
 
-            {/* Profile Cards Grid */}
-            <div className="flex flex-wrap items-stretch justify-center gap-4 sm:gap-6 pt-2">
-              {profiles.map((p, index) => {
-                const gradient = AVATAR_GRADIENTS[index % AVATAR_GRADIENTS.length];
+            <div className="flex flex-wrap items-stretch justify-center gap-4 pt-1">
+              {profiles.map((p) => {
                 const initials = getInitials(p.firstName, p.lastName);
 
                 return (
@@ -125,67 +109,64 @@ export function GlobalProfileModal() {
                     key={p.id}
                     type="button"
                     onClick={() => handleSelect(p.id)}
-                    className="group relative flex flex-col items-center justify-between p-4 w-36 h-44 sm:w-44 sm:h-52 rounded-3xl border-2 border-border/80 bg-surface hover:border-primary hover:bg-surface-raised transition-all duration-200 cursor-pointer text-center hover:scale-105 active:scale-95 shadow-xs"
+                    className="group flex flex-col items-center justify-between p-4 w-36 h-40 sm:w-40 sm:h-44 rounded-[14px] border border-border bg-surface hover:border-primary hover:bg-surface-lavender transition-colors duration-150 cursor-pointer text-center shadow-[var(--shadow-xs)]"
                   >
-                    <div className="relative mt-1">
-                      <div
-                        className={`flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-white font-black text-2xl sm:text-3xl shadow-md group-hover:scale-105 transition-transform`}
-                      >
-                        {initials}
-                      </div>
-                      <span className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-surface/90 text-xs shadow-xs">
-                        {p.gender === "male" ? "👨" : "👩"}
-                      </span>
+                    <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-[14px] bg-accent border border-border-lavender text-primary font-bold text-xl sm:text-2xl group-hover:bg-primary group-hover:text-white transition-colors duration-150 mt-1">
+                      {initials}
                     </div>
 
-                    <div className="w-full text-center px-1 mb-1">
-                      <span className="block text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">
+                    <div className="w-full text-center px-1">
+                      <span className="block text-sm font-semibold text-foreground truncate">
                         {p.firstName} {p.lastName}
+                      </span>
+                      <span className="block text-[11px] text-muted mt-0.5">
+                        {p.gender === "male" ? "Erkek" : "Kadın"} • {p.height} cm
                       </span>
                     </div>
                   </button>
                 );
               })}
 
-              {/* Add New Profile Card */}
               <button
                 type="button"
                 onClick={() => openProfileModal("create")}
-                className="group flex flex-col items-center justify-between p-4 w-36 h-44 sm:w-44 sm:h-52 rounded-3xl border-2 border-dashed border-border/80 bg-surface/50 hover:bg-surface hover:border-primary/70 transition-all duration-200 cursor-pointer text-center hover:scale-105 active:scale-95 shadow-xs"
+                className="group flex flex-col items-center justify-between p-4 w-36 h-40 sm:w-40 sm:h-44 rounded-[14px] border border-dashed border-border-strong bg-background/60 hover:bg-surface hover:border-primary transition-colors duration-150 cursor-pointer text-center"
               >
-                <div className="flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-2xl bg-surface-raised border border-border/60 text-2xl sm:text-3xl font-light text-muted group-hover:text-primary group-hover:bg-primary/10 group-hover:border-primary/30 transition-all mt-1">
-                  +
+                <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-[14px] bg-surface border border-border text-muted group-hover:text-primary group-hover:border-border-lavender transition-colors duration-150 mt-1">
+                  <PlusIcon className="h-6 w-6" />
                 </div>
-                <div className="w-full text-center px-1 mb-1">
-                  <span className="block text-sm sm:text-base font-bold text-muted group-hover:text-foreground transition-colors truncate">
+                <div className="w-full text-center px-1">
+                  <span className="block text-sm font-semibold text-foreground-secondary group-hover:text-foreground">
                     Yeni Profil
+                  </span>
+                  <span className="block text-[11px] text-muted mt-0.5">
+                    Kişi ekle
                   </span>
                 </div>
               </button>
             </div>
           </div>
         ) : (
-          /* VIEW 2: CREATE PROFILE */
-          <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200">
-            <div className="space-y-2 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 text-2xl shadow-md text-white">
-                👤
+          <div className="space-y-6">
+            <div className="space-y-1.5 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[14px] bg-accent border border-border-lavender text-primary">
+                <UserIcon className="h-6 w-6" />
               </div>
-              <h2 className="text-2xl font-black tracking-tight text-foreground">
+              <h2 className="text-xl font-semibold tracking-tight text-foreground">
                 {profiles.length === 0
-                  ? "Hane App'e Hoş Geldiniz!"
+                  ? "Hane App'e Hoş Geldiniz"
                   : "Yeni Profil Oluştur"}
               </h2>
-              <p className="text-xs sm:text-sm text-muted max-w-md mx-auto">
+              <p className="text-sm text-foreground-secondary max-w-md mx-auto">
                 {profiles.length === 0
-                  ? "Uygulamayı kullanmaya başlamak için ilk profilinizi oluşturun."
+                  ? "Uygulamayı kullanmaya başlamak için ilk hane profilinizi oluşturun."
                   : "Hane içindeki diğer kişiler için yeni bir profil oluşturun."}
               </p>
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4 max-w-md mx-auto">
               <div>
-                <label className="block text-xs font-bold text-foreground mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1.5">
                   Ad *
                 </label>
                 <input
@@ -194,17 +175,17 @@ export function GlobalProfileModal() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Örn: Mert"
-                  className="field w-full"
+                  className="field"
                 />
                 {formErrors.firstName && (
-                  <span className="text-[11px] text-rose-500 mt-1 block">
+                  <span className="text-xs text-danger mt-1 block">
                     {formErrors.firstName}
                   </span>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-foreground mb-1">
+                <label className="block text-xs font-medium text-foreground mb-1.5">
                   Soyad
                 </label>
                 <input
@@ -212,10 +193,10 @@ export function GlobalProfileModal() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Örn: Koçak"
-                  className="field w-full"
+                  className="field"
                 />
                 {formErrors.lastName && (
-                  <span className="text-[11px] text-rose-500 mt-1 block">
+                  <span className="text-xs text-danger mt-1 block">
                     {formErrors.lastName}
                   </span>
                 )}
@@ -223,7 +204,7 @@ export function GlobalProfileModal() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
+                  <label className="block text-xs font-medium text-foreground mb-1.5">
                     Boy (cm) *
                   </label>
                   <input
@@ -234,26 +215,26 @@ export function GlobalProfileModal() {
                     value={height}
                     onChange={(e) => setHeight(e.target.value)}
                     placeholder="178"
-                    className="field w-full"
+                    className="field"
                   />
                   {formErrors.height && (
-                    <span className="text-[11px] text-rose-500 mt-1 block">
+                    <span className="text-xs text-danger mt-1 block">
                       {formErrors.height}
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1">
+                  <label className="block text-xs font-medium text-foreground mb-1.5">
                     Cinsiyet *
                   </label>
                   <select
                     value={gender}
                     onChange={(e) => setGender(e.target.value as Gender)}
-                    className="field w-full"
+                    className="field"
                   >
-                    <option value="male">Erkek 👨</option>
-                    <option value="female">Kadın 👩</option>
+                    <option value="male">Erkek</option>
+                    <option value="female">Kadın</option>
                   </select>
                 </div>
               </div>
@@ -262,7 +243,7 @@ export function GlobalProfileModal() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full primary-button bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 py-3 text-sm font-bold text-white shadow-md cursor-pointer"
+                  className="w-full primary-button py-2.5"
                 >
                   {isSubmitting ? "Kaydediliyor..." : "Profili Kaydet ve Başla"}
                 </button>
@@ -271,7 +252,7 @@ export function GlobalProfileModal() {
                   <button
                     type="button"
                     onClick={() => openProfileModal("select")}
-                    className="w-full text-xs text-muted hover:text-foreground py-2 cursor-pointer transition"
+                    className="w-full secondary-button py-2 text-xs"
                   >
                     ← Kayıtlı Profillere Dön
                   </button>

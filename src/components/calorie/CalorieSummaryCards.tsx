@@ -30,10 +30,10 @@ export function CalorieSummaryCards({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
       {/* Main Calorie Progress Card */}
-      <div className="lg:col-span-6 rounded-3xl border border-border bg-gradient-to-br from-surface to-surface-raised p-5 shadow-xs flex flex-col justify-between">
+      <div className="lg:col-span-6 ds-card-lavender p-5 flex flex-col justify-between">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-orange-500/10 text-orange-500 text-sm font-bold">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent border border-border-lavender text-primary text-sm font-bold">
               🔥
             </span>
             <span className="text-xs font-bold text-foreground">
@@ -41,12 +41,12 @@ export function CalorieSummaryCards({
             </span>
           </div>
           <span
-            className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+            className={`ds-badge tabular-nums ${
               isOver
-                ? "bg-rose-500/15 border-rose-500/30 text-rose-500"
+                ? "ds-badge-danger"
                 : remaining === 0
-                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-500"
-                : "bg-primary/10 border-primary/20 text-primary"
+                ? "ds-badge-success"
+                : "ds-badge-primary"
             }`}
           >
             {isOver
@@ -57,31 +57,29 @@ export function CalorieSummaryCards({
 
         <div className="my-5 flex items-baseline justify-between">
           <div>
-            <div className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
+            <div className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground tabular-nums">
               {consumed.toLocaleString("tr-TR")}
               <span className="text-sm font-semibold text-muted ml-1.5">
                 / {targetCalories.toLocaleString("tr-TR")} kcal
               </span>
             </div>
             <p className="text-xs text-muted mt-1 font-medium">
-              Günlük hedefin <span className="font-bold text-foreground">%{percent}</span> kadarı tamamlandı
+              Günlük hedefin <span className="font-bold text-foreground tabular-nums">%{percent}</span> kadarı tamamlandı
             </p>
           </div>
         </div>
 
         {/* Big Progress Bar */}
         <div className="space-y-1.5">
-          <div className="h-3.5 w-full rounded-full bg-border/60 overflow-hidden p-0.5">
+          <div className="h-3 w-full rounded-full bg-surface border border-border-lavender overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                isOver
-                  ? "bg-gradient-to-r from-orange-500 to-rose-500"
-                  : "bg-gradient-to-r from-emerald-500 to-primary"
+              className={`h-full rounded-full transition-all duration-300 ${
+                isOver ? "bg-rose-600" : "bg-primary"
               }`}
               style={{ width: `${Math.min(100, percent)}%` }}
             />
           </div>
-          <div className="flex justify-between text-[10px] text-muted font-semibold px-0.5">
+          <div className="flex justify-between text-[10px] text-muted font-semibold px-0.5 tabular-nums">
             <span>0 kcal</span>
             <span>Hedef: {targetCalories} kcal</span>
           </div>
@@ -91,84 +89,84 @@ export function CalorieSummaryCards({
       {/* 3 Macro Cards */}
       <div className="lg:col-span-6 grid grid-cols-3 gap-3">
         {/* Protein Card */}
-        <div className="rounded-3xl border border-border bg-surface p-4 shadow-xs flex flex-col justify-between">
+        <div className="ds-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-lg">🥩</span>
-            <span className="text-[10px] font-bold text-muted">Protein</span>
+            <span className="text-[11px] font-bold text-muted">Protein</span>
           </div>
           <div className="my-2">
-            <div className="text-lg sm:text-xl font-black text-foreground">
+            <div className="text-lg sm:text-xl font-bold text-foreground tabular-nums">
               {Math.round(macros.protein)}
               <span className="text-[11px] font-normal text-muted ml-0.5">g</span>
             </div>
-            <div className="text-[10px] text-muted">
+            <div className="text-[10px] text-muted tabular-nums">
               Hedef: {targetProteinGrams}g
             </div>
           </div>
           <div className="space-y-1">
-            <div className="h-2 w-full rounded-full bg-border/60 overflow-hidden">
+            <div className="h-2 w-full rounded-full bg-background-subtle overflow-hidden">
               <div
-                className="h-full rounded-full bg-rose-500 transition-all duration-300"
+                className="h-full rounded-full bg-rose-600 transition-all duration-300"
                 style={{ width: `${proteinPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-bold text-rose-500 block text-right">
+            <span className="text-[10px] font-bold text-rose-700 block text-right tabular-nums">
               %{proteinPercent}
             </span>
           </div>
         </div>
 
         {/* Karbonhidrat Card */}
-        <div className="rounded-3xl border border-border bg-surface p-4 shadow-xs flex flex-col justify-between">
+        <div className="ds-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-lg">🍞</span>
-            <span className="text-[10px] font-bold text-muted">Karb</span>
+            <span className="text-[11px] font-bold text-muted">Karb</span>
           </div>
           <div className="my-2">
-            <div className="text-lg sm:text-xl font-black text-foreground">
+            <div className="text-lg sm:text-xl font-bold text-foreground tabular-nums">
               {Math.round(macros.carbs)}
               <span className="text-[11px] font-normal text-muted ml-0.5">g</span>
             </div>
-            <div className="text-[10px] text-muted">
+            <div className="text-[10px] text-muted tabular-nums">
               Hedef: {targetCarbsGrams}g
             </div>
           </div>
           <div className="space-y-1">
-            <div className="h-2 w-full rounded-full bg-border/60 overflow-hidden">
+            <div className="h-2 w-full rounded-full bg-background-subtle overflow-hidden">
               <div
-                className="h-full rounded-full bg-amber-500 transition-all duration-300"
+                className="h-full rounded-full bg-amber-600 transition-all duration-300"
                 style={{ width: `${carbsPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-bold text-amber-500 block text-right">
+            <span className="text-[10px] font-bold text-amber-700 block text-right tabular-nums">
               %{carbsPercent}
             </span>
           </div>
         </div>
 
         {/* Yağ Card */}
-        <div className="rounded-3xl border border-border bg-surface p-4 shadow-xs flex flex-col justify-between">
+        <div className="ds-card p-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
             <span className="text-lg">🥑</span>
-            <span className="text-[10px] font-bold text-muted">Yağ</span>
+            <span className="text-[11px] font-bold text-muted">Yağ</span>
           </div>
           <div className="my-2">
-            <div className="text-lg sm:text-xl font-black text-foreground">
+            <div className="text-lg sm:text-xl font-bold text-foreground tabular-nums">
               {Math.round(macros.fat)}
               <span className="text-[11px] font-normal text-muted ml-0.5">g</span>
             </div>
-            <div className="text-[10px] text-muted">
+            <div className="text-[10px] text-muted tabular-nums">
               Hedef: {targetFatGrams}g
             </div>
           </div>
           <div className="space-y-1">
-            <div className="h-2 w-full rounded-full bg-border/60 overflow-hidden">
+            <div className="h-2 w-full rounded-full bg-background-subtle overflow-hidden">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                className="h-full rounded-full bg-emerald-600 transition-all duration-300"
                 style={{ width: `${fatPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-bold text-emerald-500 block text-right">
+            <span className="text-[10px] font-bold text-emerald-700 block text-right tabular-nums">
               %{fatPercent}
             </span>
           </div>
