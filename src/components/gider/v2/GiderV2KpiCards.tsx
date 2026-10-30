@@ -19,6 +19,7 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
     mertKalan,
     havsaKalan,
     evGideriToplami,
+    evGelirToplami,
     evKalan,
     kayitToplamlari,
     ayriBireyselHarcamalarToplami,
@@ -150,8 +151,8 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
                 Ev Toplam Masrafı
               </span>
             </div>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-surface text-primary border border-border-lavender">
-              Ortak & Bireysel
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-surface text-success border border-success/30">
+              Gelir: {para(evGelirToplami)}
             </span>
           </div>
 
@@ -160,23 +161,31 @@ export function GiderV2KpiCards({ calc }: GiderV2KpiCardsProps) {
               {para(evGideriToplami)}
             </span>
             <span className="block text-xs text-foreground-secondary mt-0.5">
-              Hane kartları ve harcamaların toplam maliyeti
+              Hane Toplam Geliri: <strong className="text-success font-semibold">{para(evGelirToplami)}</strong>
             </span>
           </div>
         </div>
 
         <div className="pt-3 border-t border-border-lavender space-y-2 text-xs">
           <div className="flex items-center justify-between">
+            <span className="text-foreground-secondary flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-success" /> Ev Toplam Geliri:
+            </span>
+            <span className="font-bold text-success">{para(evGelirToplami)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-foreground-secondary flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-danger" /> Ev Toplam Masrafı:
+            </span>
+            <span className="font-bold text-danger">{para(evGideriToplami)}</span>
+          </div>
+          <div className="flex items-center justify-between">
             <span className="text-foreground-secondary">Kartlar & Harcamalar:</span>
             <span className="font-bold text-foreground">{para(kayitToplamlari)}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-foreground-secondary">Kişi Başı Yarı Pay:</span>
-            <span className="font-bold text-primary">{para(kayitToplamlari / 2)}</span>
-          </div>
           <div className="text-[11px] text-foreground-secondary flex items-center justify-between pt-1 pl-2 border-l-2 border-primary">
-            <span>Ayrı Harcamalar: {para(ayriBireyselHarcamalarToplami)}</span>
-            <span>Ev Net Havuzu: {para(evKalan)}</span>
+            <span>Kişi Başı Yarı Pay: {para(kayitToplamlari / 2)}</span>
+            <span>Ev Net Kalanı: {para(evKalan)}</span>
           </div>
         </div>
       </div>
