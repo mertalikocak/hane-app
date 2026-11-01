@@ -667,7 +667,13 @@ export function OzetRaporModalV2({
 • ${mahsuplasma.durumMetni}
 
 💳 *KARTLAR & ORTAK KALEMLER:*
-${veri.krediKartlari
+${[...veri.krediKartlari]
+  .sort((a, b) => {
+    const aBireysel = a.kimeAit === "mert" || a.kimeAit === "havsa";
+    const bBireysel = b.kimeAit === "mert" || b.kimeAit === "havsa";
+    if (aBireysel === bBireysel) return 0;
+    return aBireysel ? 1 : -1;
+  })
   .map(
     (k) =>
       `• ${k.ad}: ${para(k.toplamEkstre)} (Ödeyen: ${

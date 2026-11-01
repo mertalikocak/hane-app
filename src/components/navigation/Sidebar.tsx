@@ -97,6 +97,37 @@ export function Sidebar() {
     return pathname.startsWith(href);
   };
 
+  const getModuleIconColor = (href: string, active: boolean) => {
+    if (active) return "bg-primary text-white shadow-xs";
+    switch (href) {
+      case "/":
+        return "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20";
+      case "/dinner":
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+      case "/shopping":
+        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+      case "/calendar":
+        return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20";
+      case "/gider":
+        return "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20";
+      case "/fit/dashboard":
+      case "/fit":
+        return "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20";
+      case "/kalori":
+        return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20";
+      case "/cleaning":
+        return "bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20";
+      case "/wedding":
+        return "bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20";
+      case "/wishlist":
+        return "bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20";
+      case "/cardolist":
+        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20";
+      default:
+        return "bg-surface-raised text-foreground-secondary border border-border";
+    }
+  };
+
   return (
     <>
       {/* Mobile & Tablet Top Header (< 1024px) */}
@@ -149,7 +180,7 @@ export function Sidebar() {
       {/* Mobile Drawer Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-[#30263A]/45 backdrop-blur-[2px] lg:hidden transition-opacity duration-200"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] lg:hidden transition-opacity duration-200"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -226,11 +257,10 @@ export function Sidebar() {
                   }`}
                 >
                   <span
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150 ${
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-150 ${getModuleIconColor(
+                      item.href,
                       active
-                        ? "bg-primary text-white"
-                        : "bg-background text-foreground-secondary group-hover:bg-surface group-hover:text-primary border border-border"
-                    }`}
+                    )}`}
                   >
                     <ModuleLucideIcon href={item.href} className="h-4 w-4" />
                   </span>

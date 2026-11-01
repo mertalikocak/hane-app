@@ -3,122 +3,122 @@
 :root {
   color-scheme: light;
 
-  /* 1. Backgrounds & Surfaces (Warm Cream & White) */
-  --background: #F5F0E8;
-  --background-subtle: #EFE8DC;
-  --surface: #FFFFFF;
-  --surface-raised: #FAF7F2;
-  --surface-lavender: #F4EFF9;
-  --surface-overlay: rgba(48, 38, 58, 0.45);
+  /* 1. Backgrounds & Surfaces (Crisp Clean Slate & White) */
+  --background: #f8fafc;
+  --background-subtle: #f1f5f9;
+  --surface: #ffffff;
+  --surface-raised: #f8fafc;
+  --surface-lavender: #fff7ed;
+  --surface-overlay: rgba(15, 23, 42, 0.45);
 
-  /* 2. Text & Typography (Dark Plum Hierarchy) */
-  --foreground: #30263A;
-  --foreground-secondary: #544663;
-  --muted: #736582;
-  --placeholder: #9A8DA8;
+  /* 2. Text & Typography (Clean Slate Hierarchy) */
+  --foreground: #0f172a;
+  --foreground-secondary: #334155;
+  --muted: #64748b;
+  --placeholder: #94a3b8;
 
-  /* 3. Brand Primary (Muted Purple) */
-  --primary: #76548F;
-  --primary-hover: #63437A;
-  --primary-active: #523666;
-  --primary-foreground: #FFFFFF;
-  --primary-ring: rgba(118, 84, 143, 0.22);
+  /* 3. Brand Primary (Vibrant Energetic Warm Orange) */
+  --primary: #ea580c;
+  --primary-hover: #c2410c;
+  --primary-active: #9a3412;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(234, 88, 12, 0.22);
 
-  /* 4. Brand Accent / Secondary (Soft Lavender) */
-  --accent: #E8DDF1;
-  --accent-hover: #DCCCE9;
-  --accent-active: #CEB9DF;
-  --accent-foreground: #30263A;
+  /* 4. Brand Accent / Secondary (Warm Accent) */
+  --accent: #fff7ed;
+  --accent-hover: #ffedd5;
+  --accent-active: #fed7aa;
+  --accent-foreground: #9a3412;
 
   /* 5. Borders & Dividers */
-  --border: #E6DFD5;
-  --border-strong: #D4C9BA;
-  --border-lavender: #D5C3E4;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-lavender: #fed7aa;
 
   /* 6. Semantic Status Tokens */
-  --success: #2A7B56;
-  --success-bg: #EBF5F0;
-  --success-border: #C4E3D4;
-  --success-foreground: #FFFFFF;
+  --success: #10b981;
+  --success-bg: #ecfdf5;
+  --success-border: #a7f3d0;
+  --success-foreground: #ffffff;
 
-  --warning: #B86B19;
-  --warning-bg: #FDF4E7;
-  --warning-border: #F3D9B1;
-  --warning-foreground: #FFFFFF;
+  --warning: #f59e0b;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-foreground: #ffffff;
 
-  --danger: #C23B3B;
-  --danger-bg: #FCEEEE;
-  --danger-border: #F2C6C6;
-  --danger-foreground: #FFFFFF;
+  --danger: #ef4444;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-foreground: #ffffff;
 
-  --info: #4A6FA5;
-  --info-bg: #EEF3F9;
-  --info-border: #C9D9EC;
-  --info-foreground: #FFFFFF;
+  --info: #3b82f6;
+  --info-bg: #eff6ff;
+  --info-border: #bfdbfe;
+  --info-foreground: #ffffff;
 
-  /* 7. Subtle Warm Plum Shadows */
-  --shadow-xs: 0 1px 2px rgba(48, 38, 58, 0.04);
-  --shadow-sm: 0 2px 6px -1px rgba(48, 38, 58, 0.06), 0 1px 3px -1px rgba(48, 38, 58, 0.04);
-  --shadow-md: 0 8px 20px -4px rgba(48, 38, 58, 0.08), 0 2px 6px -1px rgba(48, 38, 58, 0.04);
-  --shadow-lg: 0 16px 36px -6px rgba(48, 38, 58, 0.14), 0 4px 12px -2px rgba(48, 38, 58, 0.06);
+  /* 7. Crisp Natural Slate Shadows */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 6px -1px rgba(15, 23, 42, 0.06), 0 1px 3px -1px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 20px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 16px 36px -6px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
 html[data-theme="dark"],
 html.dark {
   color-scheme: dark;
 
-  /* 1. Backgrounds & Surfaces (Deep Plum Night) */
-  --background: #141019;
-  --background-subtle: #1B1622;
-  --surface: #1F1927;
-  --surface-raised: #282032;
-  --surface-lavender: #2A1F38;
-  --surface-overlay: rgba(8, 6, 12, 0.72);
+  /* 1. Backgrounds & Surfaces (Deep Slate & Navy Night) */
+  --background: #090d16;
+  --background-subtle: #0f172a;
+  --surface: #121926;
+  --surface-raised: #182234;
+  --surface-lavender: #1e293b;
+  --surface-overlay: rgba(0, 0, 0, 0.72);
 
-  /* 2. Text & Typography (Warm Ivory & Soft Lavender-Gray Hierarchy) */
-  --foreground: #F4EFFA;
-  --foreground-secondary: #C8BDD6;
-  --muted: #988AAA;
-  --placeholder: #6E6080;
+  /* 2. Text & Typography (Crisp White & Slate Hierarchy) */
+  --foreground: #f8fafc;
+  --foreground-secondary: #cbd5e1;
+  --muted: #8e9bb2;
+  --placeholder: #64748b;
 
-  /* 3. Brand Primary (Luminous Lavender-Purple) */
-  --primary: #9B74B8;
-  --primary-hover: #AD87C9;
-  --primary-active: #865FA3;
-  --primary-foreground: #FFFFFF;
-  --primary-ring: rgba(155, 116, 184, 0.32);
+  /* 3. Brand Primary (Luminous Warm Orange) */
+  --primary: #f97316;
+  --primary-hover: #fb923c;
+  --primary-active: #ea580c;
+  --primary-foreground: #ffffff;
+  --primary-ring: rgba(249, 115, 22, 0.28);
 
-  /* 4. Brand Accent / Secondary (Deep Muted Lavender Surface) */
-  --accent: #322542;
-  --accent-hover: #3D2D50;
-  --accent-active: #48365E;
-  --accent-foreground: #F4EFFA;
+  /* 4. Brand Accent / Secondary (Deep Warm Night Accent) */
+  --accent: #2c1a0e;
+  --accent-hover: #3b2314;
+  --accent-active: #4d2d19;
+  --accent-foreground: #fed7aa;
 
   /* 5. Borders & Dividers */
-  --border: #31283D;
-  --border-strong: #433753;
-  --border-lavender: #4E3B66;
+  --border: #1f2c42;
+  --border-strong: #2d3d59;
+  --border-lavender: #432c18;
 
   /* 6. Semantic Status Tokens */
-  --success: #4CC38A;
-  --success-bg: rgba(42, 123, 86, 0.18);
-  --success-border: rgba(76, 195, 138, 0.34);
-  --success-foreground: #FFFFFF;
+  --success: #34d399;
+  --success-bg: rgba(16, 185, 129, 0.16);
+  --success-border: rgba(52, 211, 153, 0.32);
+  --success-foreground: #ffffff;
 
-  --warning: #F0A44C;
-  --warning-bg: rgba(184, 107, 25, 0.18);
-  --warning-border: rgba(240, 164, 76, 0.34);
-  --warning-foreground: #FFFFFF;
+  --warning: #fbbf24;
+  --warning-bg: rgba(245, 158, 11, 0.16);
+  --warning-border: rgba(251, 191, 36, 0.32);
+  --warning-foreground: #ffffff;
 
-  --danger: #F26B6B;
-  --danger-bg: rgba(194, 59, 59, 0.18);
-  --danger-border: rgba(242, 107, 107, 0.34);
-  --danger-foreground: #FFFFFF;
+  --danger: #f87171;
+  --danger-bg: rgba(239, 68, 68, 0.16);
+  --danger-border: rgba(248, 113, 113, 0.32);
+  --danger-foreground: #ffffff;
 
-  --info: #78A5E3;
-  --info-bg: rgba(74, 111, 165, 0.18);
-  --info-border: rgba(120, 165, 227, 0.34);
-  --info-foreground: #FFFFFF;
+  --info: #60a5fa;
+  --info-bg: rgba(59, 130, 246, 0.16);
+  --info-border: rgba(96, 165, 250, 0.32);
+  --info-foreground: #ffffff;
 
   /* 7. Night Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.28);

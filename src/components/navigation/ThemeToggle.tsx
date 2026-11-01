@@ -9,40 +9,40 @@ export const THEME_STORAGE_KEY = "hane_theme_v1";
 const THEME_EVENT = "hane:theme-changed";
 
 const DARK_THEME_VARS: Record<string, string> = {
-  "--background": "#141019",
-  "--background-subtle": "#1B1622",
-  "--surface": "#1F1927",
-  "--surface-raised": "#282032",
-  "--surface-lavender": "#2A1F38",
-  "--surface-overlay": "rgba(8, 6, 12, 0.72)",
-  "--foreground": "#F4EFFA",
-  "--foreground-secondary": "#C8BDD6",
-  "--muted": "#988AAA",
-  "--placeholder": "#6E6080",
-  "--primary": "#9B74B8",
-  "--primary-hover": "#AD87C9",
-  "--primary-active": "#865FA3",
-  "--primary-foreground": "#FFFFFF",
-  "--primary-ring": "rgba(155, 116, 184, 0.32)",
-  "--accent": "#322542",
-  "--accent-hover": "#3D2D50",
-  "--accent-active": "#48365E",
-  "--accent-foreground": "#F4EFFA",
-  "--border": "#31283D",
-  "--border-strong": "#433753",
-  "--border-lavender": "#4E3B66",
-  "--success": "#4CC38A",
-  "--success-bg": "rgba(42, 123, 86, 0.18)",
-  "--success-border": "rgba(76, 195, 138, 0.34)",
-  "--warning": "#F0A44C",
-  "--warning-bg": "rgba(184, 107, 25, 0.18)",
-  "--warning-border": "rgba(240, 164, 76, 0.34)",
-  "--danger": "#F26B6B",
-  "--danger-bg": "rgba(194, 59, 59, 0.18)",
-  "--danger-border": "rgba(242, 107, 107, 0.34)",
-  "--info": "#78A5E3",
-  "--info-bg": "rgba(74, 111, 165, 0.18)",
-  "--info-border": "rgba(120, 165, 227, 0.34)",
+  "--background": "#090d16",
+  "--background-subtle": "#0f172a",
+  "--surface": "#121926",
+  "--surface-raised": "#182234",
+  "--surface-lavender": "#1e293b",
+  "--surface-overlay": "rgba(0, 0, 0, 0.72)",
+  "--foreground": "#f8fafc",
+  "--foreground-secondary": "#cbd5e1",
+  "--muted": "#8e9bb2",
+  "--placeholder": "#64748b",
+  "--primary": "#f97316",
+  "--primary-hover": "#fb923c",
+  "--primary-active": "#ea580c",
+  "--primary-foreground": "#ffffff",
+  "--primary-ring": "rgba(249, 115, 22, 0.28)",
+  "--accent": "#2c1a0e",
+  "--accent-hover": "#3b2314",
+  "--accent-active": "#4d2d19",
+  "--accent-foreground": "#fed7aa",
+  "--border": "#1f2c42",
+  "--border-strong": "#2d3d59",
+  "--border-lavender": "#432c18",
+  "--success": "#34d399",
+  "--success-bg": "rgba(16, 185, 129, 0.16)",
+  "--success-border": "rgba(52, 211, 153, 0.32)",
+  "--warning": "#fbbf24",
+  "--warning-bg": "rgba(245, 158, 11, 0.16)",
+  "--warning-border": "rgba(251, 191, 36, 0.32)",
+  "--danger": "#f87171",
+  "--danger-bg": "rgba(239, 68, 68, 0.16)",
+  "--danger-border": "rgba(248, 113, 113, 0.32)",
+  "--info": "#60a5fa",
+  "--info-bg": "rgba(59, 130, 246, 0.16)",
+  "--info-border": "rgba(96, 165, 250, 0.32)",
 };
 
 export function applyThemeToDom(mode: ThemeMode) {
@@ -64,7 +64,7 @@ export function applyThemeToDom(mode: ThemeMode) {
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute("content", mode === "dark" ? "#141019" : "#F5F0E8");
+    metaTheme.setAttribute("content", mode === "dark" ? "#090d16" : "#f8fafc");
   }
 }
 

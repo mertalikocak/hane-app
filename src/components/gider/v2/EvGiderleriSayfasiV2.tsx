@@ -232,6 +232,16 @@ export function EvGiderleriSayfasiV2() {
     return count;
   }, [veri]);
 
+  // Sıralı kartlar: Önce ortak harcamalar/kartlar, sonra bireysel olanlar
+  const siraliKartlar = useMemo(() => {
+    return [...veri.krediKartlari].sort((a, b) => {
+      const aBireysel = a.kimeAit === "mert" || a.kimeAit === "havsa";
+      const bBireysel = b.kimeAit === "mert" || b.kimeAit === "havsa";
+      if (aBireysel === bBireysel) return 0;
+      return aBireysel ? 1 : -1;
+    });
+  }, [veri.krediKartlari]);
+
   // ------------------------------------------------------------------
   // KART EYLEMLERİ
   // ------------------------------------------------------------------
@@ -642,7 +652,7 @@ export function EvGiderleriSayfasiV2() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                {veri.krediKartlari.slice(0, 6).map((k) => {
+                {siraliKartlar.slice(0, 6).map((k) => {
                   const h = tekKartHesabi(k);
                   const odeyen = k.odenenKisi ?? "mert";
                   return (
@@ -682,7 +692,7 @@ export function EvGiderleriSayfasiV2() {
       {/* ------------------------------------------------------------- */}
       {activeView === "kartlar" && (
         <GiderV2CardList
-          kartlar={veri.krediKartlari}
+          kartlar={siraliKartlar}
           onKartDuzenle={(k) => {
             setEditingKart(k);
             setIsKartModalOpen(true);

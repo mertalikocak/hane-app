@@ -388,13 +388,13 @@ export default function DashboardPage() {
     switch (item.href) {
       case "/dinner":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-amber-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                   <UtensilsIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:text-amber-300 tabular-nums whitespace-nowrap">
                   {isLoaded ? `${dinnerStats.plannedDays} / 7 Gün` : "..."}
                 </span>
               </div>
@@ -410,7 +410,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex justify-between items-center text-xs gap-2">
                   <span className="text-foreground-secondary">Bu Hafta</span>
-                  <span className="font-semibold text-primary tabular-nums">
+                  <span className="font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
                     {isLoaded ? `${dinnerStats.plannedDays} Gün Planlı` : "..."}
                   </span>
                 </div>
@@ -418,7 +418,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <Link href="/dinner" className="primary-button text-xs py-2 px-3 whitespace-nowrap">
+              <Link href="/dinner" className="inline-flex min-h-[38px] items-center justify-center rounded-[10px] bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs py-2 px-3 whitespace-nowrap transition shadow-xs">
                 Haftalık Plan
               </Link>
               <Link href="/dinner/meals" className="secondary-button text-xs py-2 px-3 whitespace-nowrap">
@@ -430,13 +430,13 @@ export default function DashboardPage() {
 
       case "/shopping":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-emerald-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <ShoppingBagIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums whitespace-nowrap">
                   {isLoaded ? `${shoppingStats.pendingCount} Alınacak` : "Haftalık Liste"}
                 </span>
               </div>
@@ -461,7 +461,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Link href="/shopping" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/shopping" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>Alışveriş Listesini Aç</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -470,13 +470,13 @@ export default function DashboardPage() {
 
       case "/calendar":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-indigo-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                   <CalendarIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300 tabular-nums whitespace-nowrap">
                   {isLoaded ? `${calendarStats.upcomingCount} Yaklaşan` : "..."}
                 </span>
               </div>
@@ -492,14 +492,14 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex justify-between items-center text-xs gap-2">
                   <span className="text-foreground-secondary">Yaklaşan</span>
-                  <span className="font-semibold text-primary tabular-nums">
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400 tabular-nums">
                     {isLoaded ? `${calendarStats.upcomingCount} Plan` : "..."}
                   </span>
                 </div>
               </div>
             </div>
 
-            <Link href="/calendar" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/calendar" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>Takvimi Aç</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -508,13 +508,13 @@ export default function DashboardPage() {
 
       case "/gider":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-teal-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
                   <WalletIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground whitespace-nowrap">
+                <span className="rounded-lg bg-teal-500/10 border border-teal-500/20 px-2.5 py-1 text-xs font-semibold text-teal-700 dark:text-teal-300 whitespace-nowrap">
                   Bu Ay
                 </span>
               </div>
@@ -537,7 +537,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Link href="/gider" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/gider" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-teal-600 hover:bg-teal-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>Bütçeyi Yönet</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -546,13 +546,13 @@ export default function DashboardPage() {
 
       case "/fit/dashboard":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-cyan-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
                   <ActivityIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground whitespace-nowrap">
+                <span className="rounded-lg bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 text-xs font-semibold text-cyan-700 dark:text-cyan-300 whitespace-nowrap">
                   {isLoaded && fitStats.profileName ? fitStats.profileName : "Fitness"}
                 </span>
               </div>
@@ -568,7 +568,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex justify-between items-center text-xs gap-2">
                   <span className="text-foreground-secondary">Tahmini Yağ</span>
-                  <span className="font-semibold text-primary tabular-nums">
+                  <span className="font-semibold text-cyan-600 dark:text-cyan-400 tabular-nums">
                     {isLoaded && fitStats.latestBodyFat ? `%${fitStats.latestBodyFat}` : "—"}
                   </span>
                 </div>
@@ -576,7 +576,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="mt-5 grid grid-cols-2 gap-2">
-              <Link href="/fit/dashboard" className="primary-button text-xs py-2 px-3 whitespace-nowrap">
+              <Link href="/fit/dashboard" className="inline-flex min-h-[38px] items-center justify-center rounded-[10px] bg-cyan-600 hover:bg-cyan-700 text-white font-semibold text-xs py-2 px-3 whitespace-nowrap transition shadow-xs">
                 Özet
               </Link>
               <Link href="/fit/measurements/new" className="secondary-button text-xs py-2 px-3 whitespace-nowrap">
@@ -588,13 +588,13 @@ export default function DashboardPage() {
 
       case "/kalori":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-rose-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                   <FlameIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 text-xs font-semibold text-rose-700 dark:text-rose-300 tabular-nums whitespace-nowrap">
                   {isLoaded
                     ? calorieStats.consumed > 0
                       ? `${calorieStats.consumed} kcal`
@@ -604,7 +604,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold text-foreground">{item.name}</h3>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-surface-lavender text-primary border border-border-lavender">
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                   AI
                 </span>
               </div>
@@ -613,7 +613,7 @@ export default function DashboardPage() {
               <div className="mt-4 space-y-2 ds-card-recessed">
                 <div className="flex justify-between items-center text-xs gap-2">
                   <span className="text-foreground-secondary">Bugün Alınan</span>
-                  <span className="font-semibold text-primary tabular-nums">
+                  <span className="font-semibold text-rose-600 dark:text-rose-400 tabular-nums">
                     {isLoaded ? `${calorieStats.consumed} kcal` : "..."}
                   </span>
                 </div>
@@ -630,7 +630,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Link href="/kalori" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/kalori" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-rose-600 hover:bg-rose-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>Kalori Takibini Aç</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -639,13 +639,13 @@ export default function DashboardPage() {
 
       case "/wishlist":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-violet-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-violet-500/10 text-violet-600 dark:text-violet-400 border border-violet-500/20">
                   <GiftIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-violet-500/10 border border-violet-500/20 px-2.5 py-1 text-xs font-semibold text-violet-700 dark:text-violet-300 tabular-nums whitespace-nowrap">
                   {isLoaded ? `${wishlistStats.pendingCount} Bekleyen` : "..."}
                 </span>
               </div>
@@ -668,7 +668,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Link href="/wishlist" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/wishlist" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-violet-600 hover:bg-violet-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>İstek Listesini Aç</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -677,13 +677,13 @@ export default function DashboardPage() {
 
       case "/cleaning":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-sky-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
                   <SparklesCleanIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-sky-500/10 border border-sky-500/20 px-2.5 py-1 text-xs font-semibold text-sky-700 dark:text-sky-300 tabular-nums whitespace-nowrap">
                   {isLoaded ? `${cleaningStats.cleanedTodayCount} Bugün Temizlendi` : "..."}
                 </span>
               </div>
@@ -710,7 +710,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Link href="/cleaning" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/cleaning" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-sky-600 hover:bg-sky-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>Temizlik Kontrolü</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -719,13 +719,13 @@ export default function DashboardPage() {
 
       case "/wedding":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-pink-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20">
                   <HeartRingIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-pink-500/10 border border-pink-500/20 px-2.5 py-1 text-xs font-semibold text-pink-700 dark:text-pink-300 tabular-nums whitespace-nowrap">
                   {isLoaded
                     ? `${weddingStats.tamamlananSayisi}/${weddingStats.toplamMaddeSayisi} Tamam`
                     : "..."}
@@ -737,7 +737,7 @@ export default function DashboardPage() {
               <div className="mt-4 space-y-2 ds-card-recessed">
                 <div className="flex justify-between items-center text-xs gap-2">
                   <span className="text-foreground-secondary">Kalan Kumbara</span>
-                  <span className="font-semibold text-primary tabular-nums">
+                  <span className="font-semibold text-pink-600 dark:text-pink-400 tabular-nums">
                     {isLoaded ? para(weddingStats.kalanKumbara) : "..."}
                   </span>
                 </div>
@@ -752,7 +752,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Link href="/wedding" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/wedding" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-pink-600 hover:bg-pink-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>Düğün Kumbarasını Aç</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -761,13 +761,13 @@ export default function DashboardPage() {
 
       case "/cardolist":
         return (
-          <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
+          <div key={item.href} className="ds-card-interactive flex flex-col justify-between hover:border-blue-500/40">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                   <CarIcon className="h-5 w-5" />
                 </span>
-                <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="rounded-lg bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:text-blue-300 tabular-nums whitespace-nowrap">
                   {isLoaded ? `${cardoStats.count} Masraf` : "..."}
                 </span>
               </div>
@@ -794,7 +794,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <Link href="/cardolist" className="mt-5 primary-button w-full text-xs py-2.5 whitespace-nowrap">
+            <Link href="/cardolist" className="mt-5 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-[10px] bg-blue-600 hover:bg-blue-700 text-white font-semibold w-full text-xs py-2.5 whitespace-nowrap transition shadow-xs">
               <span>Masrafları Yönet</span>
               <ArrowRightIcon className="h-3.5 w-3.5" />
             </Link>
@@ -806,11 +806,11 @@ export default function DashboardPage() {
           <div key={item.href} className="ds-card-interactive flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between gap-3 mb-3.5">
-                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent border border-border-lavender text-primary">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/10 border border-primary/20 text-primary">
                   <ModuleLucideIcon href={item.href} className="h-5 w-5" />
                 </span>
                 {item.badge && (
-                  <span className="rounded-lg bg-accent border border-border-lavender px-2.5 py-1 text-xs font-semibold text-foreground whitespace-nowrap">
+                  <span className="rounded-lg bg-primary/10 border border-primary/20 px-2.5 py-1 text-xs font-semibold text-primary whitespace-nowrap">
                     {item.badge}
                   </span>
                 )}
@@ -831,50 +831,50 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 pb-8">
       {/* 1. PERSONALIZED WELCOME & IMMEDIATE HOUSEHOLD ACTIONS */}
-      <section className="rounded-[18px] border border-border bg-surface p-5 sm:p-6 shadow-[var(--shadow-xs)]">
-        <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
+      <section className="relative overflow-hidden rounded-[20px] bg-gradient-to-br from-orange-500 via-amber-600 to-rose-600 p-6 sm:p-7 text-white shadow-md">
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 rounded-lg border border-border-lavender bg-accent px-2.5 py-1 text-xs font-semibold text-foreground">
-              <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur-md border border-white/25 text-white">
+              <CalendarIcon className="h-3.5 w-3.5 text-white" />
               <span className="capitalize">{todayFormatted}</span>
             </div>
 
-            <h1 className="text-2xl sm:text-[26px] font-semibold tracking-tight text-foreground leading-tight">
+            <h1 className="text-2xl sm:text-[28px] font-extrabold tracking-tight text-white leading-tight">
               {isLoaded && fitStats.profileName
                 ? `Hoş Geldiniz, ${fitStats.profileName}`
                 : "Hoş Geldiniz, Hane Yönetim Paneli"}
             </h1>
 
-            <p className="text-sm text-foreground-secondary max-w-2xl">
+            <p className="text-sm text-white/90 max-w-2xl font-medium">
               Ev bütçesi, haftalık yemek planı, alışveriş, temizlik, takvim ve kişisel sağlık verileriniz tek ekranda.
             </p>
           </div>
 
-          {/* Household Daily Status Chips (Always 3 aligned columns) */}
+          {/* Household Daily Status Chips */}
           <div className="grid grid-cols-3 gap-2 sm:gap-2.5 shrink-0">
-            <div className="rounded-[10px] border border-border bg-background px-2.5 py-2 sm:px-3.5">
-              <span className="block text-[11px] font-medium text-muted">
+            <div className="rounded-xl bg-white/15 backdrop-blur-md border border-white/20 px-3 py-2 sm:px-3.5 text-center">
+              <span className="block text-[11px] font-medium text-white/80">
                 Bekleyen
               </span>
-              <span className="text-sm sm:text-base font-bold text-foreground tabular-nums whitespace-nowrap">
+              <span className="text-sm sm:text-base font-bold text-white tabular-nums whitespace-nowrap">
                 {isLoaded ? `${totalPendingTasks} Görev` : "..."}
               </span>
             </div>
 
-            <div className="rounded-[10px] border border-border bg-background px-2.5 py-2 sm:px-3.5">
-              <span className="block text-[11px] font-medium text-muted">
+            <div className="rounded-xl bg-emerald-500/25 backdrop-blur-md border border-emerald-300/40 px-3 py-2 sm:px-3.5 text-center">
+              <span className="block text-[11px] font-medium text-emerald-100">
                 Tamamlanan
               </span>
-              <span className="text-sm sm:text-base font-bold text-success tabular-nums whitespace-nowrap">
+              <span className="text-sm sm:text-base font-bold text-emerald-100 tabular-nums whitespace-nowrap">
                 {isLoaded ? `${totalCompletedTasks} Tamam` : "..."}
               </span>
             </div>
 
-            <div className="rounded-[10px] border border-border-lavender bg-surface-lavender px-2.5 py-2 sm:px-3.5">
-              <span className="block text-[11px] font-medium text-foreground-secondary">
+            <div className="rounded-xl bg-amber-400/25 backdrop-blur-md border border-amber-200/40 px-3 py-2 sm:px-3.5 text-center">
+              <span className="block text-[11px] font-medium text-amber-100">
                 Yaklaşan
               </span>
-              <span className="text-sm sm:text-base font-bold text-primary tabular-nums whitespace-nowrap">
+              <span className="text-sm sm:text-base font-bold text-amber-100 tabular-nums whitespace-nowrap">
                 {isLoaded ? `${calendarStats.upcomingCount} Etkinlik` : "..."}
               </span>
             </div>
@@ -882,8 +882,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Immediate Quick Action Shortcuts */}
-        <div className="mt-5 pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted shrink-0">
+        <div className="relative z-10 mt-5 pt-4 border-t border-white/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-white/85 shrink-0">
             Hızlı İşlemler
           </span>
 
@@ -891,49 +891,53 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => triggerQuickAction("gider")}
-              className="primary-button min-h-[36px] px-3 py-1.5 text-xs whitespace-nowrap"
+              className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer shadow-xs active:scale-[0.98]"
             >
-              <PlusIcon className="h-3.5 w-3.5" />
+              <PlusIcon className="h-3.5 w-3.5 text-emerald-200" />
               <span>Hızlı Gider</span>
             </button>
 
             <button
               type="button"
               onClick={() => triggerQuickAction("shopping")}
-              className="accent-button min-h-[36px] px-3 py-1.5 text-xs whitespace-nowrap"
+              className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer shadow-xs active:scale-[0.98]"
             >
-              <ShoppingBagIcon className="h-3.5 w-3.5 text-primary" />
+              <ShoppingBagIcon className="h-3.5 w-3.5 text-teal-200" />
               <span>Alışveriş Ürünü</span>
             </button>
 
             <button
               type="button"
               onClick={() => triggerQuickAction("cleaning")}
-              className="secondary-button min-h-[36px] px-3 py-1.5 text-xs whitespace-nowrap"
+              className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer shadow-xs active:scale-[0.98]"
             >
-              <SparklesCleanIcon className="h-3.5 w-3.5 text-primary" />
+              <SparklesCleanIcon className="h-3.5 w-3.5 text-sky-200" />
               <span>Temizlik İşaretle</span>
             </button>
 
             <button
               type="button"
               onClick={() => triggerQuickAction("calendar")}
-              className="secondary-button min-h-[36px] px-3 py-1.5 text-xs whitespace-nowrap"
+              className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer shadow-xs active:scale-[0.98]"
             >
-              <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+              <CalendarIcon className="h-3.5 w-3.5 text-indigo-200" />
               <span>Etkinlik Ekle</span>
             </button>
 
             <button
               type="button"
               onClick={() => triggerQuickAction("cardo")}
-              className="secondary-button min-h-[36px] px-3 py-1.5 text-xs whitespace-nowrap"
+              className="inline-flex min-h-[36px] items-center justify-center gap-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-md px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap cursor-pointer shadow-xs active:scale-[0.98]"
             >
-              <CarIcon className="h-3.5 w-3.5 text-primary" />
+              <CarIcon className="h-3.5 w-3.5 text-blue-200" />
               <span>Araç Masrafı</span>
             </button>
           </div>
         </div>
+
+        {/* Decorative background circles */}
+        <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+        <div className="absolute right-32 -top-12 h-48 w-48 rounded-full bg-amber-300/20 blur-xl pointer-events-none" />
       </section>
 
       {/* 2. PRIMARY HOUSEHOLD KPI OVERVIEW (1-col Mobile, 2x2 Tablet, 4-col Desktop XL) */}
@@ -944,13 +948,13 @@ export default function DashboardPage() {
         {/* KPI 1: Monthly Budget */}
         <Link
           href="/gider"
-          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group"
+          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group hover:border-teal-500/40"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-medium text-foreground-secondary">
               Bu Ayki Hane Gideri
             </span>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
               <WalletIcon className="h-4 w-4" />
             </span>
           </div>
@@ -971,13 +975,13 @@ export default function DashboardPage() {
         {/* KPI 2: Tonight's Dinner */}
         <Link
           href="/dinner"
-          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group"
+          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group hover:border-amber-500/40"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-medium text-foreground-secondary">
               Günün Akşam Yemeği
             </span>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
               <UtensilsIcon className="h-4 w-4" />
             </span>
           </div>
@@ -992,7 +996,7 @@ export default function DashboardPage() {
             </div>
             <div className="mt-1.5 flex items-center justify-between gap-1 text-xs">
               <span className="text-muted">Haftalık Plan:</span>
-              <span className="font-semibold text-primary tabular-nums whitespace-nowrap">
+              <span className="font-semibold text-amber-600 dark:text-amber-400 tabular-nums whitespace-nowrap">
                 {isLoaded ? `${dinnerStats.plannedDays} / 7 Gün` : "..."}
               </span>
             </div>
@@ -1002,13 +1006,13 @@ export default function DashboardPage() {
         {/* KPI 3: Daily Calorie Progress */}
         <Link
           href="/kalori"
-          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group"
+          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group hover:border-rose-500/40"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-medium text-foreground-secondary">
               Günlük Kalori Takibi
             </span>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
               <FlameIcon className="h-4 w-4" />
             </span>
           </div>
@@ -1024,7 +1028,7 @@ export default function DashboardPage() {
             </div>
             <div className="mt-2 h-1.5 w-full rounded-full bg-background-subtle overflow-hidden">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-200"
+                className="h-full rounded-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all duration-200"
                 style={{ width: `${calorieProgressPct}%` }}
               />
             </div>
@@ -1034,13 +1038,13 @@ export default function DashboardPage() {
         {/* KPI 4: Home Hygiene & Cleaning */}
         <Link
           href="/cleaning"
-          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group"
+          className="ds-card-interactive p-4 sm:p-5 flex flex-col justify-between group hover:border-sky-500/40"
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-xs font-medium text-foreground-secondary">
               Ev Temizlik Durumu
             </span>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
               <SparklesCleanIcon className="h-4 w-4" />
             </span>
           </div>
@@ -1070,7 +1074,7 @@ export default function DashboardPage() {
           <div className="flex-1 flex flex-col">
             <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-border">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <CheckCircleIcon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
@@ -1212,7 +1216,7 @@ export default function DashboardPage() {
           <div className="flex-1 flex flex-col">
             <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-border">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
                   <CalendarIcon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
@@ -1317,7 +1321,7 @@ export default function DashboardPage() {
           <div>
             <div className="flex items-center justify-between gap-2 pb-3.5 border-b border-border">
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-primary">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/20">
                   <ClockIcon className="h-4 w-4" />
                 </span>
                 <div className="min-w-0">
@@ -1338,7 +1342,7 @@ export default function DashboardPage() {
                 className="flex items-center justify-between gap-2 rounded-[10px] border border-border bg-background/60 hover:bg-surface-raised px-3.5 py-2.5 transition-colors duration-150"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <ActivityIcon className="h-4 w-4 text-primary shrink-0" />
+                  <ActivityIcon className="h-4 w-4 text-cyan-500 shrink-0" />
                   <div className="min-w-0">
                     <span className="text-xs font-semibold text-foreground block truncate">
                       Vücut & Fit Takibi
@@ -1354,7 +1358,7 @@ export default function DashboardPage() {
                   <span className="text-xs font-bold text-foreground block">
                     {isLoaded && fitStats.latestWeight ? `${fitStats.latestWeight} kg` : "—"}
                   </span>
-                  <span className="text-[11px] text-primary font-medium">
+                  <span className="text-[11px] text-cyan-600 dark:text-cyan-400 font-medium">
                     {isLoaded && fitStats.latestBodyFat ? `%${fitStats.latestBodyFat} yağ` : "Ölçüm ekle"}
                   </span>
                 </div>
@@ -1366,7 +1370,7 @@ export default function DashboardPage() {
                 className="flex items-center justify-between gap-2 rounded-[10px] border border-border bg-background/60 hover:bg-surface-raised px-3.5 py-2.5 transition-colors duration-150"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <HeartRingIcon className="h-4 w-4 text-primary shrink-0" />
+                  <HeartRingIcon className="h-4 w-4 text-pink-500 shrink-0" />
                   <div className="min-w-0">
                     <span className="text-xs font-semibold text-foreground block truncate">
                       Düğün & Kumbara
@@ -1389,7 +1393,7 @@ export default function DashboardPage() {
                 className="flex items-center justify-between gap-2 rounded-[10px] border border-border bg-background/60 hover:bg-surface-raised px-3.5 py-2.5 transition-colors duration-150"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <GiftIcon className="h-4 w-4 text-primary shrink-0" />
+                  <GiftIcon className="h-4 w-4 text-violet-500 shrink-0" />
                   <div className="min-w-0">
                     <span className="text-xs font-semibold text-foreground block truncate">
                       İstek Listesi
@@ -1399,7 +1403,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-                <span className="shrink-0 rounded-md bg-accent border border-border-lavender px-2 py-0.5 text-xs font-semibold text-foreground tabular-nums whitespace-nowrap">
+                <span className="shrink-0 rounded-md bg-violet-500/10 border border-violet-500/20 px-2 py-0.5 text-xs font-semibold text-violet-700 dark:text-violet-300 tabular-nums whitespace-nowrap">
                   {isLoaded ? `${wishlistStats.pendingCount} Bekleyen` : "..."}
                 </span>
               </Link>
@@ -1410,7 +1414,7 @@ export default function DashboardPage() {
                 className="flex items-center justify-between gap-2 rounded-[10px] border border-border bg-background/60 hover:bg-surface-raised px-3.5 py-2.5 transition-colors duration-150"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <CarIcon className="h-4 w-4 text-primary shrink-0" />
+                  <CarIcon className="h-4 w-4 text-blue-500 shrink-0" />
                   <div className="min-w-0">
                     <span className="text-xs font-semibold text-foreground block truncate">
                       Araç Masrafları

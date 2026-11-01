@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { para, KULLANICI_ETIKET, ODEYEN_ETIKET } from "./constants";
 import type {
   KrediKartiEkstresi,
@@ -33,6 +33,16 @@ export function GiderV2CardList({
   const [kalemAciklama, setKalemAciklama] = useState("");
   const [kalemTutarStr, setKalemTutarStr] = useState("");
   const [kalemKisi, setKalemKisi] = useState<KullaniciId>("mert");
+
+  // Önce ortak harcamalar/kartlar, ardından bireyseller listelensin
+  const siraliKartlar = useMemo(() => {
+    return [...kartlar].sort((a, b) => {
+      const aBireysel = a.kimeAit === "mert" || a.kimeAit === "havsa";
+      const bBireysel = b.kimeAit === "mert" || b.kimeAit === "havsa";
+      if (aBireysel === bBireysel) return 0;
+      return aBireysel ? 1 : -1;
+    });
+  }, [kartlar]);
 
   const handleKalemSubmit = (e: React.FormEvent, kartId: string) => {
     e.preventDefault();
@@ -102,7 +112,7 @@ export function GiderV2CardList({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          {kartlar.map((kart) => {
+          {siraliKartlar.map((kart) => {
             const h = tekKartHesabi(kart);
             const isHarcama = kart.kayitTipi === "harcama";
             const kimeAit = kart.kimeAit ?? "ortak";
