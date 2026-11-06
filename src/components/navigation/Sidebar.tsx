@@ -94,6 +94,7 @@ export function Sidebar() {
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     if (href === "/gider") return pathname === "/gider";
+    if (href === "/gider2") return pathname === "/gider2";
     return pathname.startsWith(href);
   };
 
@@ -109,6 +110,7 @@ export function Sidebar() {
       case "/calendar":
         return "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20";
       case "/gider":
+      case "/gider2":
         return "bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20";
       case "/fit/dashboard":
       case "/fit":

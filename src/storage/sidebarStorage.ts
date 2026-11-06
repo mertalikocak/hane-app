@@ -40,7 +40,7 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
     name: "Hane Gider",
     href: "/gider",
     icon: "💰",
-    description: "Ev bütçesi & ekstre takibi",
+    description: "Ev bütçesi & taksit takibi",
   },
   {
     name: "Hane Fit",

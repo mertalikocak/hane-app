@@ -6,6 +6,7 @@ import {
   WeddingItem,
   WeddingItemCategory,
   WeddingStats,
+  WeddingPiggyContribution,
 } from "@/domain/weddingTypes";
 import {
   getWeddingData,
@@ -17,9 +18,11 @@ import {
   WEDDING_EVENT_NAME,
 } from "@/storage/weddingStorage";
 import { KumbaraModal } from "@/components/wedding/KumbaraModal";
+import { GoldPortfolioModal } from "@/components/wedding/GoldPortfolioModal";
 import { WeddingItemModal } from "@/components/wedding/WeddingItemModal";
 import { WeddingOzetKartlari } from "@/components/wedding/WeddingOzetKartlari";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { useGoldPrices } from "@/services/clientGoldPriceService";
 import {
   WeddingIcon,
   PlusIcon,
@@ -50,8 +53,14 @@ export default function WeddingPage() {
   const [data, setData] = useState<WeddingData>(() => bosWeddingVerisi());
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Canlı Altın Fiyatları Servisi
+  const { prices: goldPrices, isLoading: isPricesLoading, refresh: refreshGoldPrices } = useGoldPrices();
+
   // Modallar
   const [isKumbaraOpen, setIsKumbaraOpen] = useState(false);
+  const [kumbaraTab, setKumbaraTab] = useState<"nakit" | "altin" | "gecmis">("nakit");
+  const [editingContribution, setEditingContribution] = useState<WeddingPiggyContribution | null>(null);
+  const [isGoldPortfolioOpen, setIsGoldPortfolioOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [selectedItemToEdit, setSelectedItemToEdit] = useState<WeddingItem | null>(null);
 
@@ -80,9 +89,10 @@ export default function WeddingPage() {
     };
   }, []);
 
+  // İstatistikleri güncel canlı altın fiyatlarıyla anlık hesapla
   const stats: WeddingStats = useMemo(() => {
-    return getWeddingStats(data);
-  }, [data]);
+    return getWeddingStats(data, goldPrices?.kalemler);
+  }, [data, goldPrices]);
 
   const filtrelenmisMaddeler = useMemo(() => {
     return data.maddeler
@@ -130,6 +140,18 @@ export default function WeddingPage() {
     setIsItemModalOpen(true);
   };
 
+  const handleOpenKumbaraModal = (tab: "nakit" | "altin" = "nakit") => {
+    setEditingContribution(null);
+    setKumbaraTab(tab);
+    setIsKumbaraOpen(true);
+  };
+
+  const handleEditContribution = (contribution: WeddingPiggyContribution) => {
+    setEditingContribution(contribution);
+    setKumbaraTab(contribution.assetType === "gold" ? "altin" : "nakit");
+    setIsKumbaraOpen(true);
+  };
+
   const handleConfirmVarsayilanYukle = () => {
     const varsayilan = bosWeddingVerisi();
     varsayilan.kumbaraKatkilar = data.kumbaraKatkilar; // Mevcut kumbara kalsın
@@ -150,7 +172,7 @@ export default function WeddingPage() {
     <div className="space-y-6 pb-8">
       <PageHeader
         title="Hane Wedding"
-        subtitle="Ortak birikim kumbarası oluşturun, düğün harcamalarını planlayın ve tamamlandıkça kumbaradan düşün."
+        subtitle="Ortak birikim kumbarası oluşturun, nakit ve altın varlıklarınızı canlı piyasa kuruyla takip edin, düğün harcamalarını planlayın."
         icon={<WeddingIcon size={20} />}
         badge={
           <span className="ds-badge ds-badge-primary">
@@ -158,46 +180,72 @@ export default function WeddingPage() {
           </span>
         }
         actions={
-          <div
-            onClick={() => setIsKumbaraOpen(true)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setIsKumbaraOpen(true);
-              }
-            }}
-            className="ds-card-lavender flex items-center gap-3 p-2 sm:px-3 sm:py-2 cursor-pointer hover:border-primary/50 transition"
-          >
-            <div className="w-9 h-9 rounded-xl bg-accent border border-border-lavender flex items-center justify-center text-lg">
-              🪙
-            </div>
-            <div className="text-left pr-1">
-              <div className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
-                <span>Düğün Kumbarası</span>
-              </div>
-              <div className="text-sm font-bold text-foreground tabular-nums">
-                {para(stats.kalanKumbara)} <span className="text-[10px] text-muted font-normal">kalan</span>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Altın Portföyü Butonu */}
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsKumbaraOpen(true);
-              }}
-              className="primary-button py-1.5 px-3 text-xs h-8 min-h-0"
+              onClick={() => setIsGoldPortfolioOpen(true)}
+              className="secondary-button bg-amber-500/10 hover:bg-amber-500/20 text-amber-900 border-amber-500/30 py-2 px-3 text-xs h-10 min-h-0 font-bold flex items-center gap-1.5"
             >
-              <PlusIcon size={13} />
-              <span className="hidden sm:inline">Para Ekle</span>
+              <span>🪙</span>
+              <span className="hidden sm:inline">Altın Portföyü</span>
+              {stats.toplamAltinGuncelDeger > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-800">
+                  {para(stats.toplamAltinGuncelDeger)}
+                </span>
+              )}
             </button>
+
+            {/* Düğün Kumbarası Kartı & Butonu */}
+            <div
+              onClick={() => handleOpenKumbaraModal("nakit")}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleOpenKumbaraModal("nakit");
+                }
+              }}
+              className="ds-card-lavender flex items-center gap-3 p-1.5 sm:px-3 sm:py-2 cursor-pointer hover:border-primary/50 transition"
+            >
+              <div className="w-9 h-9 rounded-xl bg-accent border border-border-lavender flex items-center justify-center text-lg">
+                🏦
+              </div>
+              <div className="text-left pr-1">
+                <div className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+                  <span>Düğün Kumbarası</span>
+                </div>
+                <div className="text-sm font-bold text-foreground tabular-nums">
+                  {para(stats.kalanKumbara)}{" "}
+                  <span className="text-[10px] text-muted font-normal">kalan</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenKumbaraModal("nakit");
+                }}
+                className="primary-button py-1.5 px-3 text-xs h-8 min-h-0"
+              >
+                <PlusIcon size={13} />
+                <span className="hidden sm:inline">Para Ekle</span>
+              </button>
+            </div>
           </div>
         }
       />
 
-      {/* ÜSTTEKİ ÖZET ALANI */}
-      <WeddingOzetKartlari stats={stats} onOpenKumbaraModal={() => setIsKumbaraOpen(true)} />
+      {/* ÜSTTEKİ ÖZET ALANI (Geliştirilmiş Kartlar) */}
+      <WeddingOzetKartlari
+        stats={stats}
+        onOpenKumbaraModal={(tab) => handleOpenKumbaraModal(tab || "nakit")}
+        onOpenGoldPortfolio={() => setIsGoldPortfolioOpen(true)}
+        isPricesLoading={isPricesLoading}
+        onRefreshPrices={refreshGoldPrices}
+        isStalePrices={Boolean(goldPrices?.isStale)}
+      />
 
       {/* Düğün İhtiyaçları & Alınacaklar Başlığı & Filtreler */}
       <div className="space-y-4 pt-2">
@@ -248,33 +296,30 @@ export default function WeddingPage() {
             <button
               type="button"
               onClick={() => setSeciliDurum("tum")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer tabular-nums ${
-                seciliDurum === "tum"
-                  ? "bg-surface text-foreground shadow-2xs border border-border"
-                  : "text-muted hover:text-foreground"
-              }`}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer tabular-nums ${seciliDurum === "tum"
+                ? "bg-surface text-foreground shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
+                }`}
             >
               Tümü ({data.maddeler.length})
             </button>
             <button
               type="button"
               onClick={() => setSeciliDurum("bekleyen")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer tabular-nums ${
-                seciliDurum === "bekleyen"
-                  ? "bg-surface text-primary shadow-2xs border border-border"
-                  : "text-muted hover:text-foreground"
-              }`}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer tabular-nums ${seciliDurum === "bekleyen"
+                ? "bg-surface text-primary shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
+                }`}
             >
               Alınacaklar ({data.maddeler.length - stats.tamamlananSayisi})
             </button>
             <button
               type="button"
               onClick={() => setSeciliDurum("tamamlanan")}
-              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer tabular-nums ${
-                seciliDurum === "tamamlanan"
-                  ? "bg-surface text-emerald-700 shadow-2xs border border-border"
-                  : "text-muted hover:text-foreground"
-              }`}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer tabular-nums ${seciliDurum === "tamamlanan"
+                ? "bg-surface text-emerald-700 shadow-2xs border border-border"
+                : "text-muted hover:text-foreground"
+                }`}
             >
               Alınanlar ({stats.tamamlananSayisi})
             </button>
@@ -286,11 +331,10 @@ export default function WeddingPage() {
           <button
             type="button"
             onClick={() => setSeciliKategori("tum")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${
-              seciliKategori === "tum"
-                ? "bg-primary text-white border-primary"
-                : "bg-surface border-border text-muted hover:text-foreground"
-            }`}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border ${seciliKategori === "tum"
+              ? "bg-primary text-white border-primary"
+              : "bg-surface border-border text-muted hover:text-foreground"
+              }`}
           >
             Tüm Kategoriler
           </button>
@@ -301,11 +345,10 @@ export default function WeddingPage() {
                 key={katId}
                 type="button"
                 onClick={() => setSeciliKategori(katId)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border flex items-center gap-1.5 tabular-nums ${
-                  seciliKategori === katId
-                    ? "bg-accent/70 border-primary text-primary"
-                    : "bg-surface border-border text-muted hover:text-foreground"
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer border flex items-center gap-1.5 tabular-nums ${seciliKategori === katId
+                  ? "bg-accent/70 border-primary text-primary"
+                  : "bg-surface border-border text-muted hover:text-foreground"
+                  }`}
               >
                 <span>{meta.icon}</span>
                 <span>{meta.label}</span>
@@ -366,22 +409,20 @@ export default function WeddingPage() {
                     </div>
                   )}
                   <div
-                    className={`ds-card flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 transition-all gap-3 ${
-                      item.tamamlandi
-                        ? "bg-surface-raised/60 opacity-75"
-                        : "hover:border-border-strong"
-                    }`}
+                    className={`ds-card flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 transition-all gap-3 ${item.tamamlandi
+                      ? "bg-surface-raised/60 opacity-75"
+                      : "hover:border-border-strong"
+                      }`}
                   >
                     {/* Sol Kısım: Checkbox ve Başlık */}
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <button
                         type="button"
                         onClick={() => handleToggle(item.id)}
-                        className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 transition cursor-pointer ${
-                          item.tamamlandi
-                            ? "bg-emerald-600 border-emerald-600 text-white"
-                            : "border-border-strong hover:border-primary bg-surface-raised text-transparent"
-                        }`}
+                        className={`w-6 h-6 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 transition cursor-pointer ${item.tamamlandi
+                          ? "bg-emerald-600 border-emerald-600 text-white"
+                          : "border-border-strong hover:border-primary bg-surface-raised text-transparent"
+                          }`}
                         title={item.tamamlandi ? "Alındı (Geri al)" : "Alındı olarak işaretle"}
                       >
                         <CheckIcon size={13} />
@@ -390,9 +431,8 @@ export default function WeddingPage() {
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span
-                            className={`text-sm font-bold truncate ${
-                              item.tamamlandi ? "line-through text-muted" : "text-foreground"
-                            }`}
+                            className={`text-sm font-bold truncate ${item.tamamlandi ? "line-through text-muted" : "text-foreground"
+                              }`}
                           >
                             {item.baslik}
                           </span>
@@ -406,19 +446,18 @@ export default function WeddingPage() {
                           {/* Sorumlu Rozeti */}
                           {item.sorumluKisi && (
                             <span
-                              className={`text-[10px] px-2 py-0.5 rounded-md border font-semibold ${
-                                item.sorumluKisi === "mert"
-                                  ? "bg-sky-500/10 border-sky-500/25 text-sky-700"
-                                  : item.sorumluKisi === "havsa"
+                              className={`text-[10px] px-2 py-0.5 rounded-md border font-semibold ${item.sorumluKisi === "mert"
+                                ? "bg-sky-500/10 border-sky-500/25 text-sky-700"
+                                : item.sorumluKisi === "havsa"
                                   ? "bg-pink-500/10 border-pink-500/25 text-pink-700"
                                   : "bg-accent/70 border-border-lavender text-primary"
-                              }`}
+                                }`}
                             >
                               {item.sorumluKisi === "mert"
                                 ? "👤 Mert"
                                 : item.sorumluKisi === "havsa"
-                                ? "👩 Havsa"
-                                : "👥 Ortak"}
+                                  ? "👩 Havsa"
+                                  : "👥 Ortak"}
                             </span>
                           )}
 
@@ -439,9 +478,8 @@ export default function WeddingPage() {
                     <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
                       <div className="text-right tabular-nums">
                         <div
-                          className={`text-sm sm:text-base font-bold ${
-                            item.tamamlandi ? "text-emerald-700 line-through opacity-80" : "text-foreground"
-                          }`}
+                          className={`text-sm sm:text-base font-bold ${item.tamamlandi ? "text-emerald-700 line-through opacity-80" : "text-foreground"
+                            }`}
                         >
                           {para(item.tutar)}
                         </div>
@@ -535,9 +573,29 @@ export default function WeddingPage() {
       {/* Modallar */}
       <KumbaraModal
         isOpen={isKumbaraOpen}
-        onClose={() => setIsKumbaraOpen(false)}
+        onClose={() => {
+          setIsKumbaraOpen(false);
+          setEditingContribution(null);
+        }}
         katkilar={data.kumbaraKatkilar}
         onDataChange={refreshData}
+        goldPrices={goldPrices}
+        editingContribution={editingContribution}
+        onClearEditing={() => setEditingContribution(null)}
+        initialTab={kumbaraTab}
+      />
+
+      <GoldPortfolioModal
+        isOpen={isGoldPortfolioOpen}
+        onClose={() => setIsGoldPortfolioOpen(false)}
+        stats={stats}
+        goldPrices={goldPrices}
+        isPricesLoading={isPricesLoading}
+        onRefreshPrices={refreshGoldPrices}
+        katkilar={data.kumbaraKatkilar}
+        onDataChange={refreshData}
+        onEditContribution={handleEditContribution}
+        onOpenAddGold={() => handleOpenKumbaraModal("altin")}
       />
 
       <WeddingItemModal

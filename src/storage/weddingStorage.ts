@@ -3,7 +3,11 @@ import {
   WeddingItem,
   WeddingPiggyContribution,
   WeddingStats,
+  GoldPricesMap,
+  GoldType,
+  GoldSummaryItem,
 } from "@/domain/weddingTypes";
+import { queueLocalChangePush } from "@/lib/firebase/syncService";
 
 export const WEDDING_STORAGE_KEY = "hane_wedding_data";
 export const WEDDING_EVENT_NAME = "wedding_data_updated";
@@ -107,8 +111,37 @@ export function getWeddingData(): WeddingData {
       return initial;
     }
     const parsed = JSON.parse(raw);
+
+    // Geriye dönük uyumluluk ve veri sağlama
+    const rawKatkilar = Array.isArray(parsed.kumbaraKatkilar) ? parsed.kumbaraKatkilar : [];
+    const normalizedKatkilar: WeddingPiggyContribution[] = rawKatkilar.map(
+      (k: Partial<WeddingPiggyContribution>) => {
+        const isGold = k.assetType === "gold";
+        const miktar = isGold ? Number(k.miktar) || 0 : undefined;
+        const birimAlisFiyati = isGold ? Number(k.birimAlisFiyati) || 0 : undefined;
+        const toplamAlisMaliyeti = isGold
+          ? Number(k.toplamAlisMaliyeti) || (miktar! * birimAlisFiyati!) || Number(k.tutar) || 0
+          : undefined;
+
+        return {
+          id: k.id || `piggy_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          assetType: isGold ? "gold" : "cash",
+          ekleyenKisi: k.ekleyenKisi || "mert",
+          ekleyenKisiAd: k.ekleyenKisiAd,
+          tutar: Number(k.tutar) || (isGold ? (toplamAlisMaliyeti || 0) : 0),
+          tarih: k.tarih || new Date().toISOString().split("T")[0],
+          aciklama: k.aciklama,
+          createdAt: k.createdAt || new Date().toISOString(),
+          goldType: isGold ? k.goldType || "gram" : undefined,
+          miktar,
+          birimAlisFiyati,
+          toplamAlisMaliyeti,
+        };
+      }
+    );
+
     return {
-      kumbaraKatkilar: Array.isArray(parsed.kumbaraKatkilar) ? parsed.kumbaraKatkilar : [],
+      kumbaraKatkilar: normalizedKatkilar,
       maddeler: Array.isArray(parsed.maddeler) ? parsed.maddeler : [],
       hedefTarih: parsed.hedefTarih,
       notlar: parsed.notlar,
@@ -125,6 +158,11 @@ export function saveWeddingData(data: WeddingData): void {
     localStorage.setItem(WEDDING_STORAGE_KEY, JSON.stringify(data));
     window.dispatchEvent(new Event(WEDDING_EVENT_NAME));
     window.dispatchEvent(new Event("storage"));
+    try {
+      queueLocalChangePush(true);
+    } catch {
+      // ignore
+    }
   } catch (err) {
     console.error("Wedding verisi kaydetme hatası:", err);
   }
@@ -143,6 +181,17 @@ export function addPiggyContribution(
   data.kumbaraKatkilar.unshift(yeniKatki);
   saveWeddingData(data);
   return yeniKatki;
+}
+
+export function updatePiggyContribution(
+  guncelKatki: WeddingPiggyContribution
+): void {
+  const data = getWeddingData();
+  const idx = data.kumbaraKatkilar.findIndex((k) => k.id === guncelKatki.id);
+  if (idx !== -1) {
+    data.kumbaraKatkilar[idx] = guncelKatki;
+    saveWeddingData(data);
+  }
 }
 
 export function deletePiggyContribution(id: string): void {
@@ -192,18 +241,123 @@ export function deleteWeddingItem(id: string): void {
   saveWeddingData(data);
 }
 
-export function getWeddingStats(data: WeddingData): WeddingStats {
-  const toplamBiriken = data.kumbaraKatkilar.reduce((sum, k) => sum + (Number(k.tutar) || 0), 0);
-  const mertBiriken = data.kumbaraKatkilar
-    .filter((k) => k.ekleyenKisi === "mert")
-    .reduce((sum, k) => sum + (Number(k.tutar) || 0), 0);
-  const havsaBiriken = data.kumbaraKatkilar
-    .filter((k) => k.ekleyenKisi === "havsa")
-    .reduce((sum, k) => sum + (Number(k.tutar) || 0), 0);
-  const digerBiriken = data.kumbaraKatkilar
-    .filter((k) => k.ekleyenKisi === "diger")
-    .reduce((sum, k) => sum + (Number(k.tutar) || 0), 0);
+/**
+ * Kumbara ve düğün istatistiklerini hesaplar.
+ * Altınların güncel değeri Hesaplı Altın API'sinden gelen alış (bozdururken geçerli) fiyatıyla hesaplanır.
+ */
+export function getWeddingStats(
+  data: WeddingData,
+  goldPrices?: GoldPricesMap | null
+): WeddingStats {
+  let toplamNakitBiriken = 0;
+  let toplamAltinGuncelDeger = 0;
+  let toplamAltinAlisMaliyeti = 0;
 
+  let mertBiriken = 0;
+  let havsaBiriken = 0;
+  let ortakBiriken = 0;
+  let digerBiriken = 0;
+
+  const toplamAltinAdetGram = {
+    gram: 0,
+    ceyrek: 0,
+    yarim: 0,
+    tam: 0,
+  };
+
+  const goldGroupCost: Record<GoldType, number> = {
+    gram: 0,
+    ceyrek: 0,
+    yarim: 0,
+    tam: 0,
+  };
+
+  for (const k of data.kumbaraKatkilar) {
+    const isGold = k.assetType === "gold";
+
+    if (!isGold) {
+      // Nakit katkı
+      const nakitTutar = Number(k.tutar) || 0;
+      toplamNakitBiriken += nakitTutar;
+
+      if (k.ekleyenKisi === "mert") mertBiriken += nakitTutar;
+      else if (k.ekleyenKisi === "havsa") havsaBiriken += nakitTutar;
+      else if (k.ekleyenKisi === "ortak") ortakBiriken += nakitTutar;
+      else digerBiriken += nakitTutar;
+    } else {
+      // Altın katkı
+      const goldType: GoldType = k.goldType || "gram";
+      const miktar = Number(k.miktar) || 0;
+      const unitBuyPrice = Number(k.birimAlisFiyati) || 0;
+      const totalBuyCost =
+        Number(k.toplamAlisMaliyeti) || (miktar * unitBuyPrice) || Number(k.tutar) || 0;
+
+      // API'den gelen güncel piyasa ALIŞ (bozdururken kuyumcunun verdiği) fiyatı
+      const currentUnitMarketPrice =
+        goldPrices?.[goldType]?.alis && Number(goldPrices[goldType].alis) > 0
+          ? Number(goldPrices[goldType].alis)
+          : unitBuyPrice;
+
+      const currentGoldValue = miktar * currentUnitMarketPrice;
+
+      toplamAltinGuncelDeger += currentGoldValue;
+      toplamAltinAlisMaliyeti += totalBuyCost;
+
+      toplamAltinAdetGram[goldType] += miktar;
+      goldGroupCost[goldType] += totalBuyCost;
+
+      // Kişilere göre güncel değer dağılımı
+      if (k.ekleyenKisi === "mert") mertBiriken += currentGoldValue;
+      else if (k.ekleyenKisi === "havsa") havsaBiriken += currentGoldValue;
+      else if (k.ekleyenKisi === "ortak") ortakBiriken += currentGoldValue;
+      else digerBiriken += currentGoldValue;
+    }
+  }
+
+  // Toplam biriken (Nakit + Altınların güncel TL değeri)
+  const toplamBiriken = toplamNakitBiriken + toplamAltinGuncelDeger;
+  const altinKarZararTL = toplamAltinGuncelDeger - toplamAltinAlisMaliyeti;
+  const altinKarZararYuzde =
+    toplamAltinAlisMaliyeti > 0 ? (altinKarZararTL / toplamAltinAlisMaliyeti) * 100 : 0;
+
+  // 4 altın türünün her biri için özet analizi
+  const goldTypesList: GoldType[] = ["gram", "ceyrek", "yarim", "tam"];
+  const goldLabels: Record<GoldType, string> = {
+    gram: "Gram Altın",
+    ceyrek: "Çeyrek Altın",
+    yarim: "Yarım Altın",
+    tam: "Tam Altın",
+  };
+
+  const goldSummaries = {} as Record<GoldType, GoldSummaryItem>;
+
+  for (const t of goldTypesList) {
+    const miktar = toplamAltinAdetGram[t];
+    const maliyet = goldGroupCost[t];
+    const guncelBirim =
+      goldPrices?.[t]?.alis && Number(goldPrices[t].alis) > 0
+        ? Number(goldPrices[t].alis)
+        : miktar > 0 && maliyet > 0
+        ? maliyet / miktar
+        : 0;
+    const guncelToplam = miktar * guncelBirim;
+    const karTL = guncelToplam - maliyet;
+    const karYuzde = maliyet > 0 ? (karTL / maliyet) * 100 : 0;
+
+    goldSummaries[t] = {
+      goldType: t,
+      etiket: goldLabels[t],
+      miktar,
+      birim: t === "gram" ? "gram" : "adet",
+      toplamAlisMaliyeti: maliyet,
+      guncelBirimAlisFiyati: guncelBirim,
+      guncelToplamDeger: guncelToplam,
+      karZararTL: karTL,
+      karZararYuzde: karYuzde,
+    };
+  }
+
+  // Harcamalar ve bütçe
   const harcananPara = data.maddeler
     .filter((m) => m.tamamlandi)
     .reduce((sum, m) => sum + (Number(m.tutar) || 0), 0);
@@ -228,8 +382,14 @@ export function getWeddingStats(data: WeddingData): WeddingStats {
 
   return {
     toplamBiriken,
+    toplamNakitBiriken,
+    toplamAltinGuncelDeger,
+    toplamAltinAlisMaliyeti,
+    altinKarZararTL,
+    altinKarZararYuzde,
     mertBiriken,
     havsaBiriken,
+    ortakBiriken,
     digerBiriken,
     harcananPara,
     kalanKumbara,
@@ -239,5 +399,7 @@ export function getWeddingStats(data: WeddingData): WeddingStats {
     toplamMaddeSayisi,
     tamamlanmaYuzdesi,
     kumbaraKarsilamaYuzdesi,
+    goldSummaries,
+    toplamAltinAdetGram,
   };
 }

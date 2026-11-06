@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import type { LocalShoppingItem, LocalMeal, LocalPlanEntry } from "@/lib/local-storage/store";
 import { STORAGE_KEYS, readStorage, writeStorage } from "@/lib/local-storage/store";
+import { queueLocalChangePush } from "@/lib/firebase/syncService";
 import { buildShoppingItems } from "@/services/local-shopping";
 import Link from "next/link";
 import {
@@ -28,6 +29,13 @@ function getClearedFoodKeys(): Set<string> {
 function saveClearedFoodKeys(keys: Set<string>): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY_CLEARED_FOOD_KEYS, JSON.stringify(Array.from(keys)));
+  window.dispatchEvent(new CustomEvent("hane-shopping:updated"));
+  window.dispatchEvent(new Event("storage"));
+  try {
+    queueLocalChangePush(true);
+  } catch (err) {
+    console.error("Bulut eşitleme hatası:", err);
+  }
 }
 
 interface FoodShoppingSyncListProps {
@@ -87,15 +95,22 @@ export function FoodShoppingSyncList({ onOpenWhatsApp }: FoodShoppingSyncListPro
     });
   }, [allAssignments, meals]);
 
-  // Flatten previous shopping items across weeks
+  // Flatten previous shopping items across weeks, ensuring general (manual user toggles) overrides
   const previousShoppingItems = useMemo(() => {
     const map = new Map<string, LocalShoppingItem>();
-    for (const items of Object.values(shoppingByWeek)) {
-      if (Array.isArray(items)) {
+    for (const [wKey, items] of Object.entries(shoppingByWeek)) {
+      if (wKey !== "general" && Array.isArray(items)) {
         for (const item of items) {
           if (item && item.key) {
             map.set(item.key, item);
           }
+        }
+      }
+    }
+    if (Array.isArray(shoppingByWeek["general"])) {
+      for (const item of shoppingByWeek["general"]) {
+        if (item && item.key) {
+          map.set(item.key, item);
         }
       }
     }
@@ -112,36 +127,45 @@ export function FoodShoppingSyncList({ onOpenWhatsApp }: FoodShoppingSyncListPro
   const toggleItem = (key: string, isCompleted: boolean) => {
     // Update completion state in shoppingByWeek storage
     const updated = { ...shoppingByWeek };
-    let found = false;
 
     for (const [wKey, items] of Object.entries(updated)) {
       if (Array.isArray(items)) {
         updated[wKey] = items.map((i) =>
           i.key === key ? { ...i, isCompleted } : i
         );
-        if (items.some((i) => i.key === key)) {
-          found = true;
-        }
       }
     }
 
-    if (!found) {
-      // Put in a global/general bucket
-      const general = updated["general"] || [];
-      const existingIdx = general.findIndex((i) => i.key === key);
-      if (existingIdx >= 0) {
-        general[existingIdx].isCompleted = isCompleted;
+    // Always maintain in 'general' so it overrides any week and never gets lost
+    const general = Array.isArray(updated["general"]) ? [...updated["general"]] : [];
+    const existingIdx = general.findIndex((i) => i.key === key);
+    if (existingIdx >= 0) {
+      general[existingIdx] = { ...general[existingIdx], isCompleted };
+    } else {
+      const itemToToggle = combinedShoppingItems.find((i) => i.key === key);
+      if (itemToToggle) {
+        general.push({ ...itemToToggle, isCompleted });
       } else {
-        const itemToToggle = combinedShoppingItems.find((i) => i.key === key);
-        if (itemToToggle) {
-          general.push({ ...itemToToggle, isCompleted });
-        }
+        general.push({
+          key,
+          ingredientName: key.split("::")[0] || key,
+          quantity: 1,
+          unit: "adet",
+          isCompleted,
+        });
       }
-      updated["general"] = general;
     }
+    updated["general"] = general;
 
     setShoppingByWeek(updated);
     writeStorage(STORAGE_KEYS.shopping, updated);
+    window.dispatchEvent(new CustomEvent("hane-shopping:updated"));
+    window.dispatchEvent(new Event("storage"));
+    try {
+      queueLocalChangePush(true);
+    } catch {
+      // ignore
+    }
   };
 
   const handleClearCompleted = () => {
@@ -318,30 +342,27 @@ export function FoodShoppingSyncList({ onOpenWhatsApp }: FoodShoppingSyncListPro
             <div
               key={item.key}
               onClick={() => toggleItem(item.key, !item.isCompleted)}
-              className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer select-none group ${
-                item.isCompleted
+              className={`flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer select-none group ${item.isCompleted
                   ? "bg-surface-raised/60 border-border/60 opacity-65"
                   : "bg-surface border-border hover:border-border-lavender hover:shadow-xs"
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition ${
-                    item.isCompleted
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition ${item.isCompleted
                       ? "bg-primary border-primary text-primary-foreground"
                       : "border-border-strong bg-surface group-hover:border-primary"
-                  }`}
+                    }`}
                 >
                   {item.isCompleted && <CheckIcon className="h-3.5 w-3.5" />}
                 </div>
 
                 <div className="flex flex-col min-w-0">
                   <span
-                    className={`text-sm font-semibold truncate ${
-                      item.isCompleted
+                    className={`text-sm font-semibold truncate ${item.isCompleted
                         ? "line-through text-muted"
                         : "text-foreground"
-                    }`}
+                      }`}
                   >
                     {item.ingredientName}
                   </span>
@@ -352,11 +373,10 @@ export function FoodShoppingSyncList({ onOpenWhatsApp }: FoodShoppingSyncListPro
               </div>
 
               <span
-                className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ml-2 ${
-                  item.isCompleted
+                className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ml-2 ${item.isCompleted
                     ? "border-border bg-surface-raised text-muted"
                     : "border-border-lavender bg-surface-lavender text-primary"
-                }`}
+                  }`}
               >
                 {item.isCompleted ? "Alındı" : "Alınacak"}
               </span>

@@ -1,4 +1,5 @@
 import type { MeasurementUnit } from "@/types/common";
+import { queueLocalChangePush } from "@/lib/firebase/syncService";
 
 export interface LocalIngredient {
   id: string;
@@ -46,8 +47,17 @@ export function readStorage<T>(key: string, fallback: T): T {
 }
 
 export function writeStorage<T>(key: string, value: T): void {
+  if (typeof window === "undefined") return;
   window.localStorage.setItem(key, JSON.stringify(value));
   window.dispatchEvent(new CustomEvent("hane-dinner:storage"));
+  window.dispatchEvent(new Event("storage"));
+
+  // Veri değiştiği an doğrudan buluta istek at
+  try {
+    queueLocalChangePush(true);
+  } catch (err) {
+    console.error("writeStorage bulut eşitleme hatası:", err);
+  }
 }
 
 export function createId(): string {

@@ -2,6 +2,7 @@
 
 import { ShoppingCustomItem, ShoppingCategory } from "@/domain/shoppingTypes";
 import { createId } from "@/lib/local-storage/store";
+import { queueLocalChangePush } from "@/lib/firebase/syncService";
 
 export const STORAGE_KEY_CUSTOM_SHOPPING = "hane-shopping:custom_items";
 
@@ -52,6 +53,14 @@ export function saveCustomShoppingList(items: ShoppingCustomItem[]): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY_CUSTOM_SHOPPING, JSON.stringify(items));
   window.dispatchEvent(new CustomEvent("hane-shopping:updated"));
+  window.dispatchEvent(new Event("storage"));
+
+  // Kaydedildiği an beklemeden buluta anlık istek at
+  try {
+    queueLocalChangePush(true);
+  } catch (err) {
+    console.error("Shopping bulut eşitleme tetikleme hatası:", err);
+  }
 }
 
 export function addCustomShoppingItem(

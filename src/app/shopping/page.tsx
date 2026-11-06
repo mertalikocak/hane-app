@@ -43,12 +43,24 @@ function ShoppingContent() {
       return meal?.ingredients ?? [];
     });
 
-    const previousShoppingItems: LocalShoppingItem[] = [];
-    for (const items of Object.values(shoppingByWeek)) {
-      if (Array.isArray(items)) {
-        previousShoppingItems.push(...items);
+    const previousMap = new Map<string, LocalShoppingItem>();
+    for (const [wKey, items] of Object.entries(shoppingByWeek)) {
+      if (wKey !== "general" && Array.isArray(items)) {
+        for (const item of items) {
+          if (item && item.key) {
+            previousMap.set(item.key, item);
+          }
+        }
       }
     }
+    if (Array.isArray(shoppingByWeek["general"])) {
+      for (const item of shoppingByWeek["general"]) {
+        if (item && item.key) {
+          previousMap.set(item.key, item);
+        }
+      }
+    }
+    const previousShoppingItems = Array.from(previousMap.values());
 
     let clearedKeys = new Set<string>();
     try {
@@ -117,21 +129,19 @@ function ShoppingContent() {
               <button
                 type="button"
                 onClick={() => setActiveTab("custom")}
-                className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                  activeTab === "custom"
+                className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${activeTab === "custom"
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-foreground-secondary hover:text-foreground"
-                }`}
+                  }`}
               >
                 <ShoppingBagIcon className="h-4 w-4" />
                 <span>Genel Alışveriş</span>
                 {customItems.length > 0 && (
                   <span
-                    className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
-                      activeTab === "custom"
+                    className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${activeTab === "custom"
                         ? "bg-white/20 text-white"
                         : "bg-surface-raised text-muted"
-                    }`}
+                      }`}
                   >
                     {customCompleted}/{customItems.length}
                   </span>
@@ -141,21 +151,19 @@ function ShoppingContent() {
               <button
                 type="button"
                 onClick={() => setActiveTab("food")}
-                className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${
-                  activeTab === "food"
+                className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${activeTab === "food"
                     ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-foreground-secondary hover:text-foreground"
-                }`}
+                  }`}
               >
                 <UtensilsIcon className="h-4 w-4" />
                 <span>Yemek Malzemeleri</span>
                 {foodItems.length > 0 && (
                   <span
-                    className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
-                      activeTab === "food"
+                    className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${activeTab === "food"
                         ? "bg-white/20 text-white"
                         : "bg-surface-raised text-muted"
-                    }`}
+                      }`}
                   >
                     {foodCompleted}/{foodItems.length}
                   </span>

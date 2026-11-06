@@ -614,6 +614,7 @@ export function ModuleLucideIcon({
     case "/calendar":
       return <CalendarIcon className={className} />;
     case "/gider":
+    case "/gider2":
       return <WalletIcon className={className} />;
     case "/fit/dashboard":
     case "/fit":

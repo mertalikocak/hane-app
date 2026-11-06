@@ -210,7 +210,7 @@ export function queueLocalChangePush(immediate = false) {
  */
 export function startRealtimeCloudSync(): () => void {
   if (typeof window === "undefined") {
-    return () => {};
+    return () => { };
   }
 
   if (activeFirestoreUnsubscribe) {
@@ -224,7 +224,7 @@ export function startRealtimeCloudSync(): () => void {
       lastSyncedAt: null,
     };
     notifyListeners();
-    return () => {};
+    return () => { };
   }
 
   const db = getFirebaseDb();
@@ -235,7 +235,7 @@ export function startRealtimeCloudSync(): () => void {
       errorMessage: "Firebase bağlantısı kurulamadı.",
     };
     notifyListeners();
-    return () => {};
+    return () => { };
   }
 
   currentSyncState = {
@@ -296,8 +296,8 @@ export function startRealtimeCloudSync(): () => void {
     if (pushDebounceTimer) {
       clearTimeout(pushDebounceTimer);
       pushDebounceTimer = null;
-      pushLocalToCloud();
     }
+    pushLocalToCloud();
   };
 
   const syncEvents = [
@@ -314,6 +314,8 @@ export function startRealtimeCloudSync(): () => void {
     "calendar_events_updated",
     "wishlist_items_updated",
     "hane:bulgular-changed",
+    "hane-shopping:updated",
+    "wedding_data_updated",
   ];
 
   syncEvents.forEach((ev) => window.addEventListener(ev, handleLocalUpdate));

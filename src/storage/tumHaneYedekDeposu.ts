@@ -16,6 +16,7 @@ export interface HaneModulOzet {
   wishlistSayisi?: number;
   cleaningKayitSayisi?: number;
   weddingMaddeSayisi?: number;
+  shoppingItemSayisi?: number;
   fitProfilSayisi: number;
   fitOlcumSayisi: number;
   kaloriKayitSayisi?: number;
@@ -99,6 +100,7 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
   let wishlistSayisi = 0;
   let cleaningKayitSayisi = 0;
   let weddingMaddeSayisi = 0;
+  let shoppingItemSayisi = 0;
   let fitProfilSayisi = 0;
   let fitOlcumSayisi = 0;
   let kaloriKayitSayisi = 0;
@@ -131,6 +133,9 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
         if (parsed && Array.isArray(parsed.maddeler)) {
           weddingMaddeSayisi += parsed.maddeler.length;
         }
+      } else if (key === "hane-shopping:custom_items") {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) shoppingItemSayisi += parsed.length;
       } else if (key === "hane_fit_profiles") {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) fitProfilSayisi += parsed.length;
@@ -164,6 +169,7 @@ export function verileriAnalizEt(veriler: Record<string, string>): HaneModulOzet
     wishlistSayisi,
     cleaningKayitSayisi,
     weddingMaddeSayisi,
+    shoppingItemSayisi,
     fitProfilSayisi,
     fitOlcumSayisi,
     kaloriKayitSayisi,
@@ -253,6 +259,109 @@ export function tumHaneVerileriniIceAktar(
           continue;
         }
       }
+
+      // Alışveriş listesi öğelerini güvenli birleştir (local'e yeni eklenen öğelerin kaybolmaması için)
+      if (key === "hane-shopping:custom_items") {
+        try {
+          const localRaw = localStorage.getItem("hane-shopping:custom_items");
+          const localItems = localRaw ? JSON.parse(localRaw) : [];
+          const remoteItems = JSON.parse(value);
+
+          if (Array.isArray(localItems) && Array.isArray(remoteItems)) {
+            const remoteMap = new Map<string, Record<string, unknown>>();
+            for (const item of remoteItems as Record<string, unknown>[]) {
+              if (item && typeof item.id === "string") {
+                remoteMap.set(item.id, item);
+              }
+            }
+            const mergedList: unknown[] = [];
+            const seenIds = new Set<string>();
+
+            // Önce local öğeleri koru, eğer local'de alındı olarak işaretlendiyse o durumu kaybetme
+            for (const loc of localItems as Record<string, unknown>[]) {
+              if (loc && typeof loc.id === "string") {
+                seenIds.add(loc.id);
+                const rem = remoteMap.get(loc.id);
+                mergedList.push(rem ? { ...rem, ...loc, isCompleted: loc.isCompleted ?? rem.isCompleted } : loc);
+              }
+            }
+
+            // Remote'tan gelen diğer yeni öğeleri ekle
+            for (const rem of remoteItems as Record<string, unknown>[]) {
+              if (rem && typeof rem.id === "string" && !seenIds.has(rem.id)) {
+                seenIds.add(rem.id);
+                mergedList.push(rem);
+              }
+            }
+
+            localStorage.setItem(key, JSON.stringify(mergedList));
+            continue;
+          }
+        } catch {
+          // parse hatası olursa doğrudan yaz
+        }
+      }
+
+      // Yemek malzemeleri alışveriş durumunu güvenli birleştir
+      if (key === "hane-dinner:shopping") {
+        try {
+          const localRaw = localStorage.getItem("hane-dinner:shopping");
+          const localData = localRaw ? JSON.parse(localRaw) : {};
+          const remoteData = JSON.parse(value);
+
+          if (typeof localData === "object" && typeof remoteData === "object" && localData !== null && remoteData !== null) {
+            const merged: Record<string, unknown[]> = { ...remoteData };
+            for (const [wKey, locItems] of Object.entries(localData)) {
+              if (Array.isArray(locItems)) {
+                const remItems = (Array.isArray(merged[wKey]) ? merged[wKey] : []) as Record<string, unknown>[];
+                const remMap = new Map<string, Record<string, unknown>>();
+                for (const item of remItems) {
+                  if (item && typeof item.key === "string") {
+                    remMap.set(item.key, item);
+                  }
+                }
+                const mergedWeek: unknown[] = [];
+                const seenKeys = new Set<string>();
+
+                for (const loc of locItems as Record<string, unknown>[]) {
+                  if (loc && typeof loc.key === "string") {
+                    seenKeys.add(loc.key);
+                    const rem = remMap.get(loc.key);
+                    mergedWeek.push(rem ? { ...rem, ...loc, isCompleted: loc.isCompleted || rem.isCompleted } : loc);
+                  }
+                }
+
+                for (const rem of remItems) {
+                  if (rem && typeof rem.key === "string" && !seenKeys.has(rem.key)) {
+                    seenKeys.add(rem.key);
+                    mergedWeek.push(rem);
+                  }
+                }
+                merged[wKey] = mergedWeek;
+              }
+            }
+            localStorage.setItem(key, JSON.stringify(merged));
+            continue;
+          }
+        } catch {
+          // fallback
+        }
+      }
+
+      // Temizlenen yemek malzemeleri anahtarlarını birleştir
+      if (key === "hane-shopping:cleared_food_keys") {
+        try {
+          const localRaw = localStorage.getItem("hane-shopping:cleared_food_keys");
+          const localKeys: string[] = localRaw ? JSON.parse(localRaw) : [];
+          const remoteKeys: string[] = JSON.parse(value);
+          const union = Array.from(new Set([...(Array.isArray(localKeys) ? localKeys : []), ...(Array.isArray(remoteKeys) ? remoteKeys : [])]));
+          localStorage.setItem(key, JSON.stringify(union));
+          continue;
+        } catch {
+          // fallback
+        }
+      }
+
       localStorage.setItem(key, value);
     }
 
@@ -265,6 +374,9 @@ export function tumHaneVerileriniIceAktar(
     window.dispatchEvent(new Event("wishlist_items_updated"));
     window.dispatchEvent(new Event("hane_calorie_updated"));
     window.dispatchEvent(new CustomEvent("hane:bulgular-changed"));
+    window.dispatchEvent(new CustomEvent("hane-shopping:updated"));
+    window.dispatchEvent(new CustomEvent("hane-dinner:storage"));
+    window.dispatchEvent(new Event("wedding_data_updated"));
 
     return { basarili: true, eklenenSayisi: Object.keys(hamVeriler).length };
   } catch (err) {

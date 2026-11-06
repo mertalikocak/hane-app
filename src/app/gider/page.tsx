@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { EvGiderleriSayfasiV2 } from "@/components/gider/v2/EvGiderleriSayfasiV2";
-import { TaksitSayfasi } from "@/components/gider/taksit/TaksitSayfasi";
+import { HaneGiderSimpleView } from "@/components/gider/simple/HaneGiderSimpleView";
+import { TaksitSimpleView } from "@/components/gider/simple/TaksitSimpleView";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { WalletIcon } from "@/components/ui/Icons";
 
@@ -36,15 +36,15 @@ function GiderContent() {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-5 pb-12">
       <PageHeader
         badge="Hane Gider"
         icon={<WalletIcon className="h-3.5 w-3.5" />}
         title={activeTab === "butce" ? "Ev Giderleri & Aylık Bütçe" : "Kredi Kartı Taksit Takibi"}
         subtitle={
           activeTab === "butce"
-            ? "Aylık ortak harcamaları, kredi kartı ekstrelerini ve gelir-gider dengesini yönetin."
-            : "Taksitli alışverişlerinizi kartlarınıza göre takip edin, son ödeme tarihlerini hesaplayın."
+            ? "Tek ekranda tüm kartlar, harcamalar ve ay sonu mahsuplaşma hesabı."
+            : "Taksitlerinizi ve kalan vadelerinizi tek bakışta takip edin."
         }
         actions={
           <div className="inline-flex items-center rounded-xl border border-border bg-surface p-1 shadow-xs">
@@ -58,7 +58,7 @@ function GiderContent() {
               }`}
             >
               <span>📊</span>
-              <span>Aylık Bütçe & Ekstre</span>
+              <span>Aylık Gider & Mahsuplaşma</span>
             </button>
 
             <button
@@ -71,14 +71,13 @@ function GiderContent() {
               }`}
             >
               <span>💳</span>
-              <span>Taksit Takibi</span>
+              <span>Taksitler</span>
             </button>
           </div>
         }
       />
 
-      {/* Tab Contents */}
-      {activeTab === "butce" ? <EvGiderleriSayfasiV2 /> : <TaksitSayfasi />}
+      {activeTab === "butce" ? <HaneGiderSimpleView /> : <TaksitSimpleView />}
     </div>
   );
 }
