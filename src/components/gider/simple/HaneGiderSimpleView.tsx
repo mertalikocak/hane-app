@@ -609,26 +609,26 @@ export function HaneGiderSimpleView() {
       />
 
       {/* 1. KOMPAKT DÖNEM & HIZLI AKSİYON ÇUBUĞU */}
-      <div className="ds-card p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="ds-card p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
         {/* Sol: Ay Seçici */}
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center p-1 rounded-xl bg-surface-raised border border-border">
+        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+          <div className="inline-flex flex-1 sm:flex-initial items-center justify-between p-1 rounded-xl bg-surface-raised border border-border">
             <button
               type="button"
               onClick={() => handleAnahtarDegis(ayKaydir(anahtar, -1))}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-foreground hover:bg-surface transition cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-foreground hover:bg-surface transition cursor-pointer shrink-0"
               aria-label="Önceki ay"
             >
               <ChevronLeftIcon className="h-4 w-4" />
             </button>
-            <div className="px-3 py-1 text-xs sm:text-sm font-bold text-foreground min-w-[125px] text-center flex items-center justify-center gap-1.5">
-              <CalendarIcon className="h-3.5 w-3.5 text-primary" />
-              <span>{ayEtiketi(anahtar)}</span>
+            <div className="px-2 sm:px-3 py-1 text-xs sm:text-sm font-bold text-foreground min-w-[115px] sm:min-w-[125px] text-center flex items-center justify-center gap-1.5">
+              <CalendarIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="truncate">{ayEtiketi(anahtar)}</span>
             </div>
             <button
               type="button"
               onClick={() => handleAnahtarDegis(ayKaydir(anahtar, 1))}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-foreground hover:bg-surface transition cursor-pointer"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-foreground hover:bg-surface transition cursor-pointer shrink-0"
               aria-label="Sonraki ay"
             >
               <ChevronRightIcon className="h-4 w-4" />
@@ -639,29 +639,47 @@ export function HaneGiderSimpleView() {
             <button
               type="button"
               onClick={() => handleAnahtarDegis(simdikiAyAnahtari())}
-              className="accent-button h-8 px-2.5 text-xs"
+              className="accent-button h-9 px-2.5 text-xs shrink-0"
             >
               Bu Ay
             </button>
           )}
         </div>
 
-        {/* Sağ: Gelir/Şahsi Bütçe, Ayarlar ve Ekle */}
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+        {/* Sağ: Gelir/Şahsi Bütçe, Ekle ve Ayarlar */}
+        <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-between sm:justify-end">
           <button
             type="button"
             onClick={() => {
               setGelirDrawerSubTab("gelir");
               setIsGelirDrawerOpen(true);
             }}
-            className="secondary-button h-9 px-3 text-xs font-semibold"
+            className="secondary-button h-9 px-2.5 sm:px-3 text-xs font-semibold flex-1 sm:flex-initial justify-center whitespace-nowrap"
           >
             <span>💼</span>
-            <span>Gelirler & Şahsi ({veri.bireyselGelirKalemleri.length + veri.bireyselAyriHarcamalar.length})</span>
+            <span className="sm:hidden">
+              Gelir & Şahsi ({veri.bireyselGelirKalemleri.length + veri.bireyselAyriHarcamalar.length})
+            </span>
+            <span className="hidden sm:inline">
+              Gelirler & Şahsi ({veri.bireyselGelirKalemleri.length + veri.bireyselAyriHarcamalar.length})
+            </span>
           </button>
 
-          {/* İşlemler Menüsü */}
-          <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingKart(null);
+              setIsKartModalOpen(true);
+            }}
+            className="primary-button h-9 px-2.5 sm:px-3.5 text-xs flex-1 sm:flex-initial justify-center whitespace-nowrap"
+          >
+            <PlusIcon className="h-3.5 w-3.5 shrink-0" />
+            <span className="sm:hidden">Kart / Harcama</span>
+            <span className="hidden sm:inline">Kart / Harcama Ekle</span>
+          </button>
+
+          {/* İşlemler Menüsü (En sağda sabitlenerek açılır menünün mobilde ekran dışına taşmasını önler) */}
+          <div className="relative shrink-0" ref={menuRef}>
             <button
               type="button"
               onClick={() => setIsMenuOpen((v) => !v)}
@@ -673,7 +691,7 @@ export function HaneGiderSimpleView() {
             </button>
 
             {isMenuOpen && (
-              <div className="absolute right-0 top-full mt-1.5 w-60 p-1.5 rounded-2xl bg-surface border border-border shadow-lg z-30 text-xs space-y-1">
+              <div className="absolute right-0 top-full mt-1.5 w-60 max-w-[calc(100vw-2rem)] p-1.5 rounded-2xl bg-surface border border-border shadow-lg z-30 text-xs space-y-1">
                 <button
                   type="button"
                   onClick={() => {
@@ -745,45 +763,33 @@ export function HaneGiderSimpleView() {
               </div>
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setEditingKart(null);
-              setIsKartModalOpen(true);
-            }}
-            className="primary-button h-9 px-3.5 text-xs"
-          >
-            <PlusIcon className="h-3.5 w-3.5" />
-            <span>Kart / Harcama Ekle</span>
-          </button>
         </div>
       </div>
 
       {/* 2. NET ÖZET BANNER & MAHSUPLAŞMA (TEK BAKIŞTA DURUM) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4">
         {/* Sol 7 Kolon: Kişi ve Hane Özeti (Sade 3'lü Kutu) */}
         <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Ev Toplam */}
-          <div className="ds-card p-4 flex flex-col justify-between border-l-4 border-l-primary">
-            <div className="flex items-center justify-between text-xs text-muted">
-              <span className="font-bold uppercase tracking-wider text-primary">🏠 Ev Toplamı</span>
+          <div className="ds-card p-3.5 sm:p-4 flex flex-col justify-between border-l-4 border-l-primary min-w-0">
+            <div className="flex items-center justify-between gap-1 text-xs text-muted">
+              <span className="font-bold uppercase tracking-wider text-primary truncate">🏠 Ev Toplamı</span>
             </div>
             <div className="my-2">
-              <div className="text-xl font-extrabold text-foreground tabular-nums">
+              <div className="text-lg sm:text-xl font-extrabold text-foreground tabular-nums truncate">
                 {para(calc.evGideriToplami)}
               </div>
               <span className="text-[11px] text-muted block">Toplam Harcama</span>
             </div>
-            <div className="pt-2 border-t border-border flex items-center justify-between text-[11px]">
+            <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[11px]">
               <span className="text-muted">Ortak Kişi Başı:</span>
               <span className="font-bold text-foreground tabular-nums">{para(calc.ortakPay.mert)}</span>
             </div>
           </div>
 
           {/* Mert */}
-          <div className="ds-card p-4 flex flex-col justify-between border-l-4 border-l-sky-500">
-            <div className="flex items-center justify-between text-xs">
+          <div className="ds-card p-3.5 sm:p-4 flex flex-col justify-between border-l-4 border-l-sky-500 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
               <span className="font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400">👤 Mert</span>
               {calc.mertGelir > 0 && (
                 <span className="text-[11px] text-success font-bold tabular-nums">
@@ -793,14 +799,14 @@ export function HaneGiderSimpleView() {
             </div>
             <div className="my-2 space-y-1.5">
               <div>
-                <div className="text-xl font-extrabold text-foreground tabular-nums leading-tight">
+                <div className="text-lg sm:text-xl font-extrabold text-foreground tabular-nums leading-tight truncate">
                   {para(calc.mertGider)}
                 </div>
                 <span className="text-[11px] text-muted block">Bu Ayki Toplam Gider</span>
               </div>
 
               {calc.mertGelir > 0 && (
-                <div className="pt-1.5 border-t border-border/60 flex items-baseline justify-between gap-2">
+                <div className="pt-1.5 border-t border-border/60 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted">
                     Kalan:
                   </span>
@@ -814,15 +820,15 @@ export function HaneGiderSimpleView() {
                 </div>
               )}
             </div>
-            <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted">
-              <span>Ortak: {para(calc.ortakPay.mert)}</span>
-              <span>Şahsi: {para(calc.kisiselToplam.mert)}</span>
+            <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[11px] text-muted">
+              <span className="tabular-nums">Ortak: {para(calc.ortakPay.mert)}</span>
+              <span className="tabular-nums">Şahsi: {para(calc.kisiselToplam.mert)}</span>
             </div>
           </div>
 
           {/* Havsa */}
-          <div className="ds-card p-4 flex flex-col justify-between border-l-4 border-l-pink-500">
-            <div className="flex items-center justify-between text-xs">
+          <div className="ds-card p-3.5 sm:p-4 flex flex-col justify-between border-l-4 border-l-pink-500 min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
               <span className="font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400">👤 Havsa</span>
               {calc.havsaGelir > 0 && (
                 <span className="text-[11px] text-success font-bold tabular-nums">
@@ -832,14 +838,14 @@ export function HaneGiderSimpleView() {
             </div>
             <div className="my-2 space-y-1.5">
               <div>
-                <div className="text-xl font-extrabold text-foreground tabular-nums leading-tight">
+                <div className="text-lg sm:text-xl font-extrabold text-foreground tabular-nums leading-tight truncate">
                   {para(calc.havsaGider)}
                 </div>
                 <span className="text-[11px] text-muted block">Bu Ayki Toplam Gider</span>
               </div>
 
               {calc.havsaGelir > 0 && (
-                <div className="pt-1.5 border-t border-border/60 flex items-baseline justify-between gap-2">
+                <div className="pt-1.5 border-t border-border/60 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted">
                     Kalan:
                   </span>
@@ -853,31 +859,31 @@ export function HaneGiderSimpleView() {
                 </div>
               )}
             </div>
-            <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted">
-              <span>Ortak: {para(calc.ortakPay.havsa)}</span>
-              <span>Şahsi: {para(calc.kisiselToplam.havsa)}</span>
+            <div className="pt-2 border-t border-border flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5 text-[11px] text-muted">
+              <span className="tabular-nums">Ortak: {para(calc.ortakPay.havsa)}</span>
+              <span className="tabular-nums">Şahsi: {para(calc.kisiselToplam.havsa)}</span>
             </div>
           </div>
         </div>
 
         {/* Sağ 5 Kolon: Net Mahsuplaşma (Kim Kime Ne Gönderecek?) */}
-        <div className="lg:col-span-5 ds-card-lavender p-4 flex flex-col justify-between">
+        <div className="lg:col-span-5 ds-card-lavender p-3.5 sm:p-4 flex flex-col justify-between min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-base">🤝</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-base shrink-0">🤝</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-primary truncate">
                 Ay Sonu Hesaplaşma
               </span>
             </div>
             {mahsuplasma.tamamlandiMi ? (
-              <span className="ds-badge ds-badge-success text-[10px]">✓ Dengede</span>
+              <span className="ds-badge ds-badge-success text-[10px] shrink-0">✓ Dengede</span>
             ) : (
-              <span className="ds-badge ds-badge-warning text-[10px]">Havale Bekliyor</span>
+              <span className="ds-badge ds-badge-warning text-[10px] shrink-0">Havale Bekliyor</span>
             )}
           </div>
 
-          <div className="my-2.5 flex items-center justify-between gap-3">
-            <div>
+          <div className="my-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0">
               {mahsuplasma.tamamlandiMi ? (
                 <div className="text-sm font-bold text-foreground">
                   Kimsenin birbirine borcu yok 🎉
@@ -892,24 +898,26 @@ export function HaneGiderSimpleView() {
                   </div>
                 </>
               )}
-              <div className="text-[11px] text-muted mt-0.5">
-                Mert Ödedi: {para(mahsuplasma.mertOdedi)} • Havsa Ödedi: {para(mahsuplasma.havsaOdedi)}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted mt-1">
+                <span className="tabular-nums">Mert Ödedi: {para(mahsuplasma.mertOdedi)}</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="tabular-nums">Havsa Ödedi: {para(mahsuplasma.havsaOdedi)}</span>
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5 shrink-0">
+            <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border-lavender shrink-0">
               <button
                 type="button"
                 onClick={() => setIsTransferModalOpen(true)}
-                className="primary-button h-8 px-3 text-xs"
+                className="primary-button h-8 px-3 text-xs whitespace-nowrap"
               >
                 💸 Havale Kaydet
               </button>
-              <div className="flex items-center gap-2 justify-end">
+              <div className="flex items-center gap-2.5 justify-end flex-wrap">
                 <button
                   type="button"
                   onClick={() => setShowMathDrawer((v) => !v)}
-                  className="text-[11px] font-semibold text-muted hover:text-foreground underline cursor-pointer"
+                  className="text-[11px] font-semibold text-muted hover:text-foreground underline cursor-pointer whitespace-nowrap"
                 >
                   {showMathDrawer ? "Detayı Gizle" : "Nasıl Hesaplandı?"}
                 </button>
@@ -917,7 +925,7 @@ export function HaneGiderSimpleView() {
                   <button
                     type="button"
                     onClick={() => setShowTransfersDrawer((v) => !v)}
-                    className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                    className="text-[11px] font-semibold text-primary hover:underline cursor-pointer whitespace-nowrap"
                   >
                     Havaleler ({transferSayisi})
                   </button>
@@ -928,17 +936,17 @@ export function HaneGiderSimpleView() {
 
           {/* Açılır Matematik Özeti */}
           {showMathDrawer && (
-            <div className="mt-2 pt-2.5 border-t border-border-lavender text-[11px] text-foreground-secondary space-y-1 animate-in fade-in">
-              <div className="flex justify-between">
+            <div className="mt-2 pt-2.5 border-t border-border-lavender text-[11px] text-foreground-secondary space-y-1.5 animate-in fade-in">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                 <span>Mert (Ödediği {para(mahsuplasma.mertOdedi)} − Payı {para(mahsuplasma.mertPayinaDusen)}):</span>
                 <strong className="tabular-nums">{para(mahsuplasma.mertOdedi - mahsuplasma.mertPayinaDusen)}</strong>
               </div>
-              <div className="flex justify-between">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                 <span>Havsa (Ödediği {para(mahsuplasma.havsaOdedi)} − Payı {para(mahsuplasma.havsaPayinaDusen)}):</span>
                 <strong className="tabular-nums">{para(mahsuplasma.havsaOdedi - mahsuplasma.havsaPayinaDusen)}</strong>
               </div>
               {mahsuplasma.toplamTransferEdilen > 0 && (
-                <div className="flex justify-between text-success">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-success">
                   <span>Yapılan Havaleler Toplamı:</span>
                   <strong className="tabular-nums">{para(mahsuplasma.toplamTransferEdilen)}</strong>
                 </div>
@@ -952,17 +960,17 @@ export function HaneGiderSimpleView() {
               {(veri.transferler ?? []).map((tr) => (
                 <div
                   key={tr.id}
-                  className="flex items-center justify-between text-[11px] bg-surface px-2.5 py-1.5 rounded-lg border border-border"
+                  className="flex items-center justify-between gap-2 text-[11px] bg-surface px-2.5 py-1.5 rounded-lg border border-border"
                 >
-                  <div>
+                  <div className="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                     <span className="font-bold">{KULLANICI_ETIKET[tr.gonderen]} ➔ {KULLANICI_ETIKET[tr.alan]}</span>
-                    <span className="ml-2 font-bold text-success tabular-nums">{para(tr.tutar)}</span>
-                    {tr.aciklama && <span className="text-muted ml-1.5">({tr.aciklama})</span>}
+                    <span className="font-bold text-success tabular-nums">{para(tr.tutar)}</span>
+                    {tr.aciklama && <span className="text-muted truncate">({tr.aciklama})</span>}
                   </div>
                   <button
                     type="button"
                     onClick={() => handleTransferSil(tr.id)}
-                    className="text-muted hover:text-danger font-bold px-1 cursor-pointer"
+                    className="text-muted hover:text-danger font-bold px-1 cursor-pointer shrink-0"
                     title="Transferi sil"
                   >
                     ✕
@@ -984,11 +992,11 @@ export function HaneGiderSimpleView() {
             </h3>
           </div>
 
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-surface border border-border self-start sm:self-auto">
+          <div className="grid grid-cols-3 sm:flex items-center gap-1 p-1 rounded-xl bg-surface border border-border w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setFilterTab("tum")}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`px-2 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-center whitespace-nowrap ${
                 filterTab === "tum"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted hover:text-foreground"
@@ -999,7 +1007,7 @@ export function HaneGiderSimpleView() {
             <button
               type="button"
               onClick={() => setFilterTab("ortak")}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`px-2 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-center whitespace-nowrap ${
                 filterTab === "ortak"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted hover:text-foreground"
@@ -1010,7 +1018,7 @@ export function HaneGiderSimpleView() {
             <button
               type="button"
               onClick={() => setFilterTab("bireysel")}
-              className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`px-2 sm:px-3 py-1.5 sm:py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-center whitespace-nowrap ${
                 filterTab === "bireysel"
                   ? "bg-primary text-primary-foreground"
                   : "text-muted hover:text-foreground"
@@ -1023,7 +1031,7 @@ export function HaneGiderSimpleView() {
 
         {/* Kartlar Listesi */}
         {filtrelenmisKartlar.length === 0 ? (
-          <div className="ds-card p-10 text-center space-y-3 border-dashed">
+          <div className="ds-card p-6 sm:p-10 text-center space-y-3 border-dashed">
             <span className="text-3xl block">💳</span>
             <div className="space-y-1">
               <h4 className="text-sm font-bold text-foreground">Henüz Kart veya Harcama Yok</h4>
@@ -1031,7 +1039,7 @@ export function HaneGiderSimpleView() {
                 Bu ay için kredi kartı ekstresi, fatura veya kira kaydı ekleyerek otomatik paylaşım hesabını başlatın.
               </p>
             </div>
-            <div className="flex items-center justify-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -1075,20 +1083,20 @@ export function HaneGiderSimpleView() {
                   {/* Ana Satır (Her zaman görünür, tıklanınca detay açılır) */}
                   <div
                     onClick={() => setExpandedKartId(isExpanded ? null : kart.id)}
-                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-surface-raised/60 transition select-none"
+                    className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 cursor-pointer hover:bg-surface-raised/60 transition select-none"
                   >
                     {/* Sol: İkon, Başlık ve Rozetler */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-surface-raised border border-border flex items-center justify-center text-lg shrink-0">
+                    <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface-raised border border-border flex items-center justify-center text-base sm:text-lg shrink-0 mt-0.5 sm:mt-0">
                         {isHarcama ? "🧾" : "💳"}
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm text-foreground truncate">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-foreground break-words">
                             {kart.ad}
                           </span>
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
                               kimeAit === "mert"
                                 ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25"
                                 : kimeAit === "havsa"
@@ -1103,7 +1111,7 @@ export function HaneGiderSimpleView() {
                               : "👥 Ortak"}
                           </span>
 
-                          <span className="text-[11px] text-muted">
+                          <span className="text-[11px] text-muted shrink-0">
                             Ödeyen: <strong className="text-foreground">{ODEYEN_ETIKET[odeyen]}</strong>
                           </span>
 
@@ -1121,19 +1129,19 @@ export function HaneGiderSimpleView() {
                         </div>
 
                         {/* Alt Özet: Kişi Payları */}
-                        <div className="flex items-center gap-3 text-[11px] text-muted mt-1">
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-muted mt-1">
                           {isBireysel ? (
                             <span>
                               Tamamı {kimeAit === "mert" ? "Mert" : "Havsa"}&apos;ya ait
                             </span>
                           ) : (
                             <>
-                              <span>
-                                Mert Payı: <strong className="text-sky-600 dark:text-sky-400 tabular-nums">{para(h.mertToplam)}</strong>
+                              <span className="tabular-nums">
+                                Mert Payı: <strong className="text-sky-600 dark:text-sky-400">{para(h.mertToplam)}</strong>
                               </span>
-                              <span>•</span>
-                              <span>
-                                Havsa Payı: <strong className="text-pink-600 dark:text-pink-400 tabular-nums">{para(h.havsaToplam)}</strong>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="tabular-nums">
+                                Havsa Payı: <strong className="text-pink-600 dark:text-pink-400">{para(h.havsaToplam)}</strong>
                               </span>
                             </>
                           )}
@@ -1143,11 +1151,11 @@ export function HaneGiderSimpleView() {
 
                     {/* Sağ: Toplam Tutar ve Aksiyonlar */}
                     <div
-                      className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border shrink-0"
+                      className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="text-left sm:text-right">
-                        <span className="text-base sm:text-lg font-extrabold text-foreground tabular-nums block">
+                      <div className="text-left sm:text-right min-w-0">
+                        <span className="text-base sm:text-lg font-extrabold text-foreground tabular-nums block leading-tight">
                           {para(kart.toplamEkstre)}
                         </span>
                         <span className="text-[10px] text-muted block">
@@ -1155,15 +1163,15 @@ export function HaneGiderSimpleView() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        {!isBireysel && !isHarcama && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        {!isBireysel && !isHarcama && confirmDeleteKartId !== kart.id && (
                           <button
                             type="button"
                             onClick={() => {
                               setExpandedKartId(kart.id);
                               setInlineKalemKartId(kart.id);
                             }}
-                            className="secondary-button h-8 px-2.5 text-xs"
+                            className="secondary-button h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs whitespace-nowrap"
                             title="Bu kartın içinden şahsi harcama ayrıştır"
                           >
                             + Şahsi Ayır
@@ -1228,14 +1236,16 @@ export function HaneGiderSimpleView() {
 
                   {/* Açılır Detay Çekmecesi (Bireysel Kalemler ve Paylaşım Özeti) */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 pt-2 border-t border-border bg-surface-raised/40 space-y-3 animate-in fade-in duration-150">
+                    <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 pt-2.5 border-t border-border bg-surface-raised/40 space-y-3 animate-in fade-in duration-150">
                       {/* Paylaşım Özeti Barı */}
                       {!isBireysel && (
-                        <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface border border-border text-xs">
-                          <div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface border border-border text-xs">
+                          <div className="col-span-2 sm:col-span-1 pb-1.5 sm:pb-0 border-b sm:border-b-0 border-border">
                             <span className="text-[10px] text-muted block uppercase font-bold">Ortak Bölünen</span>
-                            <span className="font-bold text-foreground tabular-nums">{para(h.ortakTaban)}</span>
-                            <span className="text-[10px] text-muted ml-1">({para(h.ortakTaban / 2)} / kişi)</span>
+                            <div className="flex flex-wrap items-baseline gap-1">
+                              <span className="font-bold text-foreground tabular-nums">{para(h.ortakTaban)}</span>
+                              <span className="text-[10px] text-muted tabular-nums">({para(h.ortakTaban / 2)} / kişi)</span>
+                            </div>
                           </div>
                           <div>
                             <span className="text-[10px] text-sky-600 dark:text-sky-400 block uppercase font-bold">Mert Toplam</span>
@@ -1251,15 +1261,15 @@ export function HaneGiderSimpleView() {
                       {/* Ekstre İçi Şahsi Kalemler */}
                       {!isBireysel && !isHarcama && (
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-xs">
+                          <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                             <span className="font-bold text-foreground-secondary">
-                              🏷️ Bu Kartın İçindeki Şahsi Harcamalar ({kart.bireyselKalemler.length})
+                              🏷️ Bu Karttaki Şahsi Harcamalar ({kart.bireyselKalemler.length})
                             </span>
                             {!isInlineAdd && (
                               <button
                                 type="button"
                                 onClick={() => setInlineKalemKartId(kart.id)}
-                                className="text-xs font-bold text-primary hover:underline cursor-pointer"
+                                className="text-xs font-bold text-primary hover:underline cursor-pointer shrink-0"
                               >
                                 + Şahsi Kalem Ekle
                               </button>
@@ -1275,9 +1285,9 @@ export function HaneGiderSimpleView() {
                               {kart.bireyselKalemler.map((bk) => (
                                 <div
                                   key={bk.id}
-                                  className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-surface border border-border text-xs"
+                                  className="flex items-center justify-between gap-2 px-2.5 sm:px-3 py-2 rounded-xl bg-surface border border-border text-xs"
                                 >
-                                  <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                                     <span
                                       className={`text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
                                         bk.kullaniciId === "mert"
@@ -1292,8 +1302,8 @@ export function HaneGiderSimpleView() {
                                     </span>
                                   </div>
 
-                                  <div className="flex items-center gap-1.5 shrink-0">
-                                    <span className="font-bold text-foreground tabular-nums mr-1">
+                                  <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                                    <span className="font-bold text-foreground tabular-nums mr-0.5 sm:mr-1">
                                       {para(bk.tutar)}
                                     </span>
                                     <button
@@ -1371,7 +1381,7 @@ export function HaneGiderSimpleView() {
                                     value={kalemTutarStr}
                                     onChange={(e) => setKalemTutarStr(e.target.value)}
                                     placeholder="Tutar (₺)"
-                                    className="field h-9 py-1 text-xs font-bold tabular-nums flex-1"
+                                    className="field h-9 py-1 text-xs font-bold tabular-nums flex-1 min-w-0"
                                   />
                                   <button
                                     type="submit"
@@ -1573,34 +1583,39 @@ function GelirVeSahsiHarcamaModal({
         className="w-full max-w-lg max-h-[88vh] flex flex-col rounded-2xl bg-surface border border-border shadow-lg overflow-hidden animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <div className="flex items-center gap-2">
+        <div className="p-3.5 sm:p-4 border-b border-border space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-bold text-foreground">
+              Gelirler & Kart Dışı Şahsi Giderler
+            </h3>
+            <button type="button" onClick={onClose} className="icon-button h-8 w-8 shrink-0">
+              <CloseIcon className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-surface-raised border border-border">
             <button
               type="button"
               onClick={() => setTab("gelir")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer text-center whitespace-nowrap ${
                 tab === "gelir"
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-2xs"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              💼 Bireysel Gelirler ({gelirler.length})
+              💼 Gelirler ({gelirler.length})
             </button>
             <button
               type="button"
               onClick={() => setTab("harcama")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer text-center whitespace-nowrap ${
                 tab === "harcama"
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-2xs"
                   : "text-muted hover:text-foreground"
               }`}
             >
-              🛍️ Kart Dışı Şahsi Giderler ({harcamalar.length})
+              🛍️ Şahsi Giderler ({harcamalar.length})
             </button>
           </div>
-          <button type="button" onClick={onClose} className="icon-button h-8 w-8">
-            <CloseIcon className="h-4 w-4" />
-          </button>
         </div>
 
         <div className="p-4 flex-1 overflow-y-auto space-y-4">

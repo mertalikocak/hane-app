@@ -182,7 +182,7 @@ export function TaksitSimpleView() {
     return (
       <div
         key={taksit.id}
-        className={`p-3.5 sm:p-4 rounded-xl border bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
+        className={`p-3 sm:p-4 rounded-xl border bg-surface flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 transition ${
           vade.tamamlandi
             ? "opacity-60 bg-surface-raised/50 border-border"
             : "border-border hover:border-border-strong"
@@ -190,13 +190,13 @@ export function TaksitSimpleView() {
       >
         {/* Sol: Ürün Adı, Kartı ve İlerleme Çubuğu */}
         <div className="space-y-1.5 flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-sm text-foreground truncate">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span className="font-bold text-sm text-foreground break-words">
               {taksit.urunAdi}
             </span>
 
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
                 taksit.sahip === "ortak"
                   ? "bg-surface-lavender text-primary border-border-lavender"
                   : taksit.sahip === "mert"
@@ -220,7 +220,7 @@ export function TaksitSimpleView() {
             {vade.tamamlandi ? (
               <span className="ds-badge ds-badge-success text-[10px]">✓ Bitti</span>
             ) : (
-              <span className="text-[11px] font-semibold text-muted">
+              <span className="text-[11px] font-semibold text-muted tabular-nums">
                 Kalan: <strong className="text-foreground">{vade.kalanTaksit} ay</strong> ({paraFormat(vade.kalanTutar)})
               </span>
             )}
@@ -243,9 +243,9 @@ export function TaksitSimpleView() {
         </div>
 
         {/* Sağ: Aylık Tutar, Sayaç (- / +1) ve Düzenle/Sil */}
-        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border shrink-0">
-          <div className="text-left sm:text-right">
-            <span className="text-sm sm:text-base font-extrabold text-foreground tabular-nums block">
+        <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border shrink-0">
+          <div className="text-left sm:text-right min-w-0">
+            <span className="text-sm sm:text-base font-extrabold text-foreground tabular-nums block leading-tight">
               {paraFormat(taksit.aylikTutar)}
               <span className="text-[10px] font-normal text-muted"> /ay</span>
             </span>
@@ -254,82 +254,84 @@ export function TaksitSimpleView() {
             </span>
           </div>
 
-          {/* Kompakt Taksit Sayacı */}
-          <div className="flex items-center gap-1 p-1 rounded-xl bg-surface-raised border border-border">
-            <button
-              type="button"
-              disabled={taksit.odenenTaksit <= 0}
-              onClick={() => {
-                decrementTaksit(taksit.id);
-                refreshData();
-              }}
-              className="h-7 w-7 rounded-lg bg-surface border border-border text-xs font-bold flex items-center justify-center hover:bg-background-subtle disabled:opacity-30 cursor-pointer"
-              title="1 taksit geri al"
-            >
-              −
-            </button>
-            <span className="px-2 text-xs font-bold text-foreground tabular-nums">
-              {taksit.odenenTaksit}/{taksit.toplamTaksit}
-            </span>
-            <button
-              type="button"
-              disabled={taksit.odenenTaksit >= taksit.toplamTaksit}
-              onClick={() => {
-                incrementTaksit(taksit.id);
-                refreshData();
-              }}
-              className="h-7 px-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary-hover disabled:opacity-30 cursor-pointer"
-              title="1 taksit ödendi işaretle"
-            >
-              +1
-            </button>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => {
-                setEditingTaksit(taksit);
-                setTargetKartId(taksit.kartId);
-                setIsTaksitModalOpen(true);
-              }}
-              className="icon-button h-8 w-8"
-              title="Düzenle"
-            >
-              <EditIcon className="w-3.5 h-3.5" />
-            </button>
-
-            {confirmDeleteTaksitId === taksit.id ? (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    deleteTaksit(taksit.id);
-                    setConfirmDeleteTaksitId(null);
-                    refreshData();
-                  }}
-                  className="danger-button h-8 px-2 text-xs"
-                >
-                  Sil
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDeleteTaksitId(null)}
-                  className="secondary-button h-8 px-2 text-xs"
-                >
-                  İptal
-                </button>
-              </div>
-            ) : (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Kompakt Taksit Sayacı */}
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-surface-raised border border-border">
               <button
                 type="button"
-                onClick={() => setConfirmDeleteTaksitId(taksit.id)}
-                className="icon-button h-8 w-8 hover:text-danger"
-                title="Sil"
+                disabled={taksit.odenenTaksit <= 0}
+                onClick={() => {
+                  decrementTaksit(taksit.id);
+                  refreshData();
+                }}
+                className="h-7 w-7 rounded-lg bg-surface border border-border text-xs font-bold flex items-center justify-center hover:bg-background-subtle disabled:opacity-30 cursor-pointer"
+                title="1 taksit geri al"
               >
-                <TrashIcon className="w-3.5 h-3.5" />
+                −
               </button>
-            )}
+              <span className="px-1.5 sm:px-2 text-xs font-bold text-foreground tabular-nums">
+                {taksit.odenenTaksit}/{taksit.toplamTaksit}
+              </span>
+              <button
+                type="button"
+                disabled={taksit.odenenTaksit >= taksit.toplamTaksit}
+                onClick={() => {
+                  incrementTaksit(taksit.id);
+                  refreshData();
+                }}
+                className="h-7 px-2 rounded-lg bg-primary text-primary-foreground text-xs font-bold hover:bg-primary-hover disabled:opacity-30 cursor-pointer"
+                title="1 taksit ödendi işaretle"
+              >
+                +1
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingTaksit(taksit);
+                  setTargetKartId(taksit.kartId);
+                  setIsTaksitModalOpen(true);
+                }}
+                className="icon-button h-8 w-8"
+                title="Düzenle"
+              >
+                <EditIcon className="w-3.5 h-3.5" />
+              </button>
+
+              {confirmDeleteTaksitId === taksit.id ? (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      deleteTaksit(taksit.id);
+                      setConfirmDeleteTaksitId(null);
+                      refreshData();
+                    }}
+                    className="danger-button h-8 px-2 text-xs"
+                  >
+                    Sil
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDeleteTaksitId(null)}
+                    className="secondary-button h-8 px-2 text-xs"
+                  >
+                    İptal
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteTaksitId(taksit.id)}
+                  className="icon-button h-8 w-8 hover:text-danger"
+                  title="Sil"
+                >
+                  <TrashIcon className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -352,7 +354,7 @@ export function TaksitSimpleView() {
           <button
             type="button"
             onClick={() => setToastMesaj(null)}
-            className="icon-button h-7 w-7"
+            className="icon-button h-7 w-7 shrink-0"
           >
             <CloseIcon className="w-3.5 h-3.5" />
           </button>
@@ -360,90 +362,96 @@ export function TaksitSimpleView() {
       )}
 
       {/* 1. ÜST ÖZET KARTLARI (SADE 4'LÜ KUTU) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="ds-card p-4 border-l-4 border-l-primary">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted block">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+        <div className="ds-card p-3 sm:p-4 border-l-4 border-l-primary min-w-0">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted block truncate">
             Aylık Taksit Yükü
           </span>
-          <span className="text-xl font-extrabold text-foreground tabular-nums block my-1">
+          <span className="text-base sm:text-xl font-extrabold text-foreground tabular-nums block my-1 truncate">
             {paraFormat(stats.toplamAylik)}
           </span>
-          <span className="text-[11px] text-muted">
-            {stats.aktifSayisi} aktif taksit • Ortak: {paraFormat(stats.ortakAylik)}
+          <span className="text-[10px] sm:text-[11px] text-muted block leading-snug">
+            {stats.aktifSayisi} aktif • Ortak: {paraFormat(stats.ortakAylik)}
           </span>
         </div>
 
-        <div className="ds-card p-4 border-l-4 border-l-sky-500">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block">
+        <div className="ds-card p-3 sm:p-4 border-l-4 border-l-sky-500 min-w-0">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 block truncate">
             👤 Mert Aylık Pay
           </span>
-          <span className="text-xl font-extrabold text-foreground tabular-nums block my-1">
+          <span className="text-base sm:text-xl font-extrabold text-foreground tabular-nums block my-1 truncate">
             {paraFormat(stats.mertToplamPay)}
           </span>
-          <span className="text-[11px] text-muted">Şahsi + Ortak (%50)</span>
+          <span className="text-[10px] sm:text-[11px] text-muted block leading-snug">
+            Şahsi + Ortak (%50)
+          </span>
         </div>
 
-        <div className="ds-card p-4 border-l-4 border-l-pink-500">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400 block">
+        <div className="ds-card p-3 sm:p-4 border-l-4 border-l-pink-500 min-w-0">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-pink-600 dark:text-pink-400 block truncate">
             👤 Havsa Aylık Pay
           </span>
-          <span className="text-xl font-extrabold text-foreground tabular-nums block my-1">
+          <span className="text-base sm:text-xl font-extrabold text-foreground tabular-nums block my-1 truncate">
             {paraFormat(stats.havsaToplamPay)}
           </span>
-          <span className="text-[11px] text-muted">Şahsi + Ortak (%50)</span>
+          <span className="text-[10px] sm:text-[11px] text-muted block leading-snug">
+            Şahsi + Ortak (%50)
+          </span>
         </div>
 
-        <div className="ds-card p-4 border-l-4 border-l-amber-500">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-muted block">
+        <div className="ds-card p-3 sm:p-4 border-l-4 border-l-amber-500 min-w-0">
+          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-muted block truncate">
             ⏳ Kalan Toplam Borç
           </span>
-          <span className="text-xl font-extrabold text-foreground tabular-nums block my-1">
+          <span className="text-base sm:text-xl font-extrabold text-foreground tabular-nums block my-1 truncate">
             {paraFormat(stats.toplamKalanBorc)}
           </span>
-          <span className="text-[11px] text-muted">Tüm vadeler toplamı</span>
+          <span className="text-[10px] sm:text-[11px] text-muted block leading-snug">
+            Tüm vadeler toplamı
+          </span>
         </div>
       </div>
 
       {/* 2. KONTROL & GÖRÜNÜM ÇUBUĞU */}
-      <div className="ds-card p-3.5 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div className="ds-card p-3 sm:p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 sm:gap-3">
         {/* Sol: Görünüm Modu (Kart Kart vs Taksit Taksit) + Kişi Filtresi */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-wrap w-full lg:w-auto">
           {/* Görünüm Seçici */}
-          <div className="flex items-center p-1 rounded-xl bg-surface-raised border border-border">
+          <div className="grid grid-cols-2 sm:inline-flex items-center p-1 rounded-xl bg-surface-raised border border-border w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setViewMode("kart_kart")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                 viewMode === "kart_kart"
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted hover:text-foreground"
               }`}
             >
               <span>💳</span>
-              <span>Kart Kart Gör ({kartlar.length})</span>
+              <span>Kart Kart ({kartlar.length})</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode("taksit_taksit")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 whitespace-nowrap ${
                 viewMode === "taksit_taksit"
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted hover:text-foreground"
               }`}
             >
               <span>🏷️</span>
-              <span>Taksit Taksit Gör ({filtrelenmisTaksitler.length})</span>
+              <span>Taksit Taksit ({filtrelenmisTaksitler.length})</span>
             </button>
           </div>
 
           {/* Kişi Filtresi */}
-          <div className="flex items-center p-1 rounded-xl bg-surface-raised border border-border">
+          <div className="grid grid-cols-4 sm:inline-flex items-center p-1 rounded-xl bg-surface-raised border border-border w-full sm:w-auto">
             {(["tum", "ortak", "mert", "havsa"] as const).map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setFilterSahip(s)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                className={`px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-center whitespace-nowrap ${
                   filterSahip === s
                     ? "bg-surface text-foreground shadow-2xs border border-border"
                     : "text-muted hover:text-foreground"
@@ -465,7 +473,7 @@ export function TaksitSimpleView() {
             <select
               value={filterKartId}
               onChange={(e) => setFilterKartId(e.target.value)}
-              className="field h-9 w-auto py-1 px-3 text-xs font-semibold"
+              className="field h-9 w-full sm:w-auto py-1 px-3 text-xs font-semibold"
             >
               <option value="tum">💳 Tüm Kartlar</option>
               {kartlar.map((k) => (
@@ -477,7 +485,7 @@ export function TaksitSimpleView() {
           )}
 
           {stats.bitenSayisi > 0 && (
-            <label className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground cursor-pointer select-none px-2">
+            <label className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-foreground cursor-pointer select-none px-1 sm:px-2 py-0.5">
               <input
                 type="checkbox"
                 checked={showCompleted}
@@ -489,12 +497,12 @@ export function TaksitSimpleView() {
           )}
         </div>
 
-        {/* Sağ: Hızlı Aksiyonlar */}
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+        {/* Sağ: Hızlı Aksiyonlar (Mobilde 2x2 Düzenli Grid) */}
+        <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:flex-wrap sm:justify-end w-full lg:w-auto">
           <button
             type="button"
             onClick={() => setShowProjeksiyon((v) => !v)}
-            className="secondary-button h-9 px-3 text-xs font-semibold"
+            className="secondary-button h-9 px-2.5 sm:px-3 text-xs font-semibold justify-center whitespace-nowrap"
           >
             <span>🔮</span>
             <span>6 Aylık Plan</span>
@@ -506,7 +514,7 @@ export function TaksitSimpleView() {
               setAktarimKartId(null);
               setIsAktarimModalOpen(true);
             }}
-            className="accent-button h-9 px-3 text-xs font-semibold"
+            className="accent-button h-9 px-2.5 sm:px-3 text-xs font-semibold justify-center whitespace-nowrap"
           >
             <span>📥</span>
             <span>Bütçeye Yansıt</span>
@@ -518,7 +526,7 @@ export function TaksitSimpleView() {
               setEditingKart(null);
               setIsKartModalOpen(true);
             }}
-            className="secondary-button h-9 px-3 text-xs font-semibold"
+            className="secondary-button h-9 px-2.5 sm:px-3 text-xs font-semibold justify-center whitespace-nowrap"
           >
             <span>💳</span>
             <span>Yeni Kart</span>
@@ -537,9 +545,9 @@ export function TaksitSimpleView() {
               );
               setIsTaksitModalOpen(true);
             }}
-            className="primary-button h-9 px-3.5 text-xs font-semibold"
+            className="primary-button h-9 px-3 sm:px-3.5 text-xs font-semibold justify-center whitespace-nowrap"
           >
-            <PlusIcon className="w-3.5 h-3.5" />
+            <PlusIcon className="w-3.5 h-3.5 shrink-0" />
             <span>Taksit Ekle</span>
           </button>
         </div>
@@ -556,7 +564,7 @@ export function TaksitSimpleView() {
       {viewMode === "kart_kart" && (
         <div className="space-y-2.5">
           {siraliKartlar.length === 0 ? (
-            <div className="ds-card p-10 text-center space-y-3 border-dashed">
+            <div className="ds-card p-6 sm:p-10 text-center space-y-3 border-dashed">
               <span className="text-3xl block">💳</span>
               <h4 className="text-sm font-bold text-foreground">Henüz Kredi Kartı Tanımlanmamış</h4>
               <p className="text-xs text-muted max-w-sm mx-auto">
@@ -600,20 +608,20 @@ export function TaksitSimpleView() {
                   {/* Kart Ana Satırı (Tıklanınca Taksitleri Altında Açar) */}
                   <div
                     onClick={() => setExpandedKartId(isExpanded ? null : kart.id)}
-                    className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-surface-raised/60 transition select-none"
+                    className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 cursor-pointer hover:bg-surface-raised/60 transition select-none"
                   >
                     {/* Sol: Kart İkonu, Adı ve Detayları */}
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-surface-raised border border-border flex items-center justify-center text-lg shrink-0">
+                    <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-surface-raised border border-border flex items-center justify-center text-base sm:text-lg shrink-0 mt-0.5 sm:mt-0">
                         💳
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm text-foreground truncate">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          <span className="font-bold text-sm text-foreground break-words">
                             {kart.ad}
                           </span>
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-md border shrink-0 ${
                               kart.kartSahibi === "mert"
                                 ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/25"
                                 : kart.kartSahibi === "havsa"
@@ -645,11 +653,11 @@ export function TaksitSimpleView() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 text-[11px] text-muted mt-1 flex-wrap">
+                        <div className="flex items-center gap-x-2 gap-y-0.5 text-[11px] text-muted mt-1 flex-wrap">
                           <span>Kesim: Ayın {kart.ekstreGunu}&apos;i</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>Son Ödeme: {sonOdeme.tarihStr}</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>
                             Kalan Borç:{" "}
                             <strong className="text-foreground tabular-nums">
@@ -662,11 +670,11 @@ export function TaksitSimpleView() {
 
                     {/* Sağ: Kartın Aylık Taksit Toplamı & Hızlı Butonlar */}
                     <div
-                      className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border shrink-0"
+                      className="flex flex-wrap items-center justify-between sm:justify-end gap-2 sm:gap-3 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <div className="text-left sm:text-right">
-                        <span className="text-base sm:text-lg font-extrabold text-foreground tabular-nums block">
+                      <div className="text-left sm:text-right min-w-0">
+                        <span className="text-base sm:text-lg font-extrabold text-foreground tabular-nums block leading-tight">
                           {paraFormat(kartAylik)}
                           <span className="text-[10px] font-normal text-muted"> /ay</span>
                         </span>
@@ -675,19 +683,21 @@ export function TaksitSimpleView() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingTaksit(null);
-                            setTargetKartId(kart.id);
-                            setIsTaksitModalOpen(true);
-                          }}
-                          className="secondary-button h-8 px-2.5 text-xs"
-                          title="Bu karta yeni taksit ekle"
-                        >
-                          + Taksit
-                        </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {confirmDeleteKartId !== kart.id && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingTaksit(null);
+                              setTargetKartId(kart.id);
+                              setIsTaksitModalOpen(true);
+                            }}
+                            className="secondary-button h-8 px-2 sm:px-2.5 text-[11px] sm:text-xs whitespace-nowrap"
+                            title="Bu karta yeni taksit ekle"
+                          >
+                            + Taksit
+                          </button>
+                        )}
 
                         <button
                           type="button"
@@ -751,14 +761,14 @@ export function TaksitSimpleView() {
 
                   {/* Açılır Alan: Bu Karta Ait Taksitler ve Kart Aksiyonları */}
                   {isExpanded && (
-                    <div className="px-4 pb-4 pt-2.5 border-t border-border bg-surface-raised/40 space-y-3 animate-in fade-in duration-150">
+                    <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 pt-2.5 border-t border-border bg-surface-raised/40 space-y-3 animate-in fade-in duration-150">
                       {/* Kart Alt İşlem Çubuğu */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 pb-1 text-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 text-xs">
                         <span className="font-bold text-foreground-secondary">
                           🏷️ {kart.ad} Taksitleri ({buKartaAitTaksitler.length})
                         </span>
 
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                           {confirmPayAllKartId === kart.id ? (
                             <div className="flex items-center gap-1">
                               <button
@@ -768,14 +778,14 @@ export function TaksitSimpleView() {
                                   setConfirmPayAllKartId(null);
                                   refreshData();
                                 }}
-                                className="primary-button h-7 px-2.5 text-xs"
+                                className="primary-button h-8 sm:h-7 px-2.5 text-xs"
                               >
                                 Onayla (+1 Ay İlerlet)
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setConfirmPayAllKartId(null)}
-                                className="secondary-button h-7 px-2 text-xs"
+                                className="secondary-button h-8 sm:h-7 px-2 text-xs"
                               >
                                 İptal
                               </button>
@@ -785,9 +795,9 @@ export function TaksitSimpleView() {
                               type="button"
                               disabled={aktifTaksitler.length === 0}
                               onClick={() => setConfirmPayAllKartId(kart.id)}
-                              className="secondary-button h-7 px-2.5 text-xs disabled:opacity-40"
+                              className="secondary-button h-8 sm:h-7 px-2.5 text-xs disabled:opacity-40 flex-1 sm:flex-initial justify-center whitespace-nowrap"
                             >
-                              <CheckIcon className="w-3 h-3 text-success" />
+                              <CheckIcon className="w-3 h-3 text-success shrink-0" />
                               <span>Tümünü +1 Öde ({aktifTaksitler.length})</span>
                             </button>
                           )}
@@ -799,9 +809,9 @@ export function TaksitSimpleView() {
                               setAktarimKartId(kart.id);
                               setIsAktarimModalOpen(true);
                             }}
-                            className="accent-button h-7 px-2.5 text-xs disabled:opacity-40"
+                            className="accent-button h-8 sm:h-7 px-2.5 text-xs disabled:opacity-40 flex-1 sm:flex-initial justify-center whitespace-nowrap"
                           >
-                            📥 Bu Kartı Bütçeye Aktar
+                            📥 Bütçeye Aktar
                           </button>
                         </div>
                       </div>

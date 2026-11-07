@@ -47,24 +47,25 @@ function GiderContent() {
             : "Taksitlerinizi ve kalan vadelerinizi tek bakışta takip edin."
         }
         actions={
-          <div className="inline-flex items-center rounded-xl border border-border bg-surface p-1 shadow-xs">
+          <div className="flex w-full sm:w-auto items-center rounded-xl border border-border bg-surface p-1 shadow-xs">
             <button
               type="button"
               onClick={() => handleTabChange("butce")}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer whitespace-nowrap ${
                 activeTab === "butce"
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-foreground-secondary hover:text-foreground"
               }`}
             >
               <span>📊</span>
-              <span>Aylık Gider & Mahsuplaşma</span>
+              <span className="sm:hidden">Aylık Gider</span>
+              <span className="hidden sm:inline">Aylık Gider & Mahsuplaşma</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleTabChange("taksit")}
-              className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-semibold transition cursor-pointer whitespace-nowrap ${
                 activeTab === "taksit"
                   ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-foreground-secondary hover:text-foreground"

@@ -103,7 +103,7 @@ export function KartEkleDuzenleModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md p-6 rounded-2xl bg-surface border border-border shadow-lg space-y-5 animate-in zoom-in-95 duration-150"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl bg-surface border border-border shadow-lg space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -203,11 +203,11 @@ export function KartEkleDuzenleModal({
             <label className="text-[11px] font-bold uppercase tracking-wider text-muted block mb-1">
               Kapsam (Ortak mı, Bireysel mi?)
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => setKimeAit("ortak")}
-                className={`py-2 px-2 rounded-xl border text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                className={`py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 text-center ${
                   kimeAit === "ortak"
                     ? "bg-surface-lavender text-primary border-primary shadow-2xs"
                     : "bg-surface-raised border-border text-muted hover:text-foreground"
@@ -220,27 +220,27 @@ export function KartEkleDuzenleModal({
               <button
                 type="button"
                 onClick={() => setKimeAit("mert")}
-                className={`py-2 px-2 rounded-xl border text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                className={`py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 text-center ${
                   kimeAit === "mert"
                     ? "bg-sky-50 text-sky-700 border-sky-400 shadow-2xs"
                     : "bg-surface-raised border-border text-muted hover:text-foreground"
                 }`}
               >
-                <span>👤 Bireysel (Mert)</span>
-                <span className="text-[9px] font-normal text-muted">%100 Mert</span>
+                <span>👤 Mert</span>
+                <span className="text-[9px] font-normal text-muted">%100 Şahsi</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setKimeAit("havsa")}
-                className={`py-2 px-2 rounded-xl border text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 ${
+                className={`py-2 px-1.5 sm:px-2 rounded-xl border text-[11px] sm:text-xs font-bold transition cursor-pointer flex flex-col items-center gap-0.5 text-center ${
                   kimeAit === "havsa"
                     ? "bg-pink-50 text-pink-700 border-pink-400 shadow-2xs"
                     : "bg-surface-raised border-border text-muted hover:text-foreground"
                 }`}
               >
-                <span>👤 Bireysel (Havsa)</span>
-                <span className="text-[9px] font-normal text-muted">%100 Havsa</span>
+                <span>👤 Havsa</span>
+                <span className="text-[9px] font-normal text-muted">%100 Şahsi</span>
               </button>
             </div>
             <p className="text-[10px] text-muted mt-1.5">
@@ -719,12 +719,12 @@ ${[...veri.krediKartlari]
           {raporMetni}
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-border">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-border">
           <span className="text-[11px] text-muted">
             WhatsApp veya Notlara yapıştırmaya hazır format
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}

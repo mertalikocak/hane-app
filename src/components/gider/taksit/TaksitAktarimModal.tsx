@@ -487,11 +487,11 @@ export function TaksitAktarimModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border flex items-center justify-between gap-3 bg-surface shrink-0">
+        <div className="p-3.5 sm:p-4 border-t border-border flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 bg-surface shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="secondary-button px-4 text-xs font-semibold"
+            className="secondary-button h-10 sm:h-auto px-4 text-xs font-semibold justify-center"
           >
             Vazgeç
           </button>
@@ -500,10 +500,10 @@ export function TaksitAktarimModal({
             type="button"
             onClick={handleAktar}
             disabled={previewData.kartDetaylari.length === 0}
-            className="primary-button px-5 py-2.5 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed"
+            className="primary-button px-4 sm:px-5 py-2.5 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed justify-center text-center"
           >
             <span>📥</span>
-            <span>
+            <span className="truncate">
               {seciliKartId === "tum"
                 ? `${formatAyLabel(hedefAy)} Bütçesine ${aktarimModu === "arti_bir" ? "+1 Artırarak " : ""}Toplu Aktar`
                 : `"${previewData.kartDetaylari[0]?.kart.ad || "Kartı"}" ${formatAyLabel(hedefAy)} Bütçesine Aktar`}

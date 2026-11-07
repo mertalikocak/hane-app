@@ -178,11 +178,11 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
         </div>
 
         {/* Görünüm Filtre Butonları */}
-        <div className="flex items-center p-1 rounded-xl bg-surface-raised border border-border self-start sm:self-auto shrink-0">
+        <div className="grid grid-cols-3 sm:inline-flex items-center p-1 rounded-xl bg-surface-raised border border-border w-full sm:w-auto shrink-0">
           <button
             type="button"
             onClick={() => setGorunum("toplam")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+            className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-center whitespace-nowrap ${
               gorunum === "toplam"
                 ? "bg-surface text-foreground shadow-xs border border-border"
                 : "text-muted hover:text-foreground"
@@ -193,24 +193,24 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
           <button
             type="button"
             onClick={() => setGorunum("mert")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+            className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-center whitespace-nowrap ${
               gorunum === "mert"
                 ? "bg-surface text-foreground shadow-xs border border-border"
                 : "text-muted hover:text-foreground"
             }`}
           >
-            Mert'in Payı
+            Mert&apos;in Payı
           </button>
           <button
             type="button"
             onClick={() => setGorunum("havsa")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+            className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer text-center whitespace-nowrap ${
               gorunum === "havsa"
                 ? "bg-surface text-foreground shadow-xs border border-border"
                 : "text-muted hover:text-foreground"
             }`}
           >
-            Havsa'nın Payı
+            Havsa&apos;nın Payı
           </button>
         </div>
       </div>
