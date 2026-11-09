@@ -256,8 +256,13 @@ export function HaneGiderSimpleView() {
     const sirali = [...veri.krediKartlari].sort((a, b) => {
       const aBireysel = a.kimeAit === "mert" || a.kimeAit === "havsa";
       const bBireysel = b.kimeAit === "mert" || b.kimeAit === "havsa";
-      if (aBireysel === bBireysel) return 0;
-      return aBireysel ? 1 : -1;
+      if (aBireysel !== bBireysel) {
+        return aBireysel ? 1 : -1; // Ortaklar üstte, bireyseller altta
+      }
+      // Kendi grubu içinde pahalıdan ucuza
+      const diff = (b.toplamEkstre ?? 0) - (a.toplamEkstre ?? 0);
+      if (diff !== 0) return diff;
+      return (a.ad ?? "").localeCompare(b.ad ?? "", "tr");
     });
 
     if (filterTab === "ortak") {
@@ -1282,7 +1287,9 @@ export function HaneGiderSimpleView() {
                             </p>
                           ) : (
                             <div className="space-y-1.5">
-                              {kart.bireyselKalemler.map((bk) => (
+                              {[...kart.bireyselKalemler]
+                                .sort((a, b) => (b.tutar ?? 0) - (a.tutar ?? 0))
+                                .map((bk) => (
                                 <div
                                   key={bk.id}
                                   className="flex items-center justify-between gap-2 px-2.5 sm:px-3 py-2 rounded-xl bg-surface border border-border text-xs"
@@ -1572,7 +1579,10 @@ function GelirVeSahsiHarcamaModal({
     setTutarStr("");
   };
 
-  const aktifListe = tab === "gelir" ? gelirler : harcamalar;
+  const aktifListe = useMemo(() => {
+    const liste = tab === "gelir" ? gelirler : harcamalar;
+    return [...liste].sort((a, b) => (b.tutar ?? 0) - (a.tutar ?? 0));
+  }, [tab, gelirler, harcamalar]);
 
   return createPortal(
     <div

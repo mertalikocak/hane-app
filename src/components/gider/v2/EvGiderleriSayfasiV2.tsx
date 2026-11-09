@@ -232,13 +232,17 @@ export function EvGiderleriSayfasiV2() {
     return count;
   }, [veri]);
 
-  // Sıralı kartlar: Önce ortak harcamalar/kartlar, sonra bireysel olanlar
+  // Sıralı kartlar: Önce ortak harcamalar/kartlar, sonra bireysel olanlar (her ikisi de pahalıdan ucuza)
   const siraliKartlar = useMemo(() => {
     return [...veri.krediKartlari].sort((a, b) => {
       const aBireysel = a.kimeAit === "mert" || a.kimeAit === "havsa";
       const bBireysel = b.kimeAit === "mert" || b.kimeAit === "havsa";
-      if (aBireysel === bBireysel) return 0;
-      return aBireysel ? 1 : -1;
+      if (aBireysel !== bBireysel) {
+        return aBireysel ? 1 : -1;
+      }
+      const diff = (b.toplamEkstre ?? 0) - (a.toplamEkstre ?? 0);
+      if (diff !== 0) return diff;
+      return (a.ad ?? "").localeCompare(b.ad ?? "", "tr");
     });
   }, [veri.krediKartlari]);
 

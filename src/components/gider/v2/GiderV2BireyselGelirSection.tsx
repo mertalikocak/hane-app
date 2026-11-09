@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { para, KULLANICI_ETIKET } from "./constants";
 import type {
   BireyselAyriHarcama,
@@ -72,13 +72,17 @@ export function GiderV2BireyselGelirSection({
     setGelirTutarStr("");
   };
 
-  const filteredHarcamalar = harcamalar.filter(
-    (h) => harcamaFilter === "all" || h.kullaniciId === harcamaFilter
-  );
+  const filteredHarcamalar = useMemo(() => {
+    return harcamalar
+      .filter((h) => harcamaFilter === "all" || h.kullaniciId === harcamaFilter)
+      .sort((a, b) => (b.tutar ?? 0) - (a.tutar ?? 0));
+  }, [harcamalar, harcamaFilter]);
 
-  const filteredGelirler = gelirler.filter(
-    (g) => gelirFilter === "all" || g.kullaniciId === gelirFilter
-  );
+  const filteredGelirler = useMemo(() => {
+    return gelirler
+      .filter((g) => gelirFilter === "all" || g.kullaniciId === gelirFilter)
+      .sort((a, b) => (b.tutar ?? 0) - (a.tutar ?? 0));
+  }, [gelirler, gelirFilter]);
 
   const mertHarcamaTop = harcamalar
     .filter((h) => h.kullaniciId === "mert")

@@ -34,13 +34,17 @@ export function GiderV2CardList({
   const [kalemTutarStr, setKalemTutarStr] = useState("");
   const [kalemKisi, setKalemKisi] = useState<KullaniciId>("mert");
 
-  // Önce ortak harcamalar/kartlar, ardından bireyseller listelensin
+  // Önce ortak harcamalar/kartlar, ardından bireyseller listelensin (pahalıdan ucuza)
   const siraliKartlar = useMemo(() => {
     return [...kartlar].sort((a, b) => {
       const aBireysel = a.kimeAit === "mert" || a.kimeAit === "havsa";
       const bBireysel = b.kimeAit === "mert" || b.kimeAit === "havsa";
-      if (aBireysel === bBireysel) return 0;
-      return aBireysel ? 1 : -1;
+      if (aBireysel !== bBireysel) {
+        return aBireysel ? 1 : -1;
+      }
+      const diff = (b.toplamEkstre ?? 0) - (a.toplamEkstre ?? 0);
+      if (diff !== 0) return diff;
+      return (a.ad ?? "").localeCompare(b.ad ?? "", "tr");
     });
   }, [kartlar]);
 
@@ -336,7 +340,9 @@ export function GiderV2CardList({
 
                       {kart.bireyselKalemler.length > 0 && (
                         <div className="space-y-1.5">
-                          {kart.bireyselKalemler.map((bk) => (
+                          {[...kart.bireyselKalemler]
+                            .sort((a, b) => (b.tutar ?? 0) - (a.tutar ?? 0))
+                            .map((bk) => (
                             <div
                               key={bk.id}
                               className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-raised border border-border text-xs"
