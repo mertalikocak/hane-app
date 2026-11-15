@@ -4,8 +4,14 @@ import {
   WeddingPiggyContribution,
   WeddingStats,
   GoldPricesMap,
+  GoldPricesResponse,
   GoldType,
   GoldSummaryItem,
+  WeddingParticipant,
+  WeddingParticipantSide,
+  WeddingTakiEventType,
+  WeddingTakiItem,
+  WeddingTakiValuation,
 } from "@/domain/weddingTypes";
 import { queueLocalChangePush } from "@/lib/firebase/syncService";
 
@@ -96,6 +102,13 @@ export function bosWeddingVerisi(): WeddingData {
       id: `wed_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
       createdAt: now,
     })),
+    katilimcilar: [],
+    takiEtkinlikTarihleri: {
+      nisan: "",
+      kina: "",
+      dugun: "",
+    },
+    takilar: [],
   };
 }
 
@@ -140,11 +153,70 @@ export function getWeddingData(): WeddingData {
       }
     );
 
+    const rawKatilimcilar = Array.isArray(parsed.katilimcilar) ? parsed.katilimcilar : [];
+    const normalizedKatilimcilar: WeddingParticipant[] = rawKatilimcilar.map(
+      (p: Partial<WeddingParticipant>) => {
+        const yetiskin = Math.max(0, Number(p.yetiskin) || 0);
+        const cocuk = Math.max(0, Number(p.cocuk) || 0);
+        return {
+          id: p.id || `part_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          isim: p.isim || "",
+          yetiskin,
+          cocuk,
+          toplam: yetiskin + cocuk,
+          taraf: p.taraf === "havsa" ? "havsa" : "mert",
+          createdAt: p.createdAt || new Date().toISOString(),
+        };
+      }
+    );
+
+    const rawTakilar = Array.isArray(parsed.takilar) ? parsed.takilar : [];
+    const normalizedTakilar: WeddingTakiItem[] = rawTakilar.map(
+      (t: Partial<WeddingTakiItem>) => {
+        const etkinlik: WeddingTakiEventType =
+          t.etkinlik === "nisan" || t.etkinlik === "kina" ? t.etkinlik : "dugun";
+        const adet = Math.max(0, Number(t.adet) || 1);
+        const gramaj = t.gramaj !== undefined ? Number(t.gramaj) || 0 : undefined;
+        const tarihBirimFiyatTL = Number(t.tarihBirimFiyatTL) || 0;
+        const tarihToplamDegerTL = Number(t.tarihToplamDegerTL) || 0;
+
+        return {
+          id: t.id || `taki_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          etkinlik,
+          kimTakti: t.kimTakti || "",
+          takiTuru:
+            t.takiTuru === "usd" || t.takiTuru === "eur" || t.takiTuru === "tl"
+              ? t.takiTuru
+              : "altin",
+          altinTuru: t.altinTuru,
+          digerAltinAciklama: t.digerAltinAciklama,
+          adet,
+          gramaj,
+          tarihBirimFiyatTL,
+          tarihToplamDegerTL,
+          tarihGramAltinKuruTL:
+            t.tarihGramAltinKuruTL !== undefined ? Number(t.tarihGramAltinKuruTL) || 0 : undefined,
+          tarih: t.tarih || new Date().toISOString().split("T")[0],
+          notlar: t.notlar,
+          createdAt: t.createdAt || new Date().toISOString(),
+        };
+      }
+    );
+
+    const rawTarihler = parsed.takiEtkinlikTarihleri || {};
+
     return {
       kumbaraKatkilar: normalizedKatkilar,
       maddeler: Array.isArray(parsed.maddeler) ? parsed.maddeler : [],
       hedefTarih: parsed.hedefTarih,
       notlar: parsed.notlar,
+      katilimcilar: normalizedKatilimcilar,
+      takiEtkinlikTarihleri: {
+        nisan: typeof rawTarihler.nisan === "string" ? rawTarihler.nisan : "",
+        kina: typeof rawTarihler.kina === "string" ? rawTarihler.kina : "",
+        dugun: typeof rawTarihler.dugun === "string" ? rawTarihler.dugun : "",
+      },
+      takilar: normalizedTakilar,
     };
   } catch (err) {
     console.error("Wedding verisi okuma hatası:", err);
@@ -239,6 +311,197 @@ export function deleteWeddingItem(id: string): void {
   const data = getWeddingData();
   data.maddeler = data.maddeler.filter((m) => m.id !== id);
   saveWeddingData(data);
+}
+
+// ==========================================
+// KATILIMCILAR CRUD
+// ==========================================
+
+export function addWeddingParticipant(payload: {
+  isim: string;
+  yetiskin: number;
+  cocuk: number;
+  taraf: WeddingParticipantSide;
+}): WeddingData {
+  const data = getWeddingData();
+  const yetiskin = Math.max(0, Math.round(Number(payload.yetiskin) || 0));
+  const cocuk = Math.max(0, Math.round(Number(payload.cocuk) || 0));
+  const yeniKatilimci: WeddingParticipant = {
+    id: `part_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    isim: payload.isim.trim(),
+    yetiskin,
+    cocuk,
+    toplam: yetiskin + cocuk,
+    taraf: payload.taraf,
+    createdAt: new Date().toISOString(),
+  };
+  data.katilimcilar = [yeniKatilimci, ...(data.katilimcilar || [])];
+  saveWeddingData(data);
+  return data;
+}
+
+export function updateWeddingParticipant(
+  id: string,
+  payload: Partial<Omit<WeddingParticipant, "id" | "createdAt">>
+): WeddingData {
+  const data = getWeddingData();
+  const list = [...(data.katilimcilar || [])];
+  const idx = list.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    const existing = list[idx];
+    const yetiskin =
+      payload.yetiskin !== undefined
+        ? Math.max(0, Math.round(Number(payload.yetiskin) || 0))
+        : existing.yetiskin;
+    const cocuk =
+      payload.cocuk !== undefined
+        ? Math.max(0, Math.round(Number(payload.cocuk) || 0))
+        : existing.cocuk;
+    list[idx] = {
+      ...existing,
+      ...payload,
+      isim: payload.isim !== undefined ? payload.isim.trim() : existing.isim,
+      yetiskin,
+      cocuk,
+      toplam: yetiskin + cocuk,
+    };
+    data.katilimcilar = list;
+    saveWeddingData(data);
+  }
+  return data;
+}
+
+export function deleteWeddingParticipant(id: string): WeddingData {
+  const data = getWeddingData();
+  data.katilimcilar = (data.katilimcilar || []).filter((p) => p.id !== id);
+  saveWeddingData(data);
+  return data;
+}
+
+// ==========================================
+// TAKI & HEDİYE CRUD + DEĞERLENDİRME
+// ==========================================
+
+export function updateWeddingTakiEventDate(
+  etkinlik: WeddingTakiEventType,
+  tarih: string
+): WeddingData {
+  const data = getWeddingData();
+  data.takiEtkinlikTarihleri = {
+    ...(data.takiEtkinlikTarihleri || {}),
+    [etkinlik]: tarih,
+  };
+  saveWeddingData(data);
+  return data;
+}
+
+export function addWeddingTaki(
+  item: Omit<WeddingTakiItem, "id" | "createdAt">
+): WeddingData {
+  const data = getWeddingData();
+  const yeniTaki: WeddingTakiItem = {
+    ...item,
+    id: `taki_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    createdAt: new Date().toISOString(),
+  };
+  data.takilar = [yeniTaki, ...(data.takilar || [])];
+  saveWeddingData(data);
+  return data;
+}
+
+export function updateWeddingTaki(
+  id: string,
+  updates: Partial<Omit<WeddingTakiItem, "id" | "createdAt">>
+): WeddingData {
+  const data = getWeddingData();
+  const list = [...(data.takilar || [])];
+  const idx = list.findIndex((t) => t.id === id);
+  if (idx !== -1) {
+    list[idx] = {
+      ...list[idx],
+      ...updates,
+    };
+    data.takilar = list;
+    saveWeddingData(data);
+  }
+  return data;
+}
+
+export function deleteWeddingTaki(id: string): WeddingData {
+  const data = getWeddingData();
+  data.takilar = (data.takilar || []).filter((t) => t.id !== id);
+  saveWeddingData(data);
+  return data;
+}
+
+export function calculateTakiItemValuation(
+  item: WeddingTakiItem,
+  goldPrices?: GoldPricesResponse | null
+): WeddingTakiValuation {
+  const tarihToplamDegerTL = Number(item.tarihToplamDegerTL) || 0;
+  let guncelBirimFiyatTL = Number(item.tarihBirimFiyatTL) || 0;
+  let guncelToplamDegerTL = tarihToplamDegerTL;
+
+  const liveGramAlis = Number(goldPrices?.kalemler?.gram?.alis) || 0;
+  const liveCeyrekAlis = Number(goldPrices?.kalemler?.ceyrek?.alis) || 0;
+  const liveYarimAlis = Number(goldPrices?.kalemler?.yarim?.alis) || 0;
+  const liveTamAlis = Number(goldPrices?.kalemler?.tam?.alis) || 0;
+  const liveUsd = Number(goldPrices?.dovizKurlari?.usd) || 0;
+  const liveEur = Number(goldPrices?.dovizKurlari?.eur) || 0;
+
+  if (item.takiTuru === "tl") {
+    guncelBirimFiyatTL = 1;
+    guncelToplamDegerTL = tarihToplamDegerTL;
+  } else if (item.takiTuru === "usd") {
+    guncelBirimFiyatTL = liveUsd > 0 ? liveUsd : Number(item.tarihBirimFiyatTL) || 0;
+    guncelToplamDegerTL = (Number(item.adet) || 0) * guncelBirimFiyatTL;
+  } else if (item.takiTuru === "eur") {
+    guncelBirimFiyatTL = liveEur > 0 ? liveEur : Number(item.tarihBirimFiyatTL) || 0;
+    guncelToplamDegerTL = (Number(item.adet) || 0) * guncelBirimFiyatTL;
+  } else if (item.takiTuru === "altin") {
+    const subType = item.altinTuru || "gram";
+    if (subType === "gram") {
+      guncelBirimFiyatTL = liveGramAlis > 0 ? liveGramAlis : Number(item.tarihBirimFiyatTL) || 0;
+      guncelToplamDegerTL = (Number(item.adet) || 0) * guncelBirimFiyatTL;
+    } else if (subType === "ceyrek") {
+      guncelBirimFiyatTL =
+        liveCeyrekAlis > 0 ? liveCeyrekAlis : Number(item.tarihBirimFiyatTL) || 0;
+      guncelToplamDegerTL = (Number(item.adet) || 0) * guncelBirimFiyatTL;
+    } else if (subType === "yarim") {
+      guncelBirimFiyatTL = liveYarimAlis > 0 ? liveYarimAlis : Number(item.tarihBirimFiyatTL) || 0;
+      guncelToplamDegerTL = (Number(item.adet) || 0) * guncelBirimFiyatTL;
+    } else if (subType === "tam") {
+      guncelBirimFiyatTL = liveTamAlis > 0 ? liveTamAlis : Number(item.tarihBirimFiyatTL) || 0;
+      guncelToplamDegerTL = (Number(item.adet) || 0) * guncelBirimFiyatTL;
+    } else if (subType === "ajda") {
+      guncelBirimFiyatTL = liveGramAlis > 0 ? liveGramAlis : Number(item.tarihBirimFiyatTL) || 0;
+      const totalGrams = (Number(item.adet) || 1) * (Number(item.gramaj) || 0);
+      guncelToplamDegerTL = totalGrams * guncelBirimFiyatTL;
+    } else if (subType === "diger") {
+      const refGram = Number(item.tarihGramAltinKuruTL) || 0;
+      if (refGram > 0 && liveGramAlis > 0) {
+        guncelToplamDegerTL = (tarihToplamDegerTL / refGram) * liveGramAlis;
+        guncelBirimFiyatTL =
+          (Number(item.adet) || 1) > 0
+            ? guncelToplamDegerTL / (Number(item.adet) || 1)
+            : guncelToplamDegerTL;
+      } else {
+        guncelBirimFiyatTL = Number(item.tarihBirimFiyatTL) || tarihToplamDegerTL;
+        guncelToplamDegerTL = tarihToplamDegerTL;
+      }
+    }
+  }
+
+  const farkTL = guncelToplamDegerTL - tarihToplamDegerTL;
+  const farkYuzde = tarihToplamDegerTL > 0 ? (farkTL / tarihToplamDegerTL) * 100 : 0;
+
+  return {
+    tarihToplamDegerTL,
+    guncelBirimFiyatTL,
+    guncelToplamDegerTL,
+    farkTL,
+    farkYuzde,
+  };
 }
 
 /**

@@ -21,6 +21,8 @@ import { KumbaraModal } from "@/components/wedding/KumbaraModal";
 import { GoldPortfolioModal } from "@/components/wedding/GoldPortfolioModal";
 import { WeddingItemModal } from "@/components/wedding/WeddingItemModal";
 import { WeddingOzetKartlari } from "@/components/wedding/WeddingOzetKartlari";
+import { WeddingParticipantsView } from "@/components/wedding/WeddingParticipantsView";
+import { WeddingTakiView } from "@/components/wedding/WeddingTakiView";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useGoldPrices } from "@/services/clientGoldPriceService";
 import {
@@ -52,6 +54,7 @@ const KATEGORI_ETIKETLERI: Record<WeddingItemCategory, { label: string; icon: st
 export default function WeddingPage() {
   const [data, setData] = useState<WeddingData>(() => bosWeddingVerisi());
   const [isLoaded, setIsLoaded] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState<"birikim" | "katilimcilar" | "taki">("birikim");
 
   // Canlı Altın Fiyatları Servisi
   const { prices: goldPrices, isLoading: isPricesLoading, refresh: refreshGoldPrices } = useGoldPrices();
@@ -93,6 +96,12 @@ export default function WeddingPage() {
   const stats: WeddingStats = useMemo(() => {
     return getWeddingStats(data, goldPrices?.kalemler);
   }, [data, goldPrices]);
+
+  const toplamTahminiKatilimci = useMemo(() => {
+    return (data.katilimcilar || []).reduce((sum, p) => sum + (Number(p.toplam) || 0), 0);
+  }, [data.katilimcilar]);
+
+  const toplamTakiSayisi = (data.takilar || []).length;
 
   const filtrelenmisMaddeler = useMemo(() => {
     return data.maddeler
@@ -155,6 +164,13 @@ export default function WeddingPage() {
   const handleConfirmVarsayilanYukle = () => {
     const varsayilan = bosWeddingVerisi();
     varsayilan.kumbaraKatkilar = data.kumbaraKatkilar; // Mevcut kumbara kalsın
+    varsayilan.katilimcilar = data.katilimcilar || [];
+    varsayilan.takiEtkinlikTarihleri = data.takiEtkinlikTarihleri || {
+      nisan: "",
+      kina: "",
+      dugun: "",
+    };
+    varsayilan.takilar = data.takilar || [];
     saveWeddingData(varsayilan);
     setConfirmResetDefault(false);
     refreshData();
@@ -237,15 +253,95 @@ export default function WeddingPage() {
         }
       />
 
-      {/* ÜSTTEKİ ÖZET ALANI (Geliştirilmiş Kartlar) */}
-      <WeddingOzetKartlari
-        stats={stats}
-        onOpenKumbaraModal={(tab) => handleOpenKumbaraModal(tab || "nakit")}
-        onOpenGoldPortfolio={() => setIsGoldPortfolioOpen(true)}
-        isPricesLoading={isPricesLoading}
-        onRefreshPrices={refreshGoldPrices}
-        isStalePrices={Boolean(goldPrices?.isStale)}
-      />
+      {/* ANA SEKMELER: Birikim / Gider, Katılımcılar, Takı */}
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-surface-raised rounded-2xl border border-border w-full sm:w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveMainTab("birikim")}
+          className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap ${
+            activeMainTab === "birikim"
+              ? "bg-surface text-foreground shadow-2xs border border-border"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          <span>🏦</span>
+          <span>Birikim / Gider</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveMainTab("katilimcilar")}
+          className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap ${
+            activeMainTab === "katilimcilar"
+              ? "bg-surface text-foreground shadow-2xs border border-border"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          <span>👥</span>
+          <span>Katılımcılar</span>
+          <span
+            className={`text-[10px] px-1.5 py-0.5 rounded-md tabular-nums ${
+              activeMainTab === "katilimcilar"
+                ? "bg-primary/15 text-primary"
+                : "bg-surface text-muted border border-border"
+            }`}
+          >
+            {toplamTahminiKatilimci}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveMainTab("taki")}
+          className={`flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap ${
+            activeMainTab === "taki"
+              ? "bg-surface text-foreground shadow-2xs border border-border"
+              : "text-muted hover:text-foreground"
+          }`}
+        >
+          <span>🎁</span>
+          <span>Takı</span>
+          <span
+            className={`text-[10px] px-1.5 py-0.5 rounded-md tabular-nums ${
+              activeMainTab === "taki"
+                ? "bg-primary/15 text-primary"
+                : "bg-surface text-muted border border-border"
+            }`}
+          >
+            {toplamTakiSayisi}
+          </span>
+        </button>
+      </div>
+
+      {activeMainTab === "katilimcilar" && (
+        <WeddingParticipantsView
+          katilimcilar={data.katilimcilar || []}
+          onDataChange={refreshData}
+        />
+      )}
+
+      {activeMainTab === "taki" && (
+        <WeddingTakiView
+          takilar={data.takilar || []}
+          etkinlikTarihleri={data.takiEtkinlikTarihleri || {}}
+          goldPrices={goldPrices}
+          isPricesLoading={isPricesLoading}
+          onRefreshPrices={refreshGoldPrices}
+          onDataChange={refreshData}
+        />
+      )}
+
+      {activeMainTab === "birikim" && (
+        <>
+          {/* ÜSTTEKİ ÖZET ALANI (Geliştirilmiş Kartlar) */}
+          <WeddingOzetKartlari
+            stats={stats}
+            onOpenKumbaraModal={(tab) => handleOpenKumbaraModal(tab || "nakit")}
+            onOpenGoldPortfolio={() => setIsGoldPortfolioOpen(true)}
+            isPricesLoading={isPricesLoading}
+            onRefreshPrices={refreshGoldPrices}
+            isStalePrices={Boolean(goldPrices?.isStale)}
+          />
 
       {/* Düğün İhtiyaçları & Alınacaklar Başlığı & Filtreler */}
       <div className="space-y-4 pt-2">
@@ -569,6 +665,8 @@ export default function WeddingPage() {
           </button>
         )}
       </div>
+        </>
+      )}
 
       {/* Modallar */}
       <KumbaraModal

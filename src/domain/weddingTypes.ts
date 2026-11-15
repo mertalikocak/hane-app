@@ -22,6 +22,10 @@ export interface GoldPricesResponse {
   isStale?: boolean;
   errorMessage?: string;
   kalemler: GoldPricesMap;
+  dovizKurlari?: {
+    usd: number;
+    eur: number;
+  };
 }
 
 export interface WeddingPiggyContribution {
@@ -62,11 +66,61 @@ export interface WeddingItem {
   createdAt: string;
 }
 
+export type WeddingParticipantSide = "mert" | "havsa";
+
+export interface WeddingParticipant {
+  id: string;
+  isim: string;
+  yetiskin: number;
+  cocuk: number;
+  toplam: number;
+  taraf: WeddingParticipantSide;
+  createdAt: string;
+}
+
+export type WeddingTakiEventType = "nisan" | "kina" | "dugun";
+export type WeddingTakiAssetType = "altin" | "usd" | "eur" | "tl";
+export type WeddingTakiGoldSubType = "gram" | "ceyrek" | "yarim" | "tam" | "ajda" | "diger";
+
+export interface WeddingTakiEventDates {
+  nisan?: string;
+  kina?: string;
+  dugun?: string;
+}
+
+export interface WeddingTakiItem {
+  id: string;
+  etkinlik: WeddingTakiEventType;
+  kimTakti: string;
+  takiTuru: WeddingTakiAssetType;
+  altinTuru?: WeddingTakiGoldSubType;
+  digerAltinAciklama?: string;
+  adet: number;
+  gramaj?: number;
+  tarihBirimFiyatTL: number;
+  tarihToplamDegerTL: number;
+  tarihGramAltinKuruTL?: number;
+  tarih: string;
+  notlar?: string;
+  createdAt: string;
+}
+
+export interface WeddingTakiValuation {
+  tarihToplamDegerTL: number;
+  guncelBirimFiyatTL: number;
+  guncelToplamDegerTL: number;
+  farkTL: number;
+  farkYuzde: number;
+}
+
 export interface WeddingData {
   kumbaraKatkilar: WeddingPiggyContribution[];
   maddeler: WeddingItem[];
   hedefTarih?: string;
   notlar?: string;
+  katilimcilar?: WeddingParticipant[];
+  takiEtkinlikTarihleri?: WeddingTakiEventDates;
+  takilar?: WeddingTakiItem[];
 }
 
 export interface GoldSummaryItem {

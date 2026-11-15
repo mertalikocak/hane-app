@@ -14,8 +14,16 @@ const VAULT_COLLECTION = "hane_vaults";
 const VAULT_DOC_ID = "main_data";
 
 let isApplyingRemoteChange = false;
+let hasInitialSnapshot = false;
+let hasPendingLocalChange = false;
 let pushDebounceTimer: NodeJS.Timeout | null = null;
 let activeFirestoreUnsubscribe: Unsubscribe | null = null;
+
+export function isLocalReadOnlyEnvironment(): boolean {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1" || host === "::1";
+}
 
 let currentSyncState: SyncState = {
   status: "unconfigured",
@@ -47,6 +55,13 @@ export function subscribeSyncState(fn: (state: SyncState) => void): () => void {
  * Pushes all current local data to Firestore
  */
 export async function pushLocalToCloud(): Promise<{ success: boolean; error?: string }> {
+  if (isLocalReadOnlyEnvironment()) {
+    return {
+      success: false,
+      error: "Localhost salt-okunur modda olduğu için buluta yazma engellendi.",
+    };
+  }
+
   const db = getFirebaseDb();
   if (!db) {
     currentSyncState = {
@@ -79,6 +94,7 @@ export async function pushLocalToCloud(): Promise<{ success: boolean; error?: st
       { merge: true }
     );
 
+    hasPendingLocalChange = false;
     currentSyncState = {
       status: "synced",
       lastSyncedAt: new Date(),
@@ -127,6 +143,7 @@ export async function pullCloudToLocal(): Promise<{ success: boolean; error?: st
       }
     }
 
+    hasPendingLocalChange = false;
     currentSyncState = {
       status: "synced",
       lastSyncedAt: new Date(),
@@ -149,6 +166,13 @@ export async function pullCloudToLocal(): Promise<{ success: boolean; error?: st
  * Deletes the cloud vault document from Firestore
  */
 export async function deleteCloudData(): Promise<{ success: boolean; error?: string }> {
+  if (isLocalReadOnlyEnvironment()) {
+    return {
+      success: false,
+      error: "Localhost salt-okunur modda olduğu için bulut verisi silinemez.",
+    };
+  }
+
   const db = getFirebaseDb();
   if (!db) {
     return { success: false, error: "Firebase veritabanı bulunamadı." };
@@ -164,6 +188,7 @@ export async function deleteCloudData(): Promise<{ success: boolean; error?: str
     const docRef = doc(db, VAULT_COLLECTION, VAULT_DOC_ID);
     await deleteDoc(docRef);
 
+    hasPendingLocalChange = false;
     currentSyncState = {
       status: "synced",
       lastSyncedAt: new Date(),
@@ -186,8 +211,12 @@ export async function deleteCloudData(): Promise<{ success: boolean; error?: str
  * Debounced trigger for pushing local changes when user adds/edits data
  */
 export function queueLocalChangePush(immediate = false) {
+  if (isLocalReadOnlyEnvironment()) return;
   if (isApplyingRemoteChange) return;
+  if (!hasInitialSnapshot) return;
   if (!isFirebaseConfigured()) return;
+
+  hasPendingLocalChange = true;
 
   if (pushDebounceTimer) {
     clearTimeout(pushDebounceTimer);
@@ -238,6 +267,9 @@ export function startRealtimeCloudSync(): () => void {
     return () => { };
   }
 
+  hasInitialSnapshot = false;
+  hasPendingLocalChange = false;
+
   currentSyncState = {
     status: "connecting",
     lastSyncedAt: currentSyncState.lastSyncedAt,
@@ -245,6 +277,7 @@ export function startRealtimeCloudSync(): () => void {
   notifyListeners();
 
   const docRef = doc(db, VAULT_COLLECTION, VAULT_DOC_ID);
+  const readOnlyLocal = isLocalReadOnlyEnvironment();
 
   activeFirestoreUnsubscribe = onSnapshot(
     docRef,
@@ -265,10 +298,12 @@ export function startRealtimeCloudSync(): () => void {
             }, 500);
           }
         }
-      } else {
+      } else if (!readOnlyLocal) {
         // If document doesn't exist yet on cloud, push initial local data
         pushLocalToCloud();
       }
+
+      hasInitialSnapshot = true;
 
       currentSyncState = {
         status: "synced",
@@ -287,12 +322,13 @@ export function startRealtimeCloudSync(): () => void {
     }
   );
 
-  // Hook into local storage update events
+  // Hook into local storage update events (canlı ortamda push aktif, localhost'ta salt-okunur)
   const handleLocalUpdate = () => {
     queueLocalChangePush();
   };
 
   const handleBeforeUnload = () => {
+    if (!hasPendingLocalChange && !pushDebounceTimer) return;
     if (pushDebounceTimer) {
       clearTimeout(pushDebounceTimer);
       pushDebounceTimer = null;
@@ -318,15 +354,19 @@ export function startRealtimeCloudSync(): () => void {
     "wedding_data_updated",
   ];
 
-  syncEvents.forEach((ev) => window.addEventListener(ev, handleLocalUpdate));
-  window.addEventListener("beforeunload", handleBeforeUnload);
+  if (!readOnlyLocal) {
+    syncEvents.forEach((ev) => window.addEventListener(ev, handleLocalUpdate));
+    window.addEventListener("beforeunload", handleBeforeUnload);
+  }
 
   return () => {
     if (activeFirestoreUnsubscribe) {
       activeFirestoreUnsubscribe();
       activeFirestoreUnsubscribe = null;
     }
-    syncEvents.forEach((ev) => window.removeEventListener(ev, handleLocalUpdate));
-    window.removeEventListener("beforeunload", handleBeforeUnload);
+    if (!readOnlyLocal) {
+      syncEvents.forEach((ev) => window.removeEventListener(ev, handleLocalUpdate));
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    }
   };
 }

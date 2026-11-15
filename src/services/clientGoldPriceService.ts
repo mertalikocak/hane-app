@@ -38,6 +38,11 @@ export const DEFAULT_FALLBACK_GOLD_PRICES: GoldPricesMap = {
   },
 };
 
+export const DEFAULT_FALLBACK_FOREX = {
+  usd: 38.0,
+  eur: 41.0,
+};
+
 export function getCachedGoldPrices(): GoldPricesResponse | null {
   if (typeof window === "undefined" || !window.localStorage) return null;
   try {

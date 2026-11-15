@@ -11,6 +11,7 @@ import { CustomShoppingList } from "@/components/shopping/CustomShoppingList";
 import { FoodShoppingSyncList } from "@/components/shopping/FoodShoppingSyncList";
 import { WhatsAppShareModal } from "@/components/shopping/WhatsAppShareModal";
 import { getCustomShoppingList } from "@/storage/shoppingStorage";
+import type { ShoppingCustomItem } from "@/domain/shoppingTypes";
 import { readStorage, STORAGE_KEYS, type LocalShoppingItem, type LocalPlanEntry, type LocalMeal } from "@/lib/local-storage/store";
 import { buildShoppingItems } from "@/services/local-shopping";
 
@@ -18,7 +19,7 @@ type ShoppingTab = "custom" | "food";
 
 function ShoppingContent() {
   const [activeTab, setActiveTab] = useState<ShoppingTab>("custom");
-  const [customItems, setCustomItems] = useState(() => getCustomShoppingList());
+  const [customItems, setCustomItems] = useState<ShoppingCustomItem[]>([]);
   const [foodItems, setFoodItems] = useState<LocalShoppingItem[]>([]);
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
 

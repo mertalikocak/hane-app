@@ -49,6 +49,11 @@ const FALLBACK_DEFAULT_PRICES: GoldPricesMap = {
   },
 };
 
+const FALLBACK_DEFAULT_FOREX = {
+  usd: 38.0,
+  eur: 41.0,
+};
+
 export class GoldPriceService {
   /**
    * Hesaplı Altın API'sinden güncel altın fiyatlarını çeker veya önbellekten döner.
@@ -98,6 +103,7 @@ export class GoldPriceService {
           errorMessage:
             "Altın fiyat servisi şu anda yanıt vermiyor. Lütfen internet bağlantınızı ve API durumunu kontrol edin.",
           kalemler: FALLBACK_DEFAULT_PRICES,
+          dovizKurlari: FALLBACK_DEFAULT_FOREX,
         };
         return fallbackData;
       })
@@ -176,12 +182,47 @@ export class GoldPriceService {
         },
       };
 
+      const usdRaw = kalemlerRaw.USD_TRY || kalemlerRaw.USD;
+      const eurRaw = kalemlerRaw.EUR_TRY || kalemlerRaw.EUR;
+      let usdRate = Number(usdRaw?.alis || usdRaw?.satis) || 0;
+      let eurRate = Number(eurRaw?.alis || eurRaw?.satis) || 0;
+
+      if (!usdRate || !eurRate) {
+        try {
+          const fxController = new AbortController();
+          const fxTimeout = setTimeout(() => fxController.abort(), 4000);
+          try {
+            const fxRes = await fetch("https://open.er-api.com/v6/latest/TRY", {
+              signal: fxController.signal,
+              cache: "no-store",
+            });
+            if (fxRes.ok) {
+              const fxJson = await fxRes.json();
+              const tryToUsd = Number(fxJson?.rates?.USD);
+              const tryToEur = Number(fxJson?.rates?.EUR);
+              if (!usdRate && tryToUsd > 0) usdRate = Number((1 / tryToUsd).toFixed(2));
+              if (!eurRate && tryToEur > 0) eurRate = Number((1 / tryToEur).toFixed(2));
+            }
+          } finally {
+            clearTimeout(fxTimeout);
+          }
+        } catch {
+          // Döviz ikincil API erişilemezse fallback kullanılır
+        }
+      }
+
+      const dovizKurlari = {
+        usd: usdRate > 0 ? usdRate : FALLBACK_DEFAULT_FOREX.usd,
+        eur: eurRate > 0 ? eurRate : FALLBACK_DEFAULT_FOREX.eur,
+      };
+
       const result: GoldPricesResponse = {
         success: true,
         updatedAt: json.updatedAt || new Date().toISOString(),
         piyasa: json.piyasa || "canli",
         isStale: false,
         kalemler,
+        dovizKurlari,
       };
 
       return result;

@@ -110,6 +110,7 @@ interface DataPoint {
 export function ProgressCharts({ records }: ProgressChartsProps) {
   const [activeTab, setActiveTab] = useState<MetricType>("weight");
   const [hoveredPointIndex, setHoveredPointIndex] = useState<number | null>(null);
+  const [selectedPointIndex, setSelectedPointIndex] = useState<number | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const chronologicalRecords = useMemo(() => {
@@ -170,9 +171,9 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
   const chartGeometry = useMemo(() => {
     if (!hasEnoughData) return null;
 
-    const width = 700;
+    const width = 640;
     const height = 280;
-    const padding = { top: 30, right: 35, bottom: 40, left: 55 };
+    const padding = { top: 28, right: 42, bottom: 42, left: 54 };
 
     const innerWidth = width - padding.left - padding.right;
     const innerHeight = height - padding.top - padding.bottom;
@@ -230,10 +231,11 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
     };
   }, [activeData, hasEnoughData]);
 
-  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    if (!chartGeometry || !svgRef.current) return;
+  const findClosestPointIndex = (clientX: number): number | null => {
+    if (!chartGeometry || !svgRef.current) return null;
     const rect = svgRef.current.getBoundingClientRect();
-    const mouseX = ((e.clientX - rect.left) / rect.width) * chartGeometry.width;
+    if (rect.width <= 0) return null;
+    const mouseX = ((clientX - rect.left) / rect.width) * chartGeometry.width;
 
     let closestIdx = 0;
     let minDistance = Infinity;
@@ -246,24 +248,57 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
       }
     });
 
-    setHoveredPointIndex(closestIdx);
+    return closestIdx;
   };
 
-  const handleMouseLeave = () => {
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType !== "mouse") return;
+    const closestIdx = findClosestPointIndex(e.clientX);
+    if (closestIdx !== null) {
+      setHoveredPointIndex(closestIdx);
+    }
+  };
+
+  const handlePointerLeave = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType !== "mouse") return;
     setHoveredPointIndex(null);
   };
 
+  const handleChartClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    const closestIdx = findClosestIndexSafe(e.clientX);
+    if (closestIdx !== null) {
+      setSelectedPointIndex(closestIdx);
+    }
+  };
+
+  const findClosestIndexSafe = (clientX: number) => findClosestPointIndex(clientX);
+
+  const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (e.touches.length === 0) return;
+    const closestIdx = findClosestPointIndex(e.touches[0].clientX);
+    if (closestIdx !== null) {
+      setSelectedPointIndex(closestIdx);
+    }
+  };
+
+  const activeIndex =
+    hoveredPointIndex !== null
+      ? hoveredPointIndex
+      : selectedPointIndex !== null && chartGeometry && selectedPointIndex < chartGeometry.points.length
+      ? selectedPointIndex
+      : null;
+
   const activeHoverPoint =
-    chartGeometry && hoveredPointIndex !== null
-      ? chartGeometry.points[hoveredPointIndex]
+    chartGeometry && activeIndex !== null
+      ? chartGeometry.points[activeIndex]
       : null;
 
   return (
-    <section className="ds-card p-6 sm:p-7 space-y-6">
+    <section className="ds-card p-4 sm:p-6 lg:p-7 space-y-5 sm:space-y-6">
       {/* 1. Header & Metric Tabs */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>
-          <h3 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+          <h3 className="text-base sm:text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
             <span>📈</span>
             <span>Gelişim ve İlerleme Grafikleri</span>
           </h3>
@@ -273,7 +308,7 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
         </div>
 
         {/* Tab Controls */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-surface-raised p-1 rounded-xl border border-border self-start lg:self-auto">
+        <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1 sm:gap-1.5 bg-surface-raised p-1 rounded-xl border border-border w-full lg:w-auto">
           {(["weight", "bodyFat", "waist"] as MetricType[]).map((type) => {
             const cfg = METRIC_CONFIGS[type];
             const count = dataSeries[type].length;
@@ -286,17 +321,18 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                 onClick={() => {
                   setActiveTab(type);
                   setHoveredPointIndex(null);
+                  setSelectedPointIndex(null);
                 }}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer select-none ${
+                className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition-all cursor-pointer select-none whitespace-nowrap ${
                   isSelected
                     ? "bg-surface text-foreground shadow-xs border border-border"
                     : "text-muted hover:text-foreground"
                 }`}
               >
                 <span>{cfg.icon}</span>
-                <span>{cfg.title.replace(" Değişimi", "")}</span>
+                <span className="truncate">{cfg.title.replace(" Değişimi", "")}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold ${
+                  className={`text-[10px] px-1.5 py-0.5 rounded-md font-bold shrink-0 ${
                     isSelected
                       ? "bg-surface-lavender text-primary"
                       : "bg-surface-raised text-muted"
@@ -388,69 +424,75 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
         </div>
       ) : (
         chartGeometry && (
-          <div className="relative rounded-2xl border border-border bg-surface-raised/40 p-4 sm:p-6 overflow-hidden">
-            {/* Interactive Tooltip Card Overlay */}
-            {activeHoverPoint && (
-              <div
-                className="absolute z-20 pointer-events-none rounded-xl border border-border bg-surface px-4 py-2.5 shadow-md transition-all duration-75 space-y-0.5 text-left min-w-[140px]"
-                style={{
-                  left: `clamp(10px, ${
-                    (activeHoverPoint.x / chartGeometry.width) * 100
-                  }%, calc(100% - 150px))`,
-                  top: "16px",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="flex items-center justify-between gap-2 border-b border-border pb-1">
-                  <span className="text-[10px] font-bold text-muted">
-                    📅 {activeHoverPoint.formattedShortDate}
-                  </span>
-                  <span className="text-[9px] font-bold text-primary bg-surface-lavender px-1.5 py-0.5 rounded">
-                    #{activeHoverPoint.index + 1}
-                  </span>
+          <div className="relative rounded-2xl border border-border bg-surface-raised/40 p-3 sm:p-6 overflow-hidden space-y-3">
+            {/* Desktop Interactive Tooltip Card Overlay */}
+            {activeHoverPoint && (() => {
+              const pct = (activeHoverPoint.x / chartGeometry.width) * 100;
+              const tooltipStyle: React.CSSProperties =
+                pct < 22
+                  ? { left: "12px", top: "12px" }
+                  : pct > 78
+                  ? { right: "12px", top: "12px" }
+                  : { left: `${pct}%`, top: "12px", transform: "translateX(-50%)" };
+
+              return (
+                <div
+                  className="hidden sm:block absolute z-20 pointer-events-none rounded-xl border border-border bg-surface px-4 py-2.5 shadow-md transition-all duration-75 space-y-0.5 text-left min-w-[148px]"
+                  style={tooltipStyle}
+                >
+                  <div className="flex items-center justify-between gap-2 border-b border-border pb-1">
+                    <span className="text-[10px] font-bold text-muted">
+                      📅 {activeHoverPoint.formattedShortDate}
+                    </span>
+                    <span className="text-[9px] font-bold text-primary bg-surface-lavender px-1.5 py-0.5 rounded">
+                      #{activeHoverPoint.index + 1}
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-1 pt-0.5">
+                    <span className="text-lg font-bold text-foreground tabular-nums">
+                      {activeHoverPoint.value}
+                    </span>
+                    <span className="text-xs font-bold text-muted">
+                      {activeConfig.unit}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-muted">
+                    {activeHoverPoint.index > 0 ? (
+                      (() => {
+                        const prevVal = chartGeometry.points[activeHoverPoint.index - 1].value;
+                        const diff = Number((activeHoverPoint.value - prevVal).toFixed(1));
+                        return (
+                          <span
+                            className={`font-bold tabular-nums ${
+                              diff < 0
+                                ? "text-success"
+                                : diff > 0
+                                ? "text-warning"
+                                : "text-muted"
+                            }`}
+                          >
+                            {diff > 0 ? `+${diff}` : diff} {activeConfig.unit} (önceki)
+                          </span>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-muted">İlk Başlangıç Kaydı</span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-baseline gap-1 pt-0.5">
-                  <span className="text-lg font-bold text-foreground tabular-nums">
-                    {activeHoverPoint.value}
-                  </span>
-                  <span className="text-xs font-bold text-muted">
-                    {activeConfig.unit}
-                  </span>
-                </div>
-                <div className="text-[10px] text-muted">
-                  {activeHoverPoint.index > 0 ? (
-                    (() => {
-                      const prevVal = chartGeometry.points[activeHoverPoint.index - 1].value;
-                      const diff = Number((activeHoverPoint.value - prevVal).toFixed(1));
-                      return (
-                        <span
-                          className={`font-bold tabular-nums ${
-                            diff < 0
-                              ? "text-success"
-                              : diff > 0
-                              ? "text-warning"
-                              : "text-muted"
-                          }`}
-                        >
-                          {diff > 0 ? `+${diff}` : diff} {activeConfig.unit} (önceki)
-                        </span>
-                      );
-                    })()
-                  ) : (
-                    <span className="text-muted">İlk Başlangıç Kaydı</span>
-                  )}
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Responsive SVG Chart */}
-            <div className="w-full aspect-[21/9] min-h-[220px] max-h-[340px]">
+            <div className="w-full aspect-[16/9] sm:aspect-[21/9] min-h-[190px] sm:min-h-[220px] max-h-[340px]">
               <svg
                 ref={svgRef}
                 viewBox={`0 0 ${chartGeometry.width} ${chartGeometry.height}`}
-                className="w-full h-full overflow-visible select-none"
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
+                className="w-full h-full overflow-visible select-none touch-pan-y"
+                onPointerMove={handlePointerMove}
+                onPointerLeave={handlePointerLeave}
+                onClick={handleChartClick}
+                onTouchStart={handleTouchStart}
               >
                 <defs>
                   <linearGradient
@@ -482,7 +524,7 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                       x={chartGeometry.padding.left - 10}
                       y={tick.y + 4}
                       textAnchor="end"
-                      fontSize="10"
+                      fontSize="12"
                       fontWeight="bold"
                       className="fill-muted"
                     >
@@ -509,7 +551,7 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                   className="transition-all duration-300"
                 />
 
-                {/* Vertical Crosshair Line on Hover */}
+                {/* Vertical Crosshair Line on Hover / Select */}
                 {activeHoverPoint && (
                   <line
                     x1={activeHoverPoint.x}
@@ -525,14 +567,24 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
 
                 {/* Data Points */}
                 {chartGeometry.points.map((pt, index) => {
-                  const isHovered = hoveredPointIndex === index;
+                  const isActive = activeIndex === index;
                   return (
-                    <g key={pt.id} className="cursor-pointer">
-                      {isHovered && (
+                    <g
+                      key={pt.id}
+                      className="cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPointIndex(index);
+                      }}
+                    >
+                      {/* Geniş dokunma alanı (özellikle mobil ve son nokta için) */}
+                      <circle cx={pt.x} cy={pt.y} r="18" fill="transparent" />
+
+                      {isActive && (
                         <circle
                           cx={pt.x}
                           cy={pt.y}
-                          r="10"
+                          r="11"
                           fill={activeConfig.strokeColor}
                           fillOpacity="0.2"
                         />
@@ -541,10 +593,10 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                       <circle
                         cx={pt.x}
                         cy={pt.y}
-                        r={isHovered ? "6" : "4.5"}
+                        r={isActive ? "6.5" : "4.5"}
                         fill="#ffffff"
                         stroke={activeConfig.strokeColor}
-                        strokeWidth={isHovered ? "3" : "2.5"}
+                        strokeWidth={isActive ? "3" : "2.5"}
                         className="transition-all duration-150"
                       />
                     </g>
@@ -553,9 +605,11 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
 
                 {/* X-Axis Date Labels */}
                 {chartGeometry.points.map((pt, index) => {
+                  const isFirst = index === 0;
+                  const isLast = index === chartGeometry.points.length - 1;
                   const shouldShow =
-                    index === 0 ||
-                    index === chartGeometry.points.length - 1 ||
+                    isFirst ||
+                    isLast ||
                     (chartGeometry.points.length > 4 &&
                       index === Math.floor(chartGeometry.points.length / 2));
 
@@ -566,8 +620,8 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
                       key={`date-${pt.id}`}
                       x={pt.x}
                       y={chartGeometry.height - 12}
-                      textAnchor="middle"
-                      fontSize="10"
+                      textAnchor={isFirst ? "start" : isLast ? "end" : "middle"}
+                      fontSize="12"
                       fontWeight="bold"
                       className="fill-muted select-none"
                     >
@@ -578,14 +632,95 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
               </svg>
             </div>
 
+            {/* Mobile Selected Point Detail Bar (Her zaman net görünür, parmak altında kalmaz ve taşmaz) */}
+            <div className="sm:hidden">
+              {activeHoverPoint ? (
+                <div className="rounded-xl border border-border bg-surface p-3 flex items-center justify-between gap-2 shadow-2xs">
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] font-bold text-muted">
+                        📅 {activeHoverPoint.formattedFullDate}
+                      </span>
+                      <span className="text-[10px] font-bold text-primary bg-surface-lavender px-1.5 py-0.5 rounded">
+                        #{activeHoverPoint.index + 1}/{chartGeometry.points.length}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-2 flex-wrap">
+                      <span className="text-base font-extrabold text-foreground tabular-nums">
+                        {activeHoverPoint.value} {activeConfig.unit}
+                      </span>
+                      {activeHoverPoint.index > 0 ? (
+                        (() => {
+                          const prevVal = chartGeometry.points[activeHoverPoint.index - 1].value;
+                          const diff = Number((activeHoverPoint.value - prevVal).toFixed(1));
+                          return (
+                            <span
+                              className={`text-[11px] font-bold tabular-nums ${
+                                diff < 0
+                                  ? "text-success"
+                                  : diff > 0
+                                  ? "text-warning"
+                                  : "text-muted"
+                              }`}
+                            >
+                              {diff > 0 ? `+${diff}` : diff} {activeConfig.unit} (önceki)
+                            </span>
+                          );
+                        })()
+                      ) : (
+                        <span className="text-[11px] text-muted">İlk Kayıt</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Önceki / Sonraki Kayıt Geçiş Butonları */}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      disabled={activeHoverPoint.index <= 0}
+                      onClick={() => setSelectedPointIndex(Math.max(0, activeHoverPoint.index - 1))}
+                      className="secondary-button h-8 w-8 p-0 text-sm font-bold disabled:opacity-35"
+                      aria-label="Önceki kayıt"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      disabled={activeHoverPoint.index >= chartGeometry.points.length - 1}
+                      onClick={() =>
+                        setSelectedPointIndex(
+                          Math.min(chartGeometry.points.length - 1, activeHoverPoint.index + 1)
+                        )
+                      }
+                      className="secondary-button h-8 w-8 p-0 text-sm font-bold disabled:opacity-35"
+                      aria-label="Sonraki kayıt"
+                    >
+                      ›
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-border bg-surface/60 px-3 py-2 flex items-center justify-between gap-2 text-[11px] text-muted">
+                  <span>Detay için grafikte bir noktaya dokunun</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedPointIndex(chartGeometry.points.length - 1)}
+                    className="font-bold text-primary hover:underline shrink-0 cursor-pointer"
+                  >
+                    Son Kaydı İncele →
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Bottom Chart Footer Legend */}
-            <div className="flex items-center justify-between pt-3 border-t border-border text-[11px] text-muted">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-border text-[11px] text-muted">
               <span>
                 Toplam <strong>{activeData.length}</strong> ölçüm noktası
               </span>
               <span className="flex items-center gap-1.5 font-semibold text-foreground">
                 <span
-                  className="w-2.5 h-2.5 rounded-full inline-block"
+                  className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
                   style={{ backgroundColor: activeConfig.strokeColor }}
                 />
                 {activeConfig.title} ({activeConfig.unit})
