@@ -233,15 +233,31 @@ export function ProgressCharts({ records }: ProgressChartsProps) {
 
   const findClosestPointIndex = (clientX: number): number | null => {
     if (!chartGeometry || !svgRef.current) return null;
-    const rect = svgRef.current.getBoundingClientRect();
-    if (rect.width <= 0) return null;
-    const mouseX = ((clientX - rect.left) / rect.width) * chartGeometry.width;
+    const svgEl = svgRef.current;
+
+    let mouseX: number | null = null;
+    const ctm = svgEl.getScreenCTM();
+    if (ctm) {
+      const pt = svgEl.createSVGPoint();
+      pt.x = clientX;
+      pt.y = 0;
+      mouseX = pt.matrixTransform(ctm.inverse()).x;
+    } else {
+      const rect = svgEl.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      const scale = Math.min(rect.width / chartGeometry.width, rect.height / chartGeometry.height);
+      const renderedWidth = chartGeometry.width * scale;
+      const offsetX = (rect.width - renderedWidth) / 2;
+      mouseX = (clientX - rect.left - offsetX) / scale;
+    }
+
+    if (mouseX === null || Number.isNaN(mouseX)) return null;
 
     let closestIdx = 0;
     let minDistance = Infinity;
 
     chartGeometry.points.forEach((pt, i) => {
-      const distance = Math.abs(pt.x - mouseX);
+      const distance = Math.abs(pt.x - mouseX!);
       if (distance < minDistance) {
         minDistance = distance;
         closestIdx = i;

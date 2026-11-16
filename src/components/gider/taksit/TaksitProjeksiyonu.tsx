@@ -262,14 +262,22 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
               ? ay.odenecekTaksitler.filter((t) => t.sahip === "havsa" || t.sahip === "ortak")
               : ay.odenecekTaksitler;
 
-          const bitenSayisi = ayTaksitleri.filter((t) => t.buAyBitiyor).length;
+          const bitenTaksitler = ayTaksitleri.filter((t) => t.buAyBitiyor);
+          const bitenSayisi = bitenTaksitler.length;
+          const bitenTutar = bitenTaksitler.reduce((sum, t) => {
+            const pay =
+              gorunum !== "toplam" && t.sahip === "ortak"
+                ? t.aylikTutar / 2
+                : t.aylikTutar;
+            return sum + pay;
+          }, 0);
 
           return (
             <button
               key={`${ay.ayAdi}-${ay.yil}`}
               type="button"
               onClick={() => setSeciliAyIndex(isSelected ? null : ay.ayIndex)}
-              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between h-56 relative overflow-hidden group ${
+              className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-56 relative overflow-hidden group ${
                 isSelected
                   ? "bg-surface-lavender border-primary shadow-xs ring-2 ring-primary/20"
                   : isCurrentMonth
@@ -322,9 +330,11 @@ export function TaksitProjeksiyonu({ taksitler, kartlar }: TaksitProjeksiyonuPro
 
                 {/* Bu Ay Biten Varsa Rozet */}
                 {bitenSayisi > 0 ? (
-                  <span className="text-[10px] font-bold text-success block truncate flex items-center gap-1">
-                    <span>🎉</span>
-                    <span>{bitenSayisi} taksit bitiyor</span>
+                  <span className="text-[10px] font-bold text-success flex items-start gap-1 leading-tight tabular-nums">
+                    <span className="shrink-0">🎉</span>
+                    <span>
+                      {bitenSayisi} taksit ({paraFormat(bitenTutar)}) bitiyor
+                    </span>
                   </span>
                 ) : (
                   <span className="text-[10px] text-muted block truncate">
