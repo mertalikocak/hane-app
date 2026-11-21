@@ -17,6 +17,7 @@ import {
   getProfiles,
   getActiveProfileId,
   getMeasurementsByProfile,
+  getProfileStats,
 } from "@/storage/bodyStorage";
 import {
   getDailyRecord,
@@ -46,6 +47,19 @@ export function buildAssistantContext(): AssistantContextSnapshot {
   const profiles = rawProfiles.map((p) => {
     const meas = getMeasurementsByProfile(p.id);
     const latest = meas[0];
+    const pStats = getProfileStats(p.id);
+    const historyChronological = meas
+      .slice(0, 30)
+      .reverse()
+      .map((m) => ({
+        date: m.date,
+        weight: m.weight,
+        waist: m.waist,
+        neck: m.neck,
+        hip: m.hip,
+        bodyFat: m.bodyFat,
+      }));
+
     return {
       id: p.id,
       name: `${p.firstName} ${p.lastName}`.trim(),
@@ -62,6 +76,17 @@ export function buildAssistantContext(): AssistantContextSnapshot {
             bodyFat: latest.bodyFat,
           }
         : undefined,
+      stats: {
+        totalMeasurements: pStats.totalMeasurements,
+        startWeight: pStats.startWeight,
+        latestWeight: pStats.latestWeight,
+        weightChange: pStats.weightChange,
+        startBodyFat: pStats.startBodyFat,
+        latestBodyFat: pStats.latestBodyFat,
+        bodyFatChange: pStats.bodyFatChange,
+        latestBMI: pStats.latestBMI,
+      },
+      measurements: historyChronological,
     };
   });
 

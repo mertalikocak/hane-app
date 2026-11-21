@@ -76,6 +76,24 @@ export interface AssistantContextSnapshot {
       hip?: number;
       bodyFat?: number;
     };
+    stats?: {
+      totalMeasurements: number;
+      startWeight?: number;
+      latestWeight?: number;
+      weightChange?: number;
+      startBodyFat?: number;
+      latestBodyFat?: number;
+      bodyFatChange?: number;
+      latestBMI?: number;
+    };
+    measurements: {
+      date: string;
+      weight: number;
+      waist: number;
+      neck: number;
+      hip?: number;
+      bodyFat?: number;
+    }[];
   }[];
   gider: {
     monthKey: string;

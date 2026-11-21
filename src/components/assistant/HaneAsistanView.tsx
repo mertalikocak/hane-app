@@ -162,6 +162,47 @@ function makeId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
 
+interface SpeechRecognitionAlternativeLike {
+  transcript: string;
+}
+
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  length: number;
+  [index: number]: SpeechRecognitionAlternativeLike;
+}
+
+interface SpeechRecognitionEventLike {
+  resultIndex: number;
+  results: {
+    length: number;
+    [index: number]: SpeechRecognitionResultLike;
+  };
+}
+
+interface SpeechRecognitionErrorEventLike {
+  error?: string;
+}
+
+interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+function getSpeechRecognitionConstructor(): (new () => SpeechRecognitionLike) | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as Record<string, unknown>;
+  const ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+  return typeof ctor === "function" ? (ctor as new () => SpeechRecognitionLike) : null;
+}
+
 export function HaneAsistanView() {
   const {
     activeProfile,
@@ -188,9 +229,14 @@ export function HaneAsistanView() {
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
 
-  // Voice recording state
+  // Voice input state (Web Speech API birincil, MediaRecorder yedek)
+  const [isSpeechListening, setIsSpeechListening] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const speechRecognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const speechBaseTextRef = useRef<string>("");
+  const speechApiBlockedRef = useRef<boolean>(false);
+  const speechGotResultRef = useRef<boolean>(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -214,6 +260,17 @@ export function HaneAsistanView() {
     } catch {
       // ignore storage errors
     }
+
+    return () => {
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.abort();
+        speechRecognitionRef.current = null;
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+    };
   }, []);
 
   // Aktif profil değiştikçe yalnızca o profile ait özel sohbeti yükle
@@ -286,6 +343,12 @@ export function HaneAsistanView() {
     const cleanText = textPayload.trim();
     if (!cleanText && !audioPayload) return;
     if (isSending) return;
+
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.abort();
+      speechRecognitionRef.current = null;
+      setIsSpeechListening(false);
+    }
 
     const targetProfileKey = effectiveProfileKey;
     const userMsgId = makeId("usr");
@@ -489,8 +552,7 @@ export function HaneAsistanView() {
     );
   };
 
-  const startVoiceRecording = async () => {
-    if (isRecording || isSending) return;
+  const startMediaRecorderFallback = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -547,7 +609,97 @@ export function HaneAsistanView() {
     }
   };
 
-  const stopVoiceRecording = () => {
+  const startVoiceInput = async () => {
+    if (isSpeechListening || isRecording || isSending) return;
+
+    const SpeechRec = getSpeechRecognitionConstructor();
+    if (!SpeechRec || speechApiBlockedRef.current) {
+      await startMediaRecorderFallback();
+      return;
+    }
+
+    try {
+      const rec = new SpeechRec();
+      rec.lang = "tr-TR";
+      rec.continuous = true;
+      rec.interimResults = true;
+
+      speechBaseTextRef.current = inputText.trim() ? `${inputText.trimEnd()} ` : "";
+      speechGotResultRef.current = false;
+
+      rec.onresult = (event) => {
+        speechGotResultRef.current = true;
+        const parts: string[] = [];
+        for (let i = 0; i < event.results.length; i++) {
+          const piece = event.results[i]?.[0]?.transcript?.trim();
+          if (piece) parts.push(piece);
+        }
+        const combined = `${speechBaseTextRef.current}${parts.join(" ")}`.trimStart();
+        setInputText(combined);
+      };
+
+      rec.onerror = (event) => {
+        const errCode = event?.error || "";
+        if (errCode === "aborted" || errCode === "no-speech") {
+          return;
+        }
+        setIsSpeechListening(false);
+        const currentRec = speechRecognitionRef.current;
+        speechRecognitionRef.current = null;
+
+        if (errCode === "not-allowed" || errCode === "service-not-allowed") {
+          updateChatForProfile(effectiveProfileKey, (prev) => [
+            ...prev,
+            {
+              id: makeId("err"),
+              role: "assistant",
+              content: "Mikrofon izni verilmedi. Tarayıcı ayarlarından mikrofon erişimine izin verin.",
+              createdAt: new Date().toISOString(),
+              error: "Mikrofon izni",
+            },
+          ]);
+          return;
+        }
+
+        // Brave vb. tarayıcılar Google Speech sunucusunu engellediğinde ("network") veya dil hatasında
+        // otomatik olarak ses kaydı (MediaRecorder) yedeğine geç
+        if (
+          errCode === "network" ||
+          errCode === "language-not-supported" ||
+          !speechGotResultRef.current
+        ) {
+          speechApiBlockedRef.current = true;
+          try {
+            currentRec?.abort();
+          } catch {
+            // ignore
+          }
+          void startMediaRecorderFallback();
+        }
+      };
+
+      rec.onend = () => {
+        setIsSpeechListening(false);
+        speechRecognitionRef.current = null;
+        inputRef.current?.focus();
+      };
+
+      speechRecognitionRef.current = rec;
+      rec.start();
+      setIsSpeechListening(true);
+    } catch {
+      speechRecognitionRef.current = null;
+      setIsSpeechListening(false);
+      await startMediaRecorderFallback();
+    }
+  };
+
+  const stopVoiceInput = () => {
+    if (speechRecognitionRef.current) {
+      speechRecognitionRef.current.stop();
+      setIsSpeechListening(false);
+      inputRef.current?.focus();
+    }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
@@ -859,16 +1011,25 @@ export function HaneAsistanView() {
           <div className="flex items-end gap-2">
             <button
               type="button"
-              onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
+              onClick={
+                isSpeechListening || isRecording ? stopVoiceInput : startVoiceInput
+              }
               disabled={isSending}
               className={`h-11 px-3 rounded-xl border text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                isRecording
+                isSpeechListening || isRecording
                   ? "bg-rose-600 border-rose-600 text-white animate-pulse"
                   : "bg-surface-raised border-border text-foreground hover:border-primary/40"
               }`}
-              title={isRecording ? "Kaydı Durdur ve Gönder" : "Sesli Komut Gönder"}
+              title={
+                isSpeechListening
+                  ? "Dinlemeyi Durdur"
+                  : isRecording
+                  ? "Kaydı Durdur ve Gönder"
+                  : "Sesle Yaz (Tarayıcı Dikte)"
+              }
             >
-              <span>{isRecording ? "⏹️" : "🎙️"}</span>
+              <span>{isSpeechListening || isRecording ? "⏹️" : "🎙️"}</span>
+              {isSpeechListening && <span>Dinleniyor</span>}
               {isRecording && (
                 <span className="tabular-nums">{recordingSeconds}s</span>
               )}
@@ -880,7 +1041,11 @@ export function HaneAsistanView() {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Örn: Garanti kartına Mert için 500 TL yakıt ekle veya kilom 87 kg..."
+              placeholder={
+                isSpeechListening
+                  ? "Konuşun, söyledikleriniz buraya canlı yazılıyor..."
+                  : "Örn: Garanti kartına Mert için 500 TL yakıt ekle veya kilom 87 kg..."
+              }
               disabled={isSending}
               className="field flex-1 min-h-[44px] max-h-32 py-2.5 px-3.5 text-sm resize-none leading-snug"
             />
@@ -895,8 +1060,9 @@ export function HaneAsistanView() {
             </button>
           </div>
           <p className="text-[10px] text-muted mt-1.5 px-1">
-            💡 Tek cümlede birden fazla modül komutu verebilirsiniz. Enter ile gönderir,
-            Shift+Enter ile alt satıra geçersiniz.
+            {isSpeechListening
+              ? "🎙️ Konuşmanız doğrudan yazı kutusuna aktarılıyor; bitince durdurup düzenleyebilir veya Gönder'e basabilirsiniz."
+              : "💡 Mikrofonla konuşarak metne çevirebilir, tek cümlede birden fazla modül komutu verebilirsiniz. Enter ile gönderir, Shift+Enter ile alt satıra geçersiniz."}
           </p>
         </div>
       </div>
