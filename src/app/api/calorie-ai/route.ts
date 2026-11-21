@@ -34,8 +34,8 @@ interface ModelCandidate {
 }
 
 const CANDIDATE_MODELS: ModelCandidate[] = [
-  { apiVersion: "v1beta", modelName: "gemini-3.6-flash" },
   { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite" },
+  { apiVersion: "v1beta", modelName: "gemini-3.6-flash" },
   { apiVersion: "v1beta", modelName: "gemini-3.8-flash" },
   { apiVersion: "v1beta", modelName: "gemini-flash-latest" },
 ];
@@ -147,51 +147,25 @@ export async function POST(req: NextRequest) {
     const controller = new AbortController();
     const overallTimeout = setTimeout(() => controller.abort(), 35000);
 
-    const safeRun = async (candidate: ModelCandidate) => {
-      try {
-        return await callCandidate(candidate, controller.signal);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        attemptErrors.push(msg);
-        throw err;
-      }
-    };
-
     let raceResult: { result: AIFoodAnalysisResult; modelUsed: string } | null = null;
 
     try {
-      // 1. Birincil modeli başlat (gemini-3.6-flash)
-      const p1 = safeRun(CANDIDATE_MODELS[0]);
-
-      // 2. Eğer birincil model 2.5 saniyede dönmezse ikincil modeli (gemini-3.5-flash-lite) paralel başlat
-      let timer: NodeJS.Timeout | null = null;
-      const p2 = new Promise<{ result: AIFoodAnalysisResult; modelUsed: string }>((resolve, reject) => {
-        timer = setTimeout(() => {
-          safeRun(CANDIDATE_MODELS[1]).then(resolve).catch(reject);
-        }, 2500);
-      });
-
-      p1.then(() => {
-        if (timer) clearTimeout(timer);
-      }).catch(() => {});
-
-      // İlk başarıyla dönen model kazanır
-      raceResult = await Promise.any([p1, p2]);
-    } catch {
-      // İlk iki model de başarısız olduysa sırayla 3. ve 4. yedekleri dene
-      for (let i = 2; i < CANDIDATE_MODELS.length; i++) {
+      // Free Tier kotasını korumak için paralel yarış yerine sırayla dene;
+      // yalnızca 429 (kota/rate limit) veya hata durumunda sonraki modele geç.
+      for (const candidate of CANDIDATE_MODELS) {
         try {
-          raceResult = await safeRun(CANDIDATE_MODELS[i]);
+          raceResult = await callCandidate(candidate, controller.signal);
           break;
-        } catch {
-          // sonraki modele geç
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          attemptErrors.push(msg);
+          if (msg.toLowerCase().includes("api_key") || msg.toLowerCase().includes("api key")) {
+            break;
+          }
         }
       }
     } finally {
       clearTimeout(overallTimeout);
-      if (raceResult) {
-        controller.abort();
-      }
     }
 
     if (raceResult) {

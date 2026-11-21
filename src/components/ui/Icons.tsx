@@ -607,6 +607,8 @@ export function ModuleLucideIcon({
   switch (href) {
     case "/":
       return <HomeIcon className={className} />;
+    case "/asistan":
+      return <SparklesIcon className={className} />;
     case "/dinner":
       return <UtensilsIcon className={className} />;
     case "/shopping":

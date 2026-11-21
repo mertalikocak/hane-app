@@ -15,6 +15,13 @@ export const DEFAULT_NAV_ITEMS: NavItem[] = [
     description: "Hane genel kontrol paneli",
   },
   {
+    name: "Hane Asistan",
+    href: "/asistan",
+    icon: "✨",
+    badge: "AI",
+    description: "Tüm modüllere erişen AI asistan",
+  },
+  {
     name: "Hane Dinner",
     href: "/dinner",
     icon: "🍽️",

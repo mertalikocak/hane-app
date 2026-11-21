@@ -7,8 +7,8 @@ interface ModelCandidate {
 }
 
 const CANDIDATE_MODELS: ModelCandidate[] = [
-  { apiVersion: "v1beta", modelName: "gemini-3.6-flash" },
   { apiVersion: "v1beta", modelName: "gemini-3.5-flash-lite" },
+  { apiVersion: "v1beta", modelName: "gemini-3.6-flash" },
   { apiVersion: "v1beta", modelName: "gemini-3.8-flash" },
   { apiVersion: "v1beta", modelName: "gemini-flash-latest" },
 ];
@@ -215,47 +215,25 @@ ANALİZ VE DÖNÜŞTÜRME KURALLARI:
     const controller = new AbortController();
     const overallTimeout = setTimeout(() => controller.abort(), hasAudio ? 45000 : 35000);
 
-    const safeRun = async (candidate: ModelCandidate) => {
-      try {
-        return await callCandidate(candidate, controller.signal);
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        attemptErrors.push(msg);
-        throw err;
-      }
-    };
-
     let raceResult: { result: AICalendarResponse; modelUsed: string } | null = null;
 
     try {
-      const p1 = safeRun(CANDIDATE_MODELS[0]);
-
-      let timer: NodeJS.Timeout | null = null;
-      const p2 = new Promise<{ result: AICalendarResponse; modelUsed: string }>((resolve, reject) => {
-        timer = setTimeout(() => {
-          safeRun(CANDIDATE_MODELS[1]).then(resolve).catch(reject);
-        }, hasAudio ? 4000 : 2500);
-      });
-
-      p1.then(() => {
-        if (timer) clearTimeout(timer);
-      }).catch(() => {});
-
-      raceResult = await Promise.any([p1, p2]);
-    } catch {
-      for (let i = 2; i < CANDIDATE_MODELS.length; i++) {
+      // Free Tier kotasını korumak için paralel yarış yerine sırayla dene;
+      // yalnızca 429 (kota/rate limit) veya hata durumunda sonraki modele geç.
+      for (const candidate of CANDIDATE_MODELS) {
         try {
-          raceResult = await safeRun(CANDIDATE_MODELS[i]);
+          raceResult = await callCandidate(candidate, controller.signal);
           break;
-        } catch {
-          // sonraki modele geç
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          attemptErrors.push(msg);
+          if (msg.toLowerCase().includes("api_key") || msg.toLowerCase().includes("api key")) {
+            break;
+          }
         }
       }
     } finally {
       clearTimeout(overallTimeout);
-      if (raceResult) {
-        controller.abort();
-      }
     }
 
     if (raceResult) {

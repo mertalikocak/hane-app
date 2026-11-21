@@ -103,6 +103,8 @@ export function Sidebar() {
     switch (href) {
       case "/":
         return "bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20";
+      case "/asistan":
+        return "bg-fuchsia-500/10 text-fuchsia-600 dark:text-fuchsia-400 border border-fuchsia-500/20";
       case "/dinner":
         return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
       case "/shopping":
