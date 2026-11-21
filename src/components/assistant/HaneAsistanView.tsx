@@ -15,14 +15,13 @@ import {
   setStoredGeminiApiKey,
 } from "@/storage/calorieStorage";
 import { useProfile } from "@/context/ProfileContext";
-import { PageHeader } from "@/components/ui/PageHeader";
 import {
-  SparklesIcon,
   CheckIcon,
   CloseIcon,
   TrashIcon,
   SettingsIcon,
   UserIcon,
+  ModuleLucideIcon,
 } from "@/components/ui/Icons";
 
 const CHAT_STORAGE_PREFIX = "hane_assistant_chat_history_";
@@ -61,102 +60,92 @@ function writeProfileChat(profileKey: string, list: AssistantChatMessage[]): voi
 
 const MODULE_META: Record<
   AssistantModule,
-  { label: string; icon: string; href: string; badgeClass: string }
+  { label: string; href: string; iconHref: string }
 > = {
-  gider: {
-    label: "Hane Gider",
-    icon: "💰",
-    href: "/gider",
-    badgeClass: "bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/25",
-  },
-  taksit: {
-    label: "Taksitler",
-    icon: "💳",
-    href: "/gider?tab=taksit",
-    badgeClass: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/25",
-  },
-  fit: {
-    label: "Hane Fit",
-    icon: "📐",
-    href: "/fit/dashboard",
-    badgeClass: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/25",
-  },
-  kalori: {
-    label: "Hane Kalori",
-    icon: "🥑",
-    href: "/kalori",
-    badgeClass: "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/25",
-  },
-  shopping: {
-    label: "Alışveriş",
-    icon: "🛒",
-    href: "/shopping",
-    badgeClass: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/25",
-  },
-  calendar: {
-    label: "Takvim",
-    icon: "📅",
-    href: "/calendar",
-    badgeClass: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/25",
-  },
-  wedding: {
-    label: "Hane Wedding",
-    icon: "💍",
-    href: "/wedding",
-    badgeClass: "bg-pink-500/10 text-pink-700 dark:text-pink-300 border-pink-500/25",
-  },
-  wishlist: {
-    label: "Wish List",
-    icon: "🎁",
-    href: "/wishlist",
-    badgeClass: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/25",
-  },
-  cleaning: {
-    label: "Temizlik",
-    icon: "🧹",
-    href: "/cleaning",
-    badgeClass: "bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/25",
-  },
-  cardolist: {
-    label: "Hane Car",
-    icon: "🚗",
-    href: "/cardolist",
-    badgeClass: "bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/25",
-  },
+  gider: { label: "Hane Gider", href: "/gider", iconHref: "/gider" },
+  taksit: { label: "Taksitler", href: "/gider?tab=taksit", iconHref: "/gider" },
+  fit: { label: "Hane Fit", href: "/fit/dashboard", iconHref: "/fit/dashboard" },
+  kalori: { label: "Hane Kalori", href: "/kalori", iconHref: "/kalori" },
+  shopping: { label: "Alışveriş", href: "/shopping", iconHref: "/shopping" },
+  calendar: { label: "Takvim", href: "/calendar", iconHref: "/calendar" },
+  wedding: { label: "Hane Wedding", href: "/wedding", iconHref: "/wedding" },
+  wishlist: { label: "Wish List", href: "/wishlist", iconHref: "/wishlist" },
+  cleaning: { label: "Temizlik", href: "/cleaning", iconHref: "/cleaning" },
+  cardolist: { label: "Hane Car", href: "/cardolist", iconHref: "/cardolist" },
 };
 
-const QUICK_PROMPTS = [
+const QUICK_PROMPTS: { module: AssistantModule; title: string; prompt: string }[] = [
   {
-    icon: "💰",
+    module: "gider",
     title: "Karta harcama ekle",
     prompt: "Garanti kartına Mert için 650 TL market harcaması ekle",
   },
   {
-    icon: "📐",
+    module: "fit",
     title: "Haftalık ölçüm gir",
     prompt: "Bugünkü ölçümümü gir: kilo 87.5 kg, bel 84 cm, boyun 39 cm",
   },
   {
-    icon: "🥑",
-    title: "Öğün / Kalori ekle",
+    module: "kalori",
+    title: "Öğün / kalori ekle",
     prompt: "Öğle yemeğine 1 tabak tavuklu pilav ve 1 bardak ayran ekle",
   },
   {
-    icon: "🛒",
+    module: "shopping",
     title: "Alışveriş listesi",
     prompt: "Alışveriş listesine 2 litre süt, 10 yumurta ve tam buğday ekmek ekle",
   },
-  {
-    icon: "📅",
-    title: "Takvime etkinlik ekle",
-    prompt: "Yarın saat 15:00'e diş hekimi randevusu ekle",
-  },
-  {
-    icon: "📊",
-    title: "Durum özeti sor",
-    prompt: "Bu ay ne kadar kart ekstresi görünüyor ve listede hangi alışverişler var?",
-  },
 ];
+
+function MicIcon({ className = "w-[18px] h-[18px]" }: { className?: string }) {
+  return (
+    <svg
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.75}
+      stroke="currentColor"
+      className={className}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"
+      />
+    </svg>
+  );
+}
+
+function StopIcon({ className = "w-[18px] h-[18px]" }: { className?: string }) {
+  return (
+    <svg
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.75}
+      stroke="currentColor"
+      className={className}
+    >
+      <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+function SendIcon({ className = "w-[18px] h-[18px]" }: { className?: string }) {
+  return (
+    <svg
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.75}
+      stroke="currentColor"
+      className={className}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+      />
+    </svg>
+  );
+}
 
 function makeId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -224,12 +213,12 @@ export function HaneAsistanView() {
 
   const messages = chatState.ownerKey === effectiveProfileKey ? chatState.list : [];
 
-  // API Key modal state
+  // Ayarlar & API Anahtarı modalı
   const [hasApiKey, setHasApiKey] = useState(false);
-  const [isApiModalOpen, setIsApiModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState("");
 
-  // Voice input state (Web Speech API birincil, MediaRecorder yedek)
+  // Sesli giriş (Web Speech API birincil, MediaRecorder yedek)
   const [isSpeechListening, setIsSpeechListening] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -244,7 +233,6 @@ export function HaneAsistanView() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // İlk yüklemede genel ayarları yükle ve eski ortak sohbet anahtarını temizle
   useEffect(() => {
     try {
       if (localStorage.getItem(LEGACY_SHARED_CHAT_KEY)) {
@@ -273,7 +261,6 @@ export function HaneAsistanView() {
     };
   }, []);
 
-  // Aktif profil değiştikçe yalnızca o profile ait özel sohbeti yükle
   useEffect(() => {
     if (!isProfileLoaded) return;
     const loaded = readProfileChat(effectiveProfileKey);
@@ -324,11 +311,11 @@ export function HaneAsistanView() {
     }
   };
 
-  const handleSaveApiKey = (e: React.FormEvent) => {
+  const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
     setStoredGeminiApiKey(apiKeyInput);
     setHasApiKey(Boolean(apiKeyInput.trim()));
-    setIsApiModalOpen(false);
+    setIsSettingsOpen(false);
   };
 
   const handleClearChat = () => {
@@ -356,7 +343,7 @@ export function HaneAsistanView() {
       id: userMsgId,
       role: "user",
       content: audioPayload
-        ? cleanText || "🎤 Sesli mesaj gönderildi..."
+        ? cleanText || "Sesli mesaj gönderildi"
         : cleanText,
       createdAt: new Date().toISOString(),
       isVoice: Boolean(audioPayload),
@@ -391,7 +378,7 @@ export function HaneAsistanView() {
 
       if (!res.ok || !data.success) {
         if (data?.missingApiKey) {
-          setIsApiModalOpen(true);
+          setIsSettingsOpen(true);
         }
         updateChatForProfile(targetProfileKey, (prev) => [
           ...prev,
@@ -400,7 +387,7 @@ export function HaneAsistanView() {
             role: "assistant",
             content:
               data?.error ||
-              "İstek işlenirken bir sorun oluştu. Lütfen tekrar deneyin.",
+              "İstek işlenirken bir sorun oluştu, lütfen tekrar deneyin",
             createdAt: new Date().toISOString(),
             error: data?.error || "Hata",
           },
@@ -408,12 +395,11 @@ export function HaneAsistanView() {
         return;
       }
 
-      // Sesli mesaj deşifresini kullanıcı balonuna yaz
       if (audioPayload && data.transcribedText) {
         updateChatForProfile(targetProfileKey, (prev) =>
           prev.map((m) =>
             m.id === userMsgId
-              ? { ...m, content: `🎤 "${data.transcribedText}"` }
+              ? { ...m, content: `Sesli: "${data.transcribedText}"` }
               : m
           )
         );
@@ -455,7 +441,7 @@ export function HaneAsistanView() {
 
       updateChatForProfile(targetProfileKey, (prev) => [...prev, assistantMessage]);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Ağ hatası oluştu.";
+      const msg = err instanceof Error ? err.message : "Ağ hatası oluştu";
       updateChatForProfile(targetProfileKey, (prev) => [
         ...prev,
         {
@@ -601,7 +587,7 @@ export function HaneAsistanView() {
         {
           id: makeId("err"),
           role: "assistant",
-          content: "Mikrofon erişimi sağlanamadı. Tarayıcı izinlerini kontrol edin.",
+          content: "Mikrofon erişimi sağlanamadı, tarayıcı izinlerini kontrol edin",
           createdAt: new Date().toISOString(),
           error: "Mikrofon hatası",
         },
@@ -653,7 +639,7 @@ export function HaneAsistanView() {
             {
               id: makeId("err"),
               role: "assistant",
-              content: "Mikrofon izni verilmedi. Tarayıcı ayarlarından mikrofon erişimine izin verin.",
+              content: "Mikrofon izni verilmedi, tarayıcı ayarlarından izin verin",
               createdAt: new Date().toISOString(),
               error: "Mikrofon izni",
             },
@@ -661,8 +647,6 @@ export function HaneAsistanView() {
           return;
         }
 
-        // Brave vb. tarayıcılar Google Speech sunucusunu engellediğinde ("network") veya dil hatasında
-        // otomatik olarak ses kaydı (MediaRecorder) yedeğine geç
         if (
           errCode === "network" ||
           errCode === "language-not-supported" ||
@@ -713,253 +697,223 @@ export function HaneAsistanView() {
     }
   };
 
+  const isMicActive = isSpeechListening || isRecording;
+
   return (
-    <div className="space-y-4 pb-6">
-      <PageHeader
-        badge="AI • Tüm Modüller"
-        icon={<SparklesIcon className="h-3.5 w-3.5" />}
-        title="Hane Asistan"
-        subtitle="Gider, taksit, fit ölçümü, kalori, alışveriş, takvim, düğün ve temizlik dahil tüm modülleri tek sohbetten yönetin."
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Aktif Kullanıcı Özel Sohbet Rozeti */}
-            <button
-              type="button"
-              onClick={() => openProfileModal("select")}
-              className="h-9 px-3 rounded-xl border border-border-lavender bg-accent text-foreground text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 hover:bg-accent-hover"
-              title="Aktif kullanıcıya özel sohbet (değiştirmek için tıklayın)"
-            >
-              <UserIcon className="h-3.5 w-3.5 text-primary" />
-              <span>🔒 {effectiveProfileName}</span>
-            </button>
+    <div className="flex flex-col h-[calc(100dvh-108px)] lg:h-[calc(100dvh-80px)] min-h-[480px] rounded-2xl border border-border bg-surface overflow-hidden">
+      {/* Sade Üst Bar */}
+      <header className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-border bg-surface shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight truncate">
+            Hane Asistan
+          </h1>
+          <button
+            type="button"
+            onClick={() => openProfileModal("select")}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-foreground-secondary bg-surface-raised border border-border hover:border-border-strong transition-colors cursor-pointer shrink-0"
+            title="Kullanıcıyı değiştir"
+          >
+            <UserIcon className="h-3.5 w-3.5 text-muted" />
+            <span>{effectiveProfileName}</span>
+            <span className="text-muted hidden sm:inline">· Özel sohbet</span>
+          </button>
+        </div>
 
-            {/* Otomatik Uygula Toggle */}
+        <div className="flex items-center gap-2 shrink-0">
+          {messages.length > 0 && (
             <button
               type="button"
-              onClick={toggleAutoApply}
-              className={`h-9 px-3 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-                autoApply
-                  ? "bg-amber-500/15 border-amber-500/40 text-amber-800 dark:text-amber-300"
-                  : "bg-surface border-border text-foreground-secondary hover:text-foreground"
-              }`}
-              title="Açıkken asistanın oluşturduğu kayıtlar onay beklemeden doğrudan kaydedilir"
+              onClick={handleClearChat}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-muted hover:text-rose-600 hover:border-border-strong transition-colors cursor-pointer"
+              aria-label="Sohbeti temizle"
+              title="Sohbeti temizle"
             >
-              <span>⚡</span>
-              <span>{autoApply ? "Otomatik Kayıt: Açık" : "Onaylı Mod"}</span>
+              <TrashIcon className="h-4 w-4" />
             </button>
+          )}
 
-            {/* Gemini API Key Butonu */}
-            <button
-              type="button"
-              onClick={() => setIsApiModalOpen(true)}
-              className="secondary-button h-9 px-3 text-xs flex items-center gap-1.5"
-              title="Gemini API Anahtarını Ayarla"
-            >
-              <SettingsIcon className="h-3.5 w-3.5" />
-              <span>API Anahtarı</span>
+          <button
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-foreground-secondary hover:text-foreground hover:border-border-strong transition-colors cursor-pointer"
+            aria-label="Asistan ayarları"
+            title="Asistan ayarları"
+          >
+            <SettingsIcon className="h-4 w-4" />
+            {!hasApiKey && (
               <span
-                className={`h-2 w-2 rounded-full ${
-                  hasApiKey ? "bg-emerald-500" : "bg-amber-500"
-                }`}
+                className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-amber-500"
+                aria-hidden="true"
               />
-            </button>
-
-            {messages.length > 0 && (
-              <button
-                type="button"
-                onClick={handleClearChat}
-                className="secondary-button h-9 px-3 text-xs text-muted hover:text-rose-600 flex items-center gap-1.5"
-                title="Sohbet Geçmişini Temizle"
-              >
-                <TrashIcon className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Temizle</span>
-              </button>
             )}
-          </div>
-        }
-      />
+          </button>
+        </div>
+      </header>
 
-      {/* Bağlı Modüller Şeridi */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-[11px] font-bold text-muted uppercase tracking-wider shrink-0 mr-1">
-          Erişim:
-        </span>
-        {(Object.keys(MODULE_META) as AssistantModule[]).map((mod) => {
-          const m = MODULE_META[mod];
-          return (
-            <Link
-              key={mod}
-              href={m.href}
-              className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold whitespace-nowrap flex items-center gap-1 transition hover:opacity-80 ${m.badgeClass}`}
-            >
-              <span>{m.icon}</span>
-              <span>{m.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Ana Sohbet Kutusu */}
-      <div className="ds-card flex flex-col h-[calc(100vh-290px)] min-h-[460px] max-h-[760px] overflow-hidden">
-        {/* Mesajlar Alanı */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center space-y-6 py-4">
-              <div className="space-y-2 max-w-md">
-                <div className="w-12 h-12 rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/25 text-fuchsia-600 dark:text-fuchsia-400 flex items-center justify-center mx-auto">
-                  <SparklesIcon className="w-6 h-6" />
-                </div>
-                <h2 className="text-base sm:text-lg font-bold text-foreground">
-                  Hane Asistan&apos;a Hoş Geldiniz
+      {/* Mesaj Alanı */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-4">
+        {messages.length === 0 ? (
+          <div className="min-h-full flex flex-col items-center justify-center py-4">
+            <div className="w-full max-w-2xl space-y-6">
+              <div className="space-y-1.5 text-left sm:text-center">
+                <h2 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight">
+                  Ne yapmak istersin, {effectiveProfileName}?
                 </h2>
-                <p className="text-xs sm:text-sm text-muted leading-relaxed">
-                  Tüm uygulama verilerinize doğrudan erişebilirim. Bana doğal bir cümle yazın veya
-                  sesle söyleyin; soruları yanıtlayayım ya da sizin yerinize kayıtları ekleyeyim.
+                <p className="text-sm text-muted">
+                  Gider, ölçüm, kalori, alışveriş veya takvim için yaz ya da konuş
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 w-full max-w-3xl text-left">
-                {QUICK_PROMPTS.map((qp) => (
-                  <button
-                    key={qp.title}
-                    type="button"
-                    onClick={() => sendToAssistant(qp.prompt)}
-                    className="p-3 rounded-xl border border-border bg-surface-raised/60 hover:bg-surface-raised hover:border-primary/40 transition text-left cursor-pointer group space-y-1"
-                  >
-                    <div className="text-xs font-bold text-foreground flex items-center gap-1.5 group-hover:text-primary transition-colors">
-                      <span>{qp.icon}</span>
-                      <span>{qp.title}</span>
-                    </div>
-                    <p className="text-[11px] text-muted line-clamp-2 leading-snug">
-                      &ldquo;{qp.prompt}&rdquo;
-                    </p>
-                  </button>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {QUICK_PROMPTS.map((qp) => {
+                  const mod = MODULE_META[qp.module];
+                  return (
+                    <button
+                      key={qp.title}
+                      type="button"
+                      onClick={() => sendToAssistant(qp.prompt)}
+                      className="p-4 rounded-xl border border-border bg-surface-raised/60 hover:bg-surface-raised hover:border-border-strong transition-colors text-left cursor-pointer space-y-1.5"
+                    >
+                      <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                        <span className="w-4 h-4 text-foreground-secondary shrink-0 flex items-center justify-center">
+                          <ModuleLucideIcon href={mod.iconHref} className="w-4 h-4" />
+                        </span>
+                        <span>{qp.title}</span>
+                      </div>
+                      <p className="text-[13px] text-muted leading-snug line-clamp-2">
+                        {qp.prompt}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          ) : (
-            messages.map((msg) => {
-              const isUser = msg.role === "user";
-              const pendingActions =
-                msg.actions?.filter(
-                  (a) => a.status === "pending" || a.status === "error"
-                ) || [];
+          </div>
+        ) : (
+          messages.map((msg) => {
+            const isUser = msg.role === "user";
+            const pendingActions =
+              msg.actions?.filter(
+                (a) => a.status === "pending" || a.status === "error"
+              ) || [];
 
-              return (
+            return (
+              <div
+                key={msg.id}
+                className={`flex flex-col ${
+                  isUser ? "items-end" : "items-start"
+                } space-y-2.5`}
+              >
+                {/* Mesaj Balonu */}
                 <div
-                  key={msg.id}
-                  className={`flex flex-col ${
-                    isUser ? "items-end" : "items-start"
-                  } space-y-2`}
+                  className={`max-w-[92%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ${
+                    isUser
+                      ? "bg-primary text-primary-foreground rounded-br-sm"
+                      : msg.error
+                      ? "bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 rounded-bl-sm"
+                      : "bg-surface-raised border border-border text-foreground rounded-bl-sm"
+                  }`}
                 >
-                  {/* Mesaj Balonu */}
-                  <div
-                    className={`max-w-[90%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                      isUser
-                        ? "bg-primary text-primary-foreground rounded-br-sm shadow-xs"
-                        : msg.error
-                        ? "bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 rounded-bl-sm"
-                        : "bg-surface-raised border border-border text-foreground rounded-bl-sm"
-                    }`}
-                  >
-                    {msg.content}
-                    {msg.modelUsed && (
-                      <div className="mt-1.5 text-[10px] opacity-60 font-medium">
-                        ✨ {msg.modelUsed}
+                  {msg.content}
+                </div>
+
+                {/* Aksiyon Onay Kartları */}
+                {msg.actions && msg.actions.length > 0 && (
+                  <div className="w-full max-w-[94%] sm:max-w-[80%] space-y-2.5">
+                    {pendingActions.length > 1 && (
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleApplyAllActions(msg.id)}
+                          className="primary-button h-9 px-3.5 text-xs font-medium rounded-xl"
+                        >
+                          <CheckIcon className="w-3.5 h-3.5" />
+                          <span>Tümünü onayla ({pendingActions.length})</span>
+                        </button>
                       </div>
                     )}
-                  </div>
 
-                  {/* Aksiyon Kartları */}
-                  {msg.actions && msg.actions.length > 0 && (
-                    <div className="w-full max-w-[95%] sm:max-w-[82%] space-y-2">
-                      {pendingActions.length > 1 && (
-                        <div className="flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => handleApplyAllActions(msg.id)}
-                            className="primary-button h-7 px-3 text-[11px] font-bold"
-                          >
-                            <CheckIcon className="w-3 h-3" />
-                            <span>Tümünü Onayla ({pendingActions.length})</span>
-                          </button>
-                        </div>
-                      )}
+                    {msg.actions.map((act) => {
+                      const modMeta = MODULE_META[act.module];
+                      const status = act.status || "pending";
 
-                      {msg.actions.map((act) => {
-                        const modMeta = MODULE_META[act.module];
-                        const status = act.status || "pending";
-
-                        return (
-                          <div
-                            key={act.id}
-                            className={`rounded-xl border p-3 transition space-y-2 ${
-                              status === "applied"
-                                ? "bg-emerald-500/10 border-emerald-500/30"
-                                : status === "cancelled"
-                                ? "bg-surface-raised/50 border-border opacity-60"
-                                : status === "error"
-                                ? "bg-rose-500/10 border-rose-500/30"
-                                : "bg-surface border-border-lavender shadow-2xs"
-                            }`}
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <span
-                                className={`text-[11px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${modMeta.badgeClass}`}
-                              >
-                                <span>{modMeta.icon}</span>
-                                <span>{modMeta.label}</span>
+                      return (
+                        <div
+                          key={act.id}
+                          className={`rounded-xl border p-3.5 sm:p-4 space-y-2.5 transition-colors ${
+                            status === "applied"
+                              ? "bg-emerald-500/5 border-emerald-500/30"
+                              : status === "cancelled"
+                              ? "bg-surface-raised/50 border-border opacity-60"
+                              : status === "error"
+                              ? "bg-rose-500/5 border-rose-500/30"
+                              : "bg-surface border-border-strong"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-xs font-medium text-foreground-secondary">
+                              <span className="w-4 h-4 flex items-center justify-center shrink-0">
+                                <ModuleLucideIcon
+                                  href={modMeta.iconHref}
+                                  className="w-4 h-4"
+                                />
                               </span>
-
-                              {status === "applied" && (
-                                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
-                                  <CheckIcon className="w-3.5 h-3.5" />
-                                  <span>Kaydedildi</span>
-                                </span>
-                              )}
-                              {status === "cancelled" && (
-                                <span className="text-[11px] font-semibold text-muted">
-                                  İptal edildi
-                                </span>
-                              )}
-                              {status === "error" && (
-                                <span className="text-[11px] font-bold text-rose-600">
-                                  Hata
-                                </span>
-                              )}
+                              <span>{modMeta.label}</span>
                             </div>
 
-                            <p className="text-xs sm:text-sm font-semibold text-foreground">
-                              {act.summary}
-                            </p>
-
-                            {act.resultMessage && (
-                              <p
-                                className={`text-xs ${
-                                  status === "error"
-                                    ? "text-rose-600 font-semibold"
-                                    : "text-emerald-700 dark:text-emerald-300"
-                                }`}
-                              >
-                                {act.resultMessage}
-                              </p>
+                            {status === "applied" && (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                <span>Kaydedildi</span>
+                              </span>
                             )}
+                            {status === "cancelled" && (
+                              <span className="text-xs font-medium text-muted">
+                                İptal edildi
+                              </span>
+                            )}
+                            {status === "error" && (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600">
+                                <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                <span>Hata</span>
+                              </span>
+                            )}
+                          </div>
 
-                            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                          <p className="text-sm sm:text-[15px] font-medium text-foreground leading-snug">
+                            {act.summary}
+                          </p>
+
+                          {act.resultMessage && (
+                            <p
+                              className={`text-[13px] leading-snug ${
+                                status === "error"
+                                  ? "text-rose-600 font-medium"
+                                  : "text-emerald-700 dark:text-emerald-300"
+                              }`}
+                            >
+                              {act.resultMessage}
+                            </p>
+                          )}
+
+                          {(status === "pending" ||
+                            status === "error" ||
+                            status === "applied") && (
+                            <div className="flex flex-wrap items-center gap-2 pt-0.5">
                               {(status === "pending" || status === "error") && (
-                                <div className="flex items-center gap-2">
+                                <>
                                   <button
                                     type="button"
                                     onClick={() =>
                                       handleActionDecision(msg.id, act.id, "apply")
                                     }
-                                    className="primary-button h-8 px-3 text-xs font-bold"
+                                    className="primary-button min-h-[42px] flex-1 sm:flex-none px-4 text-sm font-medium rounded-xl"
                                   >
-                                    <CheckIcon className="w-3.5 h-3.5" />
+                                    <CheckIcon className="w-4 h-4" />
                                     <span>
                                       {status === "error"
-                                        ? "Tekrar Dene"
-                                        : "Onayla ve Kaydet"}
+                                        ? "Tekrar dene"
+                                        : "Onayla ve kaydet"}
                                     </span>
                                   </button>
                                   <button
@@ -967,156 +921,186 @@ export function HaneAsistanView() {
                                     onClick={() =>
                                       handleActionDecision(msg.id, act.id, "cancel")
                                     }
-                                    className="secondary-button h-8 px-3 text-xs"
+                                    className="secondary-button min-h-[42px] flex-1 sm:flex-none px-4 text-sm font-medium rounded-xl"
                                   >
-                                    <CloseIcon className="w-3.5 h-3.5" />
+                                    <CloseIcon className="w-4 h-4" />
                                     <span>İptal</span>
                                   </button>
-                                </div>
+                                </>
                               )}
 
                               {status === "applied" && (
                                 <Link
                                   href={act.targetHref || modMeta.href}
-                                  className="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1"
+                                  className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 py-1"
                                 >
-                                  <span>{modMeta.label} sayfasında gör →</span>
+                                  <span>{modMeta.label} sayfasında gör</span>
+                                  <span aria-hidden="true">→</span>
                                 </Link>
                               )}
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
-
-          {isSending && (
-            <div className="flex items-start">
-              <div className="rounded-2xl rounded-bl-sm bg-surface-raised border border-border px-4 py-3 text-xs text-muted flex items-center gap-2">
-                <span className="inline-block h-2 w-2 rounded-full bg-primary animate-ping" />
-                <span>Hane Asistan düşünüyor ve verileri kontrol ediyor...</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
+            );
+          })
+        )}
+
+        {isSending && (
+          <div className="flex items-start">
+            <div className="rounded-2xl rounded-bl-sm bg-surface-raised border border-border px-4 py-3 text-sm text-muted flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary shrink-0" />
+              <span>Yanıt hazırlanıyor...</span>
             </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Alt Mesaj Yazma Barı */}
-        <div className="border-t border-border bg-surface p-3 sm:p-4">
-          <div className="flex items-end gap-2">
-            <button
-              type="button"
-              onClick={
-                isSpeechListening || isRecording ? stopVoiceInput : startVoiceInput
-              }
-              disabled={isSending}
-              className={`h-11 px-3 rounded-xl border text-xs font-bold transition shrink-0 cursor-pointer flex items-center gap-1.5 ${
-                isSpeechListening || isRecording
-                  ? "bg-rose-600 border-rose-600 text-white animate-pulse"
-                  : "bg-surface-raised border-border text-foreground hover:border-primary/40"
-              }`}
-              title={
-                isSpeechListening
-                  ? "Dinlemeyi Durdur"
-                  : isRecording
-                  ? "Kaydı Durdur ve Gönder"
-                  : "Sesle Yaz (Tarayıcı Dikte)"
-              }
-            >
-              <span>{isSpeechListening || isRecording ? "⏹️" : "🎙️"}</span>
-              {isSpeechListening && <span>Dinleniyor</span>}
-              {isRecording && (
-                <span className="tabular-nums">{recordingSeconds}s</span>
-              )}
-            </button>
-
-            <textarea
-              ref={inputRef}
-              rows={1}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={
-                isSpeechListening
-                  ? "Konuşun, söyledikleriniz buraya canlı yazılıyor..."
-                  : "Örn: Garanti kartına Mert için 500 TL yakıt ekle veya kilom 87 kg..."
-              }
-              disabled={isSending}
-              className="field flex-1 min-h-[44px] max-h-32 py-2.5 px-3.5 text-sm resize-none leading-snug"
-            />
-
-            <button
-              type="button"
-              onClick={() => sendToAssistant(inputText)}
-              disabled={isSending || !inputText.trim()}
-              className="primary-button h-11 px-4 sm:px-5 text-xs sm:text-sm font-bold shrink-0 disabled:opacity-50"
-            >
-              <span>Gönder</span>
-            </button>
           </div>
-          <p className="text-[10px] text-muted mt-1.5 px-1">
-            {isSpeechListening
-              ? "🎙️ Konuşmanız doğrudan yazı kutusuna aktarılıyor; bitince durdurup düzenleyebilir veya Gönder'e basabilirsiniz."
-              : "💡 Mikrofonla konuşarak metne çevirebilir, tek cümlede birden fazla modül komutu verebilirsiniz. Enter ile gönderir, Shift+Enter ile alt satıra geçersiniz."}
-          </p>
-        </div>
+        )}
+
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Gemini API Anahtarı Modalı */}
-      {isApiModalOpen && (
+      {/* Alt Mesaj Yazma Barı */}
+      <div className="border-t border-border bg-surface p-3 sm:p-4 shrink-0">
+        <div className="flex items-end gap-1.5 rounded-2xl border border-border bg-surface-raised p-1.5 focus-within:border-primary/60 transition-colors">
+          <button
+            type="button"
+            onClick={isMicActive ? stopVoiceInput : startVoiceInput}
+            disabled={isSending}
+            className={`flex h-11 w-11 items-center justify-center rounded-xl transition-colors shrink-0 cursor-pointer ${
+              isMicActive
+                ? "bg-rose-600 text-white"
+                : "text-foreground-secondary hover:text-foreground hover:bg-surface"
+            }`}
+            aria-label={isMicActive ? "Ses kaydını durdur" : "Sesle yaz"}
+            title={isMicActive ? "Durdur" : "Sesle yaz"}
+          >
+            {isMicActive ? <StopIcon /> : <MicIcon />}
+          </button>
+
+          <textarea
+            ref={inputRef}
+            rows={1}
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              isSpeechListening
+                ? "Konuşun, söyledikleriniz yazılıyor"
+                : "Bir şey yaz veya sor..."
+            }
+            disabled={isSending}
+            className="flex-1 bg-transparent border-0 outline-none text-base text-foreground placeholder:text-muted min-h-[44px] max-h-32 py-2.5 px-2 resize-none leading-normal"
+          />
+
+          <button
+            type="button"
+            onClick={() => sendToAssistant(inputText)}
+            disabled={isSending || !inputText.trim()}
+            className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity shrink-0 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Gönder"
+            title="Gönder"
+          >
+            <SendIcon />
+          </button>
+        </div>
+
+        {(isSpeechListening || isRecording) && (
+          <p className="text-xs font-medium text-rose-600 dark:text-rose-400 mt-2 px-1 tabular-nums">
+            {isSpeechListening
+              ? "Dinleniyor · Durdurmak için mikrofona dokun"
+              : `Ses kaydediliyor · ${recordingSeconds} sn (göndermek için durdur)`}
+          </p>
+        )}
+      </div>
+
+      {/* Asistan Ayarları Modalı (Otomatik Kayıt + Gemini API Anahtarı) */}
+      {isSettingsOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/40 backdrop-blur-[2px]"
           role="dialog"
           aria-modal="true"
         >
           <form
-            onSubmit={handleSaveApiKey}
-            className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-lg space-y-4"
+            onSubmit={handleSaveSettings}
+            className="w-full max-w-md rounded-2xl border border-border bg-surface p-5 shadow-lg space-y-5"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <span>🔑</span>
-                <span>Gemini API Anahtarı</span>
+              <h3 className="text-base font-semibold text-foreground">
+                Asistan ayarları
               </h3>
               <button
                 type="button"
-                onClick={() => setIsApiModalOpen(false)}
-                className="icon-button h-8 w-8"
+                onClick={() => setIsSettingsOpen(false)}
+                className="icon-button h-9 w-9"
+                aria-label="Kapat"
               >
                 <CloseIcon className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-muted leading-relaxed">
-              Hane Kalori, Takvim ve Asistan ortak Gemini API anahtarını kullanır. Sunucuda{" "}
-              <code className="px-1 py-0.5 rounded bg-surface-raised">GEMINI_API_KEY</code>{" "}
-              tanımlıysa boş bırakabilirsiniz.
-            </p>
-
-            <input
-              type="password"
-              value={apiKeyInput}
-              onChange={(e) => setApiKeyInput(e.target.value)}
-              placeholder="AIzaSy..."
-              className="field h-10 px-3 text-sm"
-            />
-
-            <div className="flex items-center justify-end gap-2">
+            {/* Otomatik Kayıt Seçeneği */}
+            <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-border bg-surface-raised">
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium text-foreground">
+                  Otomatik kayıt
+                </div>
+                <p className="text-xs text-muted">
+                  Açıkken asistanın oluşturduğu işlemler onay beklemeden kaydedilir
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => setIsApiModalOpen(false)}
-                className="secondary-button h-9 px-3.5 text-xs"
+                role="switch"
+                aria-checked={autoApply}
+                onClick={toggleAutoApply}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors cursor-pointer ${
+                  autoApply ? "bg-primary" : "bg-border-strong"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    autoApply ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* Gemini API Anahtarı */}
+            <div className="space-y-2">
+              <label
+                htmlFor="gemini-api-key-input"
+                className="block text-sm font-medium text-foreground"
+              >
+                Gemini API anahtarı
+              </label>
+              <input
+                id="gemini-api-key-input"
+                type="password"
+                value={apiKeyInput}
+                onChange={(e) => setApiKeyInput(e.target.value)}
+                placeholder="AIzaSy..."
+                className="field h-11 px-3.5 text-sm"
+              />
+              <p className="text-xs text-muted leading-relaxed">
+                Hane Kalori ve Takvim ile ortak kullanılır. Sunucuda tanımlıysa boş
+                bırakabilirsiniz.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(false)}
+                className="secondary-button h-10 px-4 text-sm font-medium rounded-xl"
               >
                 İptal
               </button>
               <button
                 type="submit"
-                className="primary-button h-9 px-4 text-xs font-bold"
+                className="primary-button h-10 px-4 text-sm font-medium rounded-xl"
               >
                 Kaydet
               </button>
