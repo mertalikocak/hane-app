@@ -500,11 +500,27 @@ export function executeAssistantAction(action: AssistantAction): ActionExecution
             ? p.date
             : todayStr();
         const validMeals: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
-        const mealType: MealType = validMeals.includes(p.mealType as MealType)
-          ? (p.mealType as MealType)
-          : "lunch";
+        const rawMealStr = String(p.mealType || "").toLowerCase().trim();
+        let mealType: MealType = "lunch";
+        if (validMeals.includes(rawMealStr as MealType)) {
+          mealType = rawMealStr as MealType;
+        } else if (rawMealStr.includes("kahvalt") || rawMealStr.includes("sabah")) {
+          mealType = "breakfast";
+        } else if (rawMealStr.includes("akşam") || rawMealStr.includes("aksam")) {
+          mealType = "dinner";
+        } else if (rawMealStr.includes("ara") || rawMealStr.includes("atıştırm")) {
+          mealType = "snack";
+        }
 
-        const rawItems = Array.isArray(p.items) ? p.items : [];
+        const rawItems = Array.isArray(p.items)
+          ? p.items
+          : Array.isArray(p.foods)
+          ? p.foods
+          : Array.isArray(p.besinler)
+          ? p.besinler
+          : typeof p.name === "string" && p.name.trim()
+          ? [p]
+          : [];
         if (rawItems.length === 0) {
           return {
             success: false,

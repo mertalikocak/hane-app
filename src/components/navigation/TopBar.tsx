@@ -11,8 +11,17 @@ import { ThemeToggle } from "./ThemeToggle";
 export function TopBar() {
   const { activeProfile, isLoaded } = useProfile();
   const [unresolvedCount, setUnresolvedCount] = useState(0);
+  const [todayShort, setTodayShort] = useState("");
 
   useEffect(() => {
+    setTodayShort(
+      new Intl.DateTimeFormat("tr-TR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(new Date())
+    );
+
     const updateCount = () => {
       const list = getBulgular();
       setUnresolvedCount(list.filter((b) => !b.cozuldu).length);
@@ -25,12 +34,6 @@ export function TopBar() {
       window.removeEventListener("storage", updateCount);
     };
   }, []);
-
-  const todayShort = new Intl.DateTimeFormat("tr-TR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(new Date());
 
   return (
     <header className="hidden lg:flex h-16 items-center justify-between border-b border-border bg-surface/90 backdrop-blur-md px-8 shrink-0 z-30 sticky top-0">

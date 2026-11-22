@@ -46,7 +46,15 @@ export interface IceAktarmaOnizleme {
 export const DEVICE_LOCAL_KEYS = new Set<string>([
   "hane_fit_active_profile_id",
   "hane_profile_selected_at",
+  "hane_assistant_chat_history",
 ]);
+
+export function isDeviceLocalKey(key: string): boolean {
+  return (
+    DEVICE_LOCAL_KEYS.has(key) ||
+    key.startsWith("hane_assistant_chat_history_")
+  );
+}
 
 export function tumHaneVerileriniTopla(excludeDeviceLocalKeys = true): TumHaneYedekPaketi {
   const veriler: Record<string, string> = {};
@@ -71,7 +79,7 @@ export function tumHaneVerileriniTopla(excludeDeviceLocalKeys = true): TumHaneYe
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (!key) continue;
-    if (excludeDeviceLocalKeys && DEVICE_LOCAL_KEYS.has(key)) {
+    if (excludeDeviceLocalKeys && isDeviceLocalKey(key)) {
       continue;
     }
     const val = localStorage.getItem(key);
@@ -249,13 +257,17 @@ export function tumHaneVerileriniIceAktar(
     const existingActiveProfileId = localStorage.getItem("hane_fit_active_profile_id");
 
     for (const [key, value] of Object.entries(hamVeriler)) {
-      if (preserveDeviceLocal && DEVICE_LOCAL_KEYS.has(key)) {
+      if (preserveDeviceLocal && isDeviceLocalKey(key)) {
         // Cihazda zaten aktif bir profil varsa, dışarıdan gelen profil ile ezme!
         if (key === "hane_fit_active_profile_id" && existingActiveProfileId) {
           continue;
         }
-        // Oturum süresi / timestamp anahtarını ezme
-        if (key === "hane_profile_selected_at") {
+        // Oturum süresi / timestamp veya asistan sohbet geçmişi anahtarlarını buluttan ezme/geri getirme
+        if (
+          key === "hane_profile_selected_at" ||
+          key === "hane_assistant_chat_history" ||
+          key.startsWith("hane_assistant_chat_history_")
+        ) {
           continue;
         }
       }

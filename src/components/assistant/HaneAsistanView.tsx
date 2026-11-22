@@ -147,6 +147,24 @@ function SendIcon({ className = "w-[18px] h-[18px]" }: { className?: string }) {
   );
 }
 
+function HistoryIcon({ className = "w-4 h-4" }: { className?: string }) {
+  return (
+    <svg
+      fill="none"
+      viewBox="0 0 24 24"
+      strokeWidth={1.75}
+      stroke="currentColor"
+      className={className}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  );
+}
+
 function makeId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
@@ -203,15 +221,25 @@ export function HaneAsistanView() {
   const effectiveProfileKey = activeProfile?.id || activeProfileId || "default";
   const effectiveProfileName = activeProfile?.firstName || "Kullanıcı";
 
-  const [chatState, setChatState] = useState<{
+  const [historyState, setHistoryState] = useState<{
     ownerKey: string | null;
     list: AssistantChatMessage[];
   }>({ ownerKey: null, list: [] });
+  const [sessionState, setSessionState] = useState<{
+    ownerKey: string | null;
+    list: AssistantChatMessage[];
+  }>({ ownerKey: null, list: [] });
+  const [showHistory, setShowHistory] = useState(false);
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [autoApply, setAutoApply] = useState(false);
 
-  const messages = chatState.ownerKey === effectiveProfileKey ? chatState.list : [];
+  const savedHistory = historyState.ownerKey === effectiveProfileKey ? historyState.list : [];
+  const sessionMessages = sessionState.ownerKey === effectiveProfileKey ? sessionState.list : [];
+  const sessionIdSet = new Set(sessionMessages.map((m) => m.id));
+  const pastOnlyMessages = savedHistory.filter((m) => !sessionIdSet.has(m.id));
+  const hasAnyVisibleMessages =
+    sessionMessages.length > 0 || (showHistory && pastOnlyMessages.length > 0);
 
   // Ayarlar & API Anahtarı modalı
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -261,14 +289,17 @@ export function HaneAsistanView() {
     };
   }, []);
 
+  // Aktif profil değiştikçe kayıtlı geçmişi arka planda yükle; ekran her girişte 0'dan başlar
   useEffect(() => {
     if (!isProfileLoaded) return;
     const loaded = readProfileChat(effectiveProfileKey);
-    setChatState({ ownerKey: effectiveProfileKey, list: loaded });
+    setHistoryState({ ownerKey: effectiveProfileKey, list: loaded });
+    setSessionState({ ownerKey: effectiveProfileKey, list: [] });
+    setShowHistory(false);
 
     const handleStorage = () => {
       const fresh = readProfileChat(effectiveProfileKey);
-      setChatState((prev) => {
+      setHistoryState((prev) => {
         if (
           prev.ownerKey === effectiveProfileKey &&
           JSON.stringify(prev.list) === JSON.stringify(fresh)
@@ -286,18 +317,26 @@ export function HaneAsistanView() {
   }, [isProfileLoaded, effectiveProfileKey]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, effectiveProfileKey]);
+    if (sessionMessages.length > 0 || showHistory) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [sessionMessages.length, showHistory, effectiveProfileKey]);
 
   const updateChatForProfile = (
     targetKey: string,
     updater: (prevList: AssistantChatMessage[]) => AssistantChatMessage[]
   ) => {
-    const currentList = readProfileChat(targetKey);
-    const nextList = updater(currentList).slice(-50);
-    writeProfileChat(targetKey, nextList);
-    setChatState((prev) =>
-      prev.ownerKey === targetKey ? { ownerKey: targetKey, list: nextList } : prev
+    const currentHistory = readProfileChat(targetKey);
+    const nextHistory = updater(currentHistory).slice(-50);
+    writeProfileChat(targetKey, nextHistory);
+
+    setHistoryState((prev) =>
+      prev.ownerKey === targetKey ? { ownerKey: targetKey, list: nextHistory } : prev
+    );
+    setSessionState((prev) =>
+      prev.ownerKey === targetKey
+        ? { ownerKey: targetKey, list: updater(prev.list).slice(-50) }
+        : prev
     );
   };
 
@@ -320,7 +359,9 @@ export function HaneAsistanView() {
 
   const handleClearChat = () => {
     writeProfileChat(effectiveProfileKey, []);
-    setChatState({ ownerKey: effectiveProfileKey, list: [] });
+    setHistoryState({ ownerKey: effectiveProfileKey, list: [] });
+    setSessionState({ ownerKey: effectiveProfileKey, list: [] });
+    setShowHistory(false);
   };
 
   const sendToAssistant = async (
@@ -349,7 +390,8 @@ export function HaneAsistanView() {
       isVoice: Boolean(audioPayload),
     };
 
-    const historySnapshot = messages
+    const historySource = showHistory ? savedHistory : sessionMessages;
+    const historySnapshot = historySource
       .filter((m) => !m.error)
       .slice(-8)
       .map((m) => ({ role: m.role, content: m.content }));
@@ -462,7 +504,8 @@ export function HaneAsistanView() {
     actionId: string,
     decision: "apply" | "cancel"
   ) => {
-    const targetMsg = messages.find((m) => m.id === messageId);
+    const allKnown = [...sessionMessages, ...pastOnlyMessages];
+    const targetMsg = allKnown.find((m) => m.id === messageId);
     const targetAct = targetMsg?.actions?.find((a) => a.id === actionId);
     if (!targetAct) return;
 
@@ -507,7 +550,8 @@ export function HaneAsistanView() {
   };
 
   const handleApplyAllActions = (messageId: string) => {
-    const targetMsg = messages.find((m) => m.id === messageId);
+    const allKnown = [...sessionMessages, ...pastOnlyMessages];
+    const targetMsg = allKnown.find((m) => m.id === messageId);
     if (!targetMsg?.actions) return;
 
     const resultsMap = new Map<string, ReturnType<typeof executeAssistantAction>>();
@@ -699,34 +743,214 @@ export function HaneAsistanView() {
 
   const isMicActive = isSpeechListening || isRecording;
 
+  const renderMessageItem = (msg: AssistantChatMessage) => {
+    const isUser = msg.role === "user";
+    const pendingActions =
+      msg.actions?.filter(
+        (a) => a.status === "pending" || a.status === "error"
+      ) || [];
+
+    return (
+      <div
+        key={msg.id}
+        className={`flex flex-col ${
+          isUser ? "items-end" : "items-start"
+        } space-y-2.5`}
+      >
+        <div
+          className={`max-w-[92%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ${
+            isUser
+              ? "bg-primary text-primary-foreground rounded-br-sm"
+              : msg.error
+              ? "bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 rounded-bl-sm"
+              : "bg-surface-raised border border-border text-foreground rounded-bl-sm"
+          }`}
+        >
+          {msg.content}
+        </div>
+
+        {msg.actions && msg.actions.length > 0 && (
+          <div className="w-full max-w-[94%] sm:max-w-[80%] space-y-2.5">
+            {pendingActions.length > 1 && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleApplyAllActions(msg.id)}
+                  className="primary-button h-9 px-3.5 text-xs font-medium rounded-xl"
+                >
+                  <CheckIcon className="w-3.5 h-3.5" />
+                  <span>Tümünü onayla ({pendingActions.length})</span>
+                </button>
+              </div>
+            )}
+
+            {msg.actions.map((act) => {
+              const modMeta = MODULE_META[act.module];
+              const status = act.status || "pending";
+
+              return (
+                <div
+                  key={act.id}
+                  className={`rounded-xl border p-3.5 sm:p-4 space-y-2.5 transition-colors ${
+                    status === "applied"
+                      ? "bg-emerald-500/5 border-emerald-500/30"
+                      : status === "cancelled"
+                      ? "bg-surface-raised/50 border-border opacity-60"
+                      : status === "error"
+                      ? "bg-rose-500/5 border-rose-500/30"
+                      : "bg-surface border-border-strong"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs font-medium text-foreground-secondary">
+                      <span className="w-4 h-4 flex items-center justify-center shrink-0">
+                        <ModuleLucideIcon
+                          href={modMeta.iconHref}
+                          className="w-4 h-4"
+                        />
+                      </span>
+                      <span>{modMeta.label}</span>
+                    </div>
+
+                    {status === "applied" && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        <span>Kaydedildi</span>
+                      </span>
+                    )}
+                    {status === "cancelled" && (
+                      <span className="text-xs font-medium text-muted">
+                        İptal edildi
+                      </span>
+                    )}
+                    {status === "error" && (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                        <span>Hata</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm sm:text-[15px] font-medium text-foreground leading-snug">
+                    {act.summary}
+                  </p>
+
+                  {act.resultMessage && (
+                    <p
+                      className={`text-[13px] leading-snug ${
+                        status === "error"
+                          ? "text-rose-600 font-medium"
+                          : "text-emerald-700 dark:text-emerald-300"
+                      }`}
+                    >
+                      {act.resultMessage}
+                    </p>
+                  )}
+
+                  {(status === "pending" ||
+                    status === "error" ||
+                    status === "applied") && (
+                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                      {(status === "pending" || status === "error") && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleActionDecision(msg.id, act.id, "apply")
+                            }
+                            className="primary-button min-h-[42px] flex-1 sm:flex-none px-4 text-sm font-medium rounded-xl"
+                          >
+                            <CheckIcon className="w-4 h-4" />
+                            <span>
+                              {status === "error"
+                                ? "Tekrar dene"
+                                : "Onayla ve kaydet"}
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleActionDecision(msg.id, act.id, "cancel")
+                            }
+                            className="secondary-button min-h-[42px] flex-1 sm:flex-none px-4 text-sm font-medium rounded-xl"
+                          >
+                            <CloseIcon className="w-4 h-4" />
+                            <span>İptal</span>
+                          </button>
+                        </>
+                      )}
+
+                      {status === "applied" && (
+                        <Link
+                          href={act.targetHref || modMeta.href}
+                          className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 py-1"
+                        >
+                          <span>{modMeta.label} sayfasında gör</span>
+                          <span aria-hidden="true">→</span>
+                        </Link>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col h-[calc(100dvh-108px)] lg:h-[calc(100dvh-80px)] min-h-[480px] rounded-2xl border border-border bg-surface overflow-hidden">
       {/* Sade Üst Bar */}
-      <header className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-border bg-surface shrink-0">
-        <div className="flex items-center gap-3 min-w-0">
-          <h1 className="text-lg sm:text-xl font-semibold text-foreground tracking-tight truncate">
+      <header className="flex items-center justify-between gap-2 px-4 py-3 sm:px-5 sm:py-3.5 border-b border-border bg-surface shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <h1 className="text-base sm:text-xl font-semibold text-foreground tracking-tight truncate">
             Hane Asistan
           </h1>
           <button
             type="button"
             onClick={() => openProfileModal("select")}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-foreground-secondary bg-surface-raised border border-border hover:border-border-strong transition-colors cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-foreground-secondary bg-surface-raised border border-border hover:border-border-strong transition-colors cursor-pointer shrink-0"
             title="Kullanıcıyı değiştir"
           >
             <UserIcon className="h-3.5 w-3.5 text-muted" />
-            <span>{effectiveProfileName}</span>
-            <span className="text-muted hidden sm:inline">· Özel sohbet</span>
+            <span className="max-w-[72px] sm:max-w-none truncate">
+              {effectiveProfileName}
+            </span>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {messages.length > 0 && (
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {savedHistory.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowHistory((s) => !s)}
+              className={`flex h-10 items-center gap-1.5 rounded-xl border px-2.5 sm:px-3 text-xs font-medium transition-colors cursor-pointer ${
+                showHistory
+                  ? "bg-accent border-border-lavender text-foreground"
+                  : "bg-surface border-border text-foreground-secondary hover:text-foreground hover:border-border-strong"
+              }`}
+              aria-label={showHistory ? "Geçmişi gizle" : "Geçmişi göster"}
+              title={showHistory ? "Geçmişi gizle" : "Geçmişi göster"}
+            >
+              <HistoryIcon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">
+                {showHistory ? "Geçmişi gizle" : "Geçmişi göster"}
+              </span>
+              <span className="sm:hidden tabular-nums text-xs">
+                {savedHistory.length}
+              </span>
+            </button>
+          )}
+
+          {(sessionMessages.length > 0 || (showHistory && savedHistory.length > 0)) && (
             <button
               type="button"
               onClick={handleClearChat}
               className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-surface text-muted hover:text-rose-600 hover:border-border-strong transition-colors cursor-pointer"
-              aria-label="Sohbeti temizle"
-              title="Sohbeti temizle"
+              aria-label="Sohbeti ve geçmişi temizle"
+              title="Sohbeti ve geçmişi temizle"
             >
               <TrashIcon className="h-4 w-4" />
             </button>
@@ -752,7 +976,7 @@ export function HaneAsistanView() {
 
       {/* Mesaj Alanı */}
       <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 space-y-4">
-        {messages.length === 0 ? (
+        {!hasAnyVisibleMessages ? (
           <div className="min-h-full flex flex-col items-center justify-center py-4">
             <div className="w-full max-w-2xl space-y-6">
               <div className="space-y-1.5 text-left sm:text-center">
@@ -790,164 +1014,47 @@ export function HaneAsistanView() {
             </div>
           </div>
         ) : (
-          messages.map((msg) => {
-            const isUser = msg.role === "user";
-            const pendingActions =
-              msg.actions?.filter(
-                (a) => a.status === "pending" || a.status === "error"
-              ) || [];
-
-            return (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${
-                  isUser ? "items-end" : "items-start"
-                } space-y-2.5`}
-              >
-                {/* Mesaj Balonu */}
-                <div
-                  className={`max-w-[92%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ${
-                    isUser
-                      ? "bg-primary text-primary-foreground rounded-br-sm"
-                      : msg.error
-                      ? "bg-rose-500/10 border border-rose-500/25 text-rose-700 dark:text-rose-300 rounded-bl-sm"
-                      : "bg-surface-raised border border-border text-foreground rounded-bl-sm"
-                  }`}
-                >
-                  {msg.content}
+          <>
+            {showHistory && pastOnlyMessages.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+                  <span className="text-xs font-medium text-muted">
+                    Önceki konuşmalar ({pastOnlyMessages.length})
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleClearChat}
+                      className="text-xs font-medium text-rose-600 hover:underline cursor-pointer"
+                    >
+                      Geçmişi sil
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowHistory(false)}
+                      className="text-xs font-medium text-foreground-secondary hover:text-foreground cursor-pointer"
+                    >
+                      Gizle
+                    </button>
+                  </div>
                 </div>
 
-                {/* Aksiyon Onay Kartları */}
-                {msg.actions && msg.actions.length > 0 && (
-                  <div className="w-full max-w-[94%] sm:max-w-[80%] space-y-2.5">
-                    {pendingActions.length > 1 && (
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => handleApplyAllActions(msg.id)}
-                          className="primary-button h-9 px-3.5 text-xs font-medium rounded-xl"
-                        >
-                          <CheckIcon className="w-3.5 h-3.5" />
-                          <span>Tümünü onayla ({pendingActions.length})</span>
-                        </button>
-                      </div>
-                    )}
+                {pastOnlyMessages.map((msg) => renderMessageItem(msg))}
 
-                    {msg.actions.map((act) => {
-                      const modMeta = MODULE_META[act.module];
-                      const status = act.status || "pending";
-
-                      return (
-                        <div
-                          key={act.id}
-                          className={`rounded-xl border p-3.5 sm:p-4 space-y-2.5 transition-colors ${
-                            status === "applied"
-                              ? "bg-emerald-500/5 border-emerald-500/30"
-                              : status === "cancelled"
-                              ? "bg-surface-raised/50 border-border opacity-60"
-                              : status === "error"
-                              ? "bg-rose-500/5 border-rose-500/30"
-                              : "bg-surface border-border-strong"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 text-xs font-medium text-foreground-secondary">
-                              <span className="w-4 h-4 flex items-center justify-center shrink-0">
-                                <ModuleLucideIcon
-                                  href={modMeta.iconHref}
-                                  className="w-4 h-4"
-                                />
-                              </span>
-                              <span>{modMeta.label}</span>
-                            </div>
-
-                            {status === "applied" && (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                <span>Kaydedildi</span>
-                              </span>
-                            )}
-                            {status === "cancelled" && (
-                              <span className="text-xs font-medium text-muted">
-                                İptal edildi
-                              </span>
-                            )}
-                            {status === "error" && (
-                              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-rose-600">
-                                <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                                <span>Hata</span>
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-sm sm:text-[15px] font-medium text-foreground leading-snug">
-                            {act.summary}
-                          </p>
-
-                          {act.resultMessage && (
-                            <p
-                              className={`text-[13px] leading-snug ${
-                                status === "error"
-                                  ? "text-rose-600 font-medium"
-                                  : "text-emerald-700 dark:text-emerald-300"
-                              }`}
-                            >
-                              {act.resultMessage}
-                            </p>
-                          )}
-
-                          {(status === "pending" ||
-                            status === "error" ||
-                            status === "applied") && (
-                            <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                              {(status === "pending" || status === "error") && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleActionDecision(msg.id, act.id, "apply")
-                                    }
-                                    className="primary-button min-h-[42px] flex-1 sm:flex-none px-4 text-sm font-medium rounded-xl"
-                                  >
-                                    <CheckIcon className="w-4 h-4" />
-                                    <span>
-                                      {status === "error"
-                                        ? "Tekrar dene"
-                                        : "Onayla ve kaydet"}
-                                    </span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleActionDecision(msg.id, act.id, "cancel")
-                                    }
-                                    className="secondary-button min-h-[42px] flex-1 sm:flex-none px-4 text-sm font-medium rounded-xl"
-                                  >
-                                    <CloseIcon className="w-4 h-4" />
-                                    <span>İptal</span>
-                                  </button>
-                                </>
-                              )}
-
-                              {status === "applied" && (
-                                <Link
-                                  href={act.targetHref || modMeta.href}
-                                  className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1 py-1"
-                                >
-                                  <span>{modMeta.label} sayfasında gör</span>
-                                  <span aria-hidden="true">→</span>
-                                </Link>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                {sessionMessages.length > 0 && (
+                  <div className="flex items-center gap-3 py-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-medium text-muted">
+                      Bu sohbet
+                    </span>
+                    <div className="h-px flex-1 bg-border" />
                   </div>
                 )}
               </div>
-            );
-          })
+            )}
+
+            {sessionMessages.map((msg) => renderMessageItem(msg))}
+          </>
         )}
 
         {isSending && (

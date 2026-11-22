@@ -46,6 +46,22 @@ const VALID_ACTION_TYPES: AssistantActionType[] = [
   "cardolist_add_expense",
 ];
 
+function inferModuleFromType(actionType: AssistantActionType, rawModule?: unknown): AssistantModule {
+  if (typeof rawModule === "string" && VALID_MODULES.includes(rawModule as AssistantModule)) {
+    return rawModule as AssistantModule;
+  }
+  if (actionType.startsWith("gider_")) return "gider";
+  if (actionType.startsWith("taksit_")) return "taksit";
+  if (actionType.startsWith("fit_")) return "fit";
+  if (actionType.startsWith("kalori_")) return "kalori";
+  if (actionType.startsWith("shopping_")) return "shopping";
+  if (actionType.startsWith("calendar_")) return "calendar";
+  if (actionType.startsWith("wedding_")) return "wedding";
+  if (actionType.startsWith("wishlist_")) return "wishlist";
+  if (actionType.startsWith("cleaning_")) return "cleaning";
+  return "cardolist";
+}
+
 function buildSystemPrompt(context: AssistantContextSnapshot): string {
   return `Sen "Hane Asistan" adında, Mert ve Havsa'nın kullandığı "Hane App" ev ve yaşam yönetim uygulamasının tam yetkili yapay zeka asistanısın.
 Kullanıcıyla doğal, samimi, kısa ve net Türkçe konuşursun. Hem uygulama verileri hakkında soruları yanıtlayabilirsin hem de kullanıcının isteği doğrultusunda tüm modüllerde kayıt oluşturacak/güncelleyecek "actions" dizisi üretebilirsin.
@@ -186,8 +202,13 @@ KURALLAR:
   * "Toplam hane / ev bütçesi" sorulduğunda "context.gider.hane" alanını, "mahsuplaşma / kim kime borçlu" sorulduğunda "context.gider.mahsuplasma" alanını kullan.
 - KİLO / VÜCUT ANALİZİ KURALI:
   * Kullanıcı kilo gelişimi, yağ oranı trendi, bel ölçüsü değişimi veya geçmiş ölçümlerini sorduğunda "context.profiles" içindeki ilgili profilin "stats" (toplam ölçüm, başlangıç/son kilo, kilo değişimi, BMI, yağ oranı değişimi) ve "measurements" (tarih sırasıyla tüm son ölçümler) verilerini kullanarak somut sayılarla analiz yap.
+- İSTEK KİPİ KURALI:
+  * "... girer misin?", "... ekler misin?", "... yazar mısın?", "... kaydeder misin?" cümleleri soru DEĞİL, doğrudan işlem yapma isteğidir! Bu cümlelerde MUTLAKA ilgili "actions" nesnesini üret; asla "actions": [] döndürüp sadece sözlü onay verme.
+- KALORİ / BESİN HESAPLAMA KURALI ("kalori_add_food"):
+  * Kullanıcı sadece yediği besinleri ve adet/gramaj bilgisini yazar (örn: "Kahvaltıya 1 orta boy yumurta, 2 yumurta beyazı, 1 gr zeytinyağı, 30 gr hindi füme girer misin"). Kullanıcının kalori ve makro değerlerini yazmamış olması eksik bilgi DEĞİLDİR!
+  * Uzman bir diyetisyen gibi her bir besin için standart kalori, protein, karbonhidrat ve yağ (gram) değerlerini kendin hesapla ve her besini "kalori_add_food" aksiyonundaki "payload.items" dizisine ayrı obje olarak ekle ("Kahvaltı" -> mealType: "breakfast", "Öğle" -> "lunch", "Akşam" -> "dinner", "Ara öğün" -> "snack").
 - Kullanıcı tek bir mesajda birden fazla işlem isterse (örn: "Alışverişe süt ekle ve yarın 14:00'e toplantı yaz"), "actions" dizisinde birden fazla aksiyon döndürebilirsin!
-- Eksik kritik bilgi varsa (örneğin tutar söylenmeden harcama ekle denmişse veya hangi kart olduğu çok belirsizse), uydurma yapma; "actions": [] döndür ve "reply" içinde nazikçe eksik bilgiyi sor.
+- Eksik kritik bilgi varsa (örneğin tutar söylenmeden harcama ekle denmişse veya hangi kart olduğu çok belirsizse), uydurma yapma; "actions": [] döndür ve "reply" içinde nazikçe eksik bilgiyi sor. (Dikkat: Kalori girişinde besinlerin kalori/makrosunu sorma, kendin hesaplayıp ekle!)
 - İsim eşleştirme: "benim", "ben" ifadeleri context.activeProfile kişisini ifade eder (yoksa "mert"). "Mert" veya "Havsa" ifadelerini context.profiles içindeki doğru id ile eşleştir.
 - Her aksiyon için "summary" alanı kullanıcıya onay kartında gösterilecek net, anlaşılır Türkçe özet olmalıdır.
 - ÇIKTI SADECE VE SADECE AŞAĞIDAKİ JSON FORMATINDA OLMALIDIR (markdown backtick ekleme):
@@ -401,19 +422,32 @@ export async function POST(req: NextRequest) {
             (a) =>
               a &&
               typeof a.type === "string" &&
-              VALID_ACTION_TYPES.includes(a.type as AssistantActionType) &&
-              typeof a.module === "string" &&
-              VALID_MODULES.includes(a.module as AssistantModule)
+              VALID_ACTION_TYPES.includes(a.type as AssistantActionType)
           )
-          .map((a) => ({
-            type: a.type as AssistantActionType,
-            module: a.module as AssistantModule,
-            summary: String(a.summary || "İşlem hazırlandı").trim(),
-            payload:
-              a.payload && typeof a.payload === "object" && !Array.isArray(a.payload)
-                ? a.payload
-                : {},
-          }))
+          .map((a) => {
+            const actionType = a.type as AssistantActionType;
+            const resolvedModule = inferModuleFromType(actionType, a.module);
+            const rawObj = a as unknown as Record<string, unknown>;
+            const {
+              type: _t,
+              module: _m,
+              summary: _s,
+              payload: rawPayload,
+              ...extraRootFields
+            } = rawObj;
+            const basePayload =
+              rawPayload && typeof rawPayload === "object" && !Array.isArray(rawPayload)
+                ? (rawPayload as Record<string, unknown>)
+                : {};
+            const mergedPayload = { ...extraRootFields, ...basePayload };
+
+            return {
+              type: actionType,
+              module: resolvedModule,
+              summary: String(a.summary || "İşlem hazırlandı").trim(),
+              payload: mergedPayload,
+            };
+          })
       : [];
 
     return NextResponse.json({

@@ -1563,6 +1563,11 @@ function GelirVeSahsiHarcamaModal({
     setTab(initialTab);
   }, [initialTab, isOpen]);
 
+  const aktifListe = useMemo(() => {
+    const liste = tab === "gelir" ? gelirler : harcamalar;
+    return [...liste].sort((a, b) => (b.tutar ?? 0) - (a.tutar ?? 0));
+  }, [tab, gelirler, harcamalar]);
+
   if (!isOpen || typeof document === "undefined") return null;
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -1578,11 +1583,6 @@ function GelirVeSahsiHarcamaModal({
     setAciklama("");
     setTutarStr("");
   };
-
-  const aktifListe = useMemo(() => {
-    const liste = tab === "gelir" ? gelirler : harcamalar;
-    return [...liste].sort((a, b) => (b.tutar ?? 0) - (a.tutar ?? 0));
-  }, [tab, gelirler, harcamalar]);
 
   return createPortal(
     <div
